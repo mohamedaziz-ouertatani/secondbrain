@@ -1,0 +1,54 @@
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class Settings(BaseSettings):
+    """Precedence: env vars > .env > config.yaml > defaults below."""
+
+    model_config = SettingsConfigDict(
+        env_file=ROOT / ".env", yaml_file=ROOT / "config.yaml", extra="ignore"
+    )
+
+    database_url: str = "postgresql://secondbrain:secondbrain@localhost:5433/secondbrain"
+    ollama_url: str = "http://localhost:11434"
+
+    llm_model: str = "qwen3:4b-instruct"
+    embed_model: str = "bge-m3"
+    embed_dim: int = 1024
+    num_ctx: int = 6144
+    temperature: float = 0.2
+
+    watch_dir: Path = Path("inbox")
+    chunk_tokens: int = 500
+    chunk_overlap: int = 80
+    embed_batch: int = 16
+
+    top_k: int = 5
+    min_score: float = 0.35
+
+    cors_origins: list[str] = ["http://localhost:3000"]
+
+    @classmethod
+    def settings_customise_sources(
+        cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (init_settings, env_settings, dotenv_settings, YamlConfigSettingsSource(settings_cls))
+
+    @property
+    def inbox(self) -> Path:
+        p = self.watch_dir
+        return (p if p.is_absolute() else ROOT / p).resolve()
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

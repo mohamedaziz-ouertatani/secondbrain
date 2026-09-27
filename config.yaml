@@ -1,0 +1,20 @@
+# Second Brain configuration. Env vars (see .env.example) override these.
+database_url: postgresql://secondbrain:secondbrain@localhost:5433/secondbrain
+ollama_url: http://localhost:11434
+
+# Models (4 GB VRAM: keep the LLM around 4B at Q4)
+llm_model: qwen3:4b-instruct   # non-thinking; alternatives: qwen2.5:3b, qwen2.5:7b-instruct (CPU offload)
+embed_model: bge-m3
+embed_dim: 1024
+num_ctx: 6144
+temperature: 0.2
+
+# Ingestion
+watch_dir: inbox          # relative to project root
+chunk_tokens: 500
+chunk_overlap: 80
+embed_batch: 16
+
+# Retrieval
+top_k: 5
+min_score: 0.35
