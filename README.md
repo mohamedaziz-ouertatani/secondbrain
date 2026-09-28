@@ -28,6 +28,12 @@ cd backend && uv sync
 cd frontend && npm install
 ```
 
+For OCR (text inside images), download the Tesseract language data once. It's about 31 MB (English, French and Arabic) and goes into `backend/data/tessdata/`, which Git ignores. Nothing is installed system-wide:
+
+```bash
+cd backend && uv run python -m app.ingest.ocr --setup
+```
+
 The first ingest downloads the bge-m3 tokenizer (~17 MB) once. After that, everything works offline.
 
 ## Run
@@ -49,7 +55,13 @@ Drop PDF, PPTX, DOCX, `.md` or `.txt` files into `inbox/<course>/`. The subfolde
 The backend watches the folder:
 - New and changed files are ingested within a few seconds.
 - Deleted files leave the index, and so does a deleted or renamed module folder (a renamed one is re-filed under its new name).
-- Scanned PDFs with no text layer are listed in the Drawer as not searchable. OCR is planned.
+- **Text inside images is read by OCR** (Tesseract, built into PyMuPDF):
+  - PDF pages with fewer than 25 words and an image (diagram-heavy slides exported to PDF);
+  - pictures of at least 300×150 px in slide decks and Word files, such as screenshots of terminals and tools. Pictures repeated in a file, like template logos, are skipped.
+
+  The OCR text joins its own page, slide or section, so citations still point to the right place. Lines that don't read like words are dropped. Fiches from OCR text carry an **OCR** tag, because recognition can make mistakes. Without the language data, OCR is off, and the admin Status card says so.
+- OCR makes indexing slower: re-reading the whole library took about 12 minutes, most of it on slide screenshots. A screenshot-heavy deck takes a while to appear after a sync.
+- Arabic OCR is off by default, because mixing it in makes French and English worse. For Arabic slides, set `ocr_languages: eng+fra+ara` in `config.yaml`.
 
 ## History
 
@@ -137,7 +149,7 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 
 ## Roadmap
 
-- **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync.
+- **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync, OCR of images in PDFs, slides and Word files.
 - **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (parked: it orders passages well but takes 12–23 s per question on the CPU), and document tags/summaries.
 - **v3:** chat history (done), the admin panel (done: status, library, settings, insights and Blackboard sync), related notes and flashcards.
 - **v4:** a Chrome extension to save from Blackboard, and an eval set built from the query log.
