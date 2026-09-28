@@ -6,6 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ..admin import sync as sync_jobs
 from ..admin.insights import compare, problems, summary
 from ..admin.settings import Invalid, update, view
 from ..admin.status import status
@@ -130,3 +131,39 @@ def insight_problems(kind: Literal["refused", "invalid", "slow"], days: int = 7,
 def admin_compare(body: CompareBody) -> dict:
     with exclusive("compare"):
         return compare(body.limit)
+
+
+class SyncBody(BaseModel):
+    mode: Literal["sync", "preview", "probe"]
+    course: str | None = None
+
+
+@router.get("/sync")
+def sync_status() -> dict:
+    return sync_jobs.runner.status()
+
+
+@router.post("/sync", status_code=202)
+def sync_start(body: SyncBody) -> dict:
+    if body.course is not None and body.course not in sync_jobs.modules():
+        raise HTTPException(400, "no such module folder in the inbox")
+    try:
+        return sync_jobs.runner.start(body.mode, body.course)
+    except sync_jobs.Busy as e:
+        raise HTTPException(409, str(e)) from e
+
+
+@router.post("/sync/login", status_code=202)
+def sync_login() -> dict:
+    try:
+        return sync_jobs.runner.start("login")
+    except sync_jobs.Busy as e:
+        raise HTTPException(409, str(e)) from e
+
+
+@router.post("/sync/cancel")
+def sync_cancel() -> dict:
+    job = sync_jobs.runner.cancel()
+    if job is None:
+        raise HTTPException(404, "no sync is running")
+    return job

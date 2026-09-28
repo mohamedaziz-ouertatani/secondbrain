@@ -39,6 +39,8 @@ EDITABLE = (
     Field("num_ctx", "Answers", "Context window", "int", "Tokens the model sees; larger uses more VRAM", 1024, 32768),
     Field("llm_keep_alive", "Answers", "Keep loaded for", "text",
           "After a question: 30m, 2h, 0 (unload at once) or -1 (never)", pattern=r"^(-1|0|\d+[smh])$"),
+    Field("sync_auto_days", "Blackboard", "Automatic sync every", "int",
+          "Days between automatic syncs; 0 turns them off", 0, 30),
 )
 FIELDS = {f.key: f for f in EDITABLE}
 READONLY = {

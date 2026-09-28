@@ -189,3 +189,46 @@ def test_replace_retries_transient_lock(tmp_path, monkeypatch):
     monkeypatch.setattr(bb.time, "sleep", lambda s: None)
     bb.replace_with_retry(src, dst)
     assert dst.read_text() == "x"
+
+
+def test_run_emits_events_for_each_mode(inbox):
+    ev = []
+    bb.run(FakeAPI(), probe=True, dry_run=False, only=None, include_unmapped=False, emit=ev.append)
+    assert [e["type"] for e in ev] == ["courses", "done"]
+    assert ev[0]["probe"] is True and ev[1]["mode"] == "probe"
+    assert any(c["folder"] == "Probability 2" for c in ev[0]["courses"])
+    assert any(c["folder"] is None for c in ev[0]["courses"])  # an unmapped course is listed as skipped
+
+    ev.clear()
+    bb.run(FakeAPI(), probe=False, dry_run=True, only=None, include_unmapped=False, emit=ev.append)
+    files = [e for e in ev if e["type"] == "file"]
+    assert {e["action"] for e in files} == {"would_download"} and len(files) == 3
+    assert next(e for e in ev if e["type"] == "course")["to_download"] == 3
+    assert ev[-1] == {"type": "done", "mode": "preview", "files": 0, "bytes": 0}
+
+    ev.clear()
+    bb.run(FakeAPI(), probe=False, dry_run=False, only=None, include_unmapped=False, emit=ev.append)
+    files = [e for e in ev if e["type"] == "file"]
+    assert [e["action"] for e in files] == ["downloaded"] * 3 and all(e["kb"] >= 1 for e in files)
+    assert ev[-1]["type"] == "done" and ev[-1]["mode"] == "sync" and ev[-1]["files"] == 3
+
+
+def test_json_event_is_one_line_per_event(capsys):
+    bb.json_event({"type": "file", "path": "Probabilité/é.pdf"})
+    assert capsys.readouterr().out == '{"type": "file", "path": "Probabilité/é.pdf"}\n'
+
+
+def test_headless_expired_session_exits_3(monkeypatch, capsys):
+    class ExpiredAPI:
+        def __init__(self, headless=False):
+            self.headless = headless
+
+        def ensure_login(self, headless=False, timeout_s=600, emit=None):
+            raise bb.LoginRequired
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(bb, "PlaywrightAPI", ExpiredAPI)
+    assert bb.main(["--headless", "--json"]) == 3
+    assert capsys.readouterr().out.strip() == '{"type": "login_required"}'

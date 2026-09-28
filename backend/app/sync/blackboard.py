@@ -264,6 +264,56 @@ def write_atomic(target: Path, data: bytes) -> None:
     replace_with_retry(part, target)
 
 
+# --- events: what a run reports, printed as today's text or as JSON lines (--json) --------------
+
+# 15-character labels keep the text output byte-for-byte what it was before events existed
+LABEL = {
+    "would_download": "would download ", "would_save_page": "would save page", "failed": "FAILED         ",
+    "already_had": "already had    ", "downloaded": "downloaded     ", "saved_page": "saved page     ",
+}
+
+
+class LoginRequired(RuntimeError):
+    """Headless run with an expired Blackboard session."""
+
+
+def print_event(e: dict) -> None:
+    t = e["type"]
+    if t == "courses":
+        print(f"\n{len(e['courses'])} courses on Blackboard:")
+        for c in e["courses"]:
+            print(f"  {'->' if c['folder'] else '  '} {c['name']:<45} {c['folder'] or '(skipped: no inbox folder)'}")
+        if e["probe"]:
+            print("\nProbe only: nothing downloaded. Fix wrong matches with blackboard_course_map in config.yaml.")
+    elif t == "course":
+        print(f"\n{e['folder']}: {e['files']} readable files, {e['to_download']} to download, {e['unchanged']} unchanged"
+              + (f", {e['deleted_locally']} deleted locally (left alone)" if e["deleted_locally"] else ""))
+        if e["skipped"]:
+            print("  skipped, not readable yet: " + ", ".join(f"{n} {ext}" for ext, n in e["skipped"].items()))
+    elif t == "file":
+        a = e["action"]
+        tail = (f": {e['error']}" if a == "failed"
+                else f" ({e['kb']} KB)" if a in ("downloaded", "saved_page")
+                else "  (a file with this name exists; kept if identical)" if e.get("adopt") else "")
+        print(f"  {LABEL[a]} {e['path']}{tail}")
+    elif t == "done":
+        if e["mode"] == "sync":
+            print(f"\nDone: {e['files']} files, {e['bytes'] / 1_048_576:.1f} MB. "
+                  "The backend indexes them automatically if it's running.")
+    elif t == "login_waiting":
+        print("Log in to Blackboard in the browser window that just opened. Waiting…", flush=True)
+    elif t == "logged_in":
+        print("Logged in.", flush=True)
+    elif t == "login_required":
+        print("Blackboard session expired. Run once without --headless to log in.")
+    elif t == "error":
+        print(e["message"])
+
+
+def json_event(e: dict) -> None:
+    print(json.dumps(e, ensure_ascii=False), flush=True)
+
+
 def my_courses(api: BlackboardAPI) -> list[dict]:
     me = api.get(f"{API}/users/me?fields=id")
     rows = paged(api, f"{API}/users/{me['id']}/courses?expand=course&limit=100"
@@ -275,7 +325,8 @@ def my_courses(api: BlackboardAPI) -> list[dict]:
     ]
 
 
-def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, include_unmapped: bool) -> int:
+def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, include_unmapped: bool,
+        emit=print_event) -> int:
     s = get_settings()
     inbox = s.inbox
     folders = sorted(p.name for p in inbox.iterdir() if p.is_dir())
@@ -288,11 +339,11 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
             folder = safe_segment(clean_course_name(c["name"]))
         mapping.append((c, folder))
 
-    print(f"\n{len(courses)} courses on Blackboard:")
-    for c, folder in mapping:
-        print(f"  {'->' if folder else '  '} {clean_course_name(c['name']):<45} {folder or '(skipped: no inbox folder)'}")
+    mode = "probe" if probe else "preview" if dry_run else "sync"
+    emit({"type": "courses", "probe": probe,
+          "courses": [{"name": clean_course_name(c["name"]), "folder": folder} for c, folder in mapping]})
     if probe:
-        print("\nProbe only: nothing downloaded. Fix wrong matches with blackboard_course_map in config.yaml.")
+        emit({"type": "done", "mode": mode, "files": 0, "bytes": 0})
         return 0
 
     state = load_state()
@@ -303,14 +354,14 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
         skipped: Counter = Counter()
         files = list(walk(api, c["id"], skipped, folder))
         plan = plan_course(files, inbox / folder, state, inbox)
-        print(f"\n{folder}: {len(files)} readable files, {len(plan.download)} to download, "
-              f"{plan.unchanged} unchanged" + (f", {plan.deleted_locally} deleted locally (left alone)" if plan.deleted_locally else ""))
-        if skipped:
-            print("  skipped, not readable yet: " + ", ".join(f"{n} {ext}" for ext, n in skipped.most_common()))
+        emit({"type": "course", "folder": folder, "files": len(files), "to_download": len(plan.download),
+              "unchanged": plan.unchanged, "deleted_locally": plan.deleted_locally,
+              "skipped": dict(skipped.most_common())})
         for f, target, adopt in plan.download:
             rel = target.relative_to(inbox).as_posix()
             if dry_run:
-                print(f"  {'would save page' if f.text else 'would download '} {rel}" + ("  (a file with this name exists; kept if identical)" if adopt else ""))
+                emit({"type": "file", "folder": folder, "path": rel, "adopt": adopt,
+                      "action": "would_save_page" if f.text else "would_download"})
                 continue
             try:
                 if f.text is not None:
@@ -319,13 +370,13 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
                     data = api.download(f.url or f"{API}/courses/{f.course_id}/contents/{f.content_id}"
                                                  f"/attachments/{f.attachment_id}/download")
             except Exception as e:  # keep going; the next run retries it
-                print(f"  FAILED          {rel}: {e}")
+                emit({"type": "file", "folder": folder, "path": rel, "action": "failed", "error": str(e)})
                 continue
             if adopt:
                 if target.read_bytes() == data:
                     state[f.key] = {"path": rel, "modified": f.modified}
                     save_state(state)
-                    print(f"  already had     {rel}")
+                    emit({"type": "file", "folder": folder, "path": rel, "action": "already_had"})
                     continue
                 target = with_id(target, f)
                 rel = target.relative_to(inbox).as_posix()
@@ -334,9 +385,9 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
             save_state(state)
             total_new += 1
             total_bytes += len(data)
-            print(f"  {'saved page     ' if f.text else 'downloaded     '} {rel} ({max(1, len(data) // 1024)} KB)")
-    if not dry_run:
-        print(f"\nDone: {total_new} files, {total_bytes / 1_048_576:.1f} MB. The backend indexes them automatically if it's running.")
+            emit({"type": "file", "folder": folder, "path": rel, "kb": max(1, len(data) // 1024),
+                  "action": "saved_page" if f.text else "downloaded"})
+    emit({"type": "done", "mode": mode, "files": total_new, "bytes": total_bytes})
     return 0
 
 
@@ -364,19 +415,19 @@ class PlaywrightAPI:
     def _save_cookies(self) -> None:
         COOKIES_FILE.write_text(json.dumps(self.ctx.cookies()), encoding="utf-8")
 
-    def ensure_login(self, headless: bool = False, timeout_s: int = 600) -> None:
+    def ensure_login(self, headless: bool = False, timeout_s: int = 600, emit=print_event) -> None:
         if self._status(f"{API}/users/me?fields=id") == 200:
             return
         if headless:
-            raise SystemExit("Blackboard session expired. Run once without --headless to log in.")
+            raise LoginRequired
         page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         page.goto(f"{self.base}/ultra/course")
-        print("Log in to Blackboard in the browser window that just opened. Waiting…", flush=True)
+        emit({"type": "login_waiting"})
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             time.sleep(3)
             if self._status(f"{API}/users/me?fields=id") == 200:
-                print("Logged in.", flush=True)
+                emit({"type": "logged_in"})
                 self._save_cookies()
                 return
         raise SystemExit("Timed out waiting for Blackboard login.")
@@ -418,15 +469,27 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--course", help="only sync this module (inbox folder or course name)")
     ap.add_argument("--include-unmapped", action="store_true", help="also sync courses without an inbox folder")
     ap.add_argument("--headless", action="store_true", help="no browser window (works while the saved session is valid)")
+    ap.add_argument("--json", action="store_true", help="print one JSON event per line (used by the admin panel)")
     args = ap.parse_args(argv)
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # course names with accents on a cp1252 console
-    api = PlaywrightAPI(headless=args.headless)
+    emit = json_event if args.json else print_event
     try:
-        api.ensure_login(headless=args.headless)
+        api = PlaywrightAPI(headless=args.headless)
+    except Exception as e:  # noqa: BLE001 -- browser missing, profile locked by another run, ...: report, don't crash
+        emit({"type": "error", "message": f"Couldn't start the browser: {e}"})
+        return 1
+    try:
+        api.ensure_login(headless=args.headless, emit=emit)
         return run(api, probe=args.probe, dry_run=args.dry_run, only=args.course,
-                   include_unmapped=args.include_unmapped)
+                   include_unmapped=args.include_unmapped, emit=emit)
+    except LoginRequired:
+        emit({"type": "login_required"})
+        return 3
+    except SystemExit as e:
+        emit({"type": "error", "message": str(e)})
+        return 1
     finally:
         api.close()
 

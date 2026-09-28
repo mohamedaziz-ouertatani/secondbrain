@@ -4,6 +4,7 @@ import { InsightsCard } from "@/components/admin/InsightsCard";
 import { LibraryAdmin } from "@/components/admin/LibraryAdmin";
 import { SettingsCard } from "@/components/admin/SettingsCard";
 import { StatusCard } from "@/components/admin/StatusCard";
+import { SyncCard } from "@/components/admin/SyncCard";
 
 export default function AdminPage() {
   return (
@@ -15,6 +16,7 @@ export default function AdminPage() {
       <StatusCard />
       <InsightsCard />
       <LibraryAdmin />
+      <SyncCard />
       <SettingsCard />
     </div>
   );

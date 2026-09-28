@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
+from ..admin import sync as sync_jobs
 from ..config import get_settings
 from ..db import get_pool
 from ..ingest.parse import parse
@@ -126,4 +127,5 @@ def health() -> dict:
         db = {"ok": False, "error": str(e)}
     oll = ollama.status()
     ok = db["ok"] and oll.get("reachable") and oll.get("llm_pulled") and oll.get("embed_pulled")
-    return {"ok": bool(ok), "db": db, "ollama": oll, "inbox": str(get_settings().inbox)}
+    return {"ok": bool(ok), "db": db, "ollama": oll, "inbox": str(get_settings().inbox),
+            "blackboard_login_needed": sync_jobs.runner.login_needed()}

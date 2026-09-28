@@ -49,6 +49,7 @@ export type Health = {
   ok: boolean;
   db: { ok: boolean; error?: string };
   ollama: { reachable: boolean; llm_model?: string; llm_pulled?: boolean; embed_pulled?: boolean; error?: string };
+  blackboard_login_needed?: boolean;
 };
 
 type Locatable = { mime: string; page: number; label?: string | null };
@@ -281,4 +282,30 @@ export type CompareResult = {
     verdict_hybrid: "answer" | "refuse";
     changed: boolean;
   }[];
+};
+
+export type SyncEvent = { type: string; [k: string]: unknown };
+export type SyncAction = "downloaded" | "saved_page" | "already_had" | "would_download" | "would_save_page" | "failed";
+export type SyncJob = {
+  id: number;
+  mode: "sync" | "preview" | "probe" | "login";
+  course: string | null;
+  started_at: string;
+  finished_at: string | null;
+  state: "running" | "ok" | "login_required" | "failed" | "cancelled";
+  exit_code: number | null;
+  counts: Record<SyncAction, number>;
+  bytes: number;
+  error: string | null;
+  events?: SyncEvent[];
+  courses?: { name: string; folder: string | null }[] | null;
+};
+export type SyncStatus = {
+  job: SyncJob | null;
+  runs: SyncJob[];
+  login_needed: boolean;
+  last_full_sync: string | null;
+  next_auto: string | null;
+  auto_days: number;
+  modules: string[];
 };

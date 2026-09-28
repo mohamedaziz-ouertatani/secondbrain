@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .admin.sync import AutoSync, runner
 from .api.admin import router as admin_router
 from .api.routes import router
 from .config import get_settings
@@ -21,7 +22,11 @@ async def lifespan(app: FastAPI):
     get_pool()
     watcher = InboxWatcher()
     watcher.start()
+    autosync = AutoSync()
+    autosync.start()
     yield
+    autosync.stop()
+    runner.cancel()  # a running sync must not outlive the backend
     watcher.stop()
     close_pool()
 

@@ -102,6 +102,11 @@ export function Rail() {
         <Link href="/admin" className="health-link" aria-current={pathname.startsWith("/admin") ? "page" : undefined}>
           <HealthLine health={health} />
         </Link>
+        {health && health !== "down" && health.blackboard_login_needed && (
+          <Link href="/admin#sync" className="bb-login">
+            Blackboard: log in needed
+          </Link>
+        )}
         {docs && docs.length > 0 && <span className="filed">Last fiche filed {ago(newestFiled(docs))}</span>}
       </footer>
     </nav>
