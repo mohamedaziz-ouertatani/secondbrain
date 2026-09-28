@@ -1,6 +1,6 @@
 # Second Brain configuration. Env vars (see .env.example) override these.
 database_url: postgresql://secondbrain:secondbrain@localhost:5433/secondbrain
-ollama_url: http://localhost:11434
+ollama_url: http://127.0.0.1:11434   # not localhost: on Windows it tries IPv6 first and waits ~2 s
 
 # Models (4 GB VRAM: keep the LLM around 4B at Q4)
 llm_model: qwen3:4b-instruct   # non-thinking; alternatives: qwen2.5:3b, qwen2.5:7b-instruct (CPU offload)
