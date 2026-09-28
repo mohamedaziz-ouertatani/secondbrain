@@ -21,6 +21,7 @@
   --bad: #b3261e;
   --good: #2e6b3a;
   --sel: #cfe0f0;
+  --chart: #2a6db0; /* data marks; validated by the dataviz checker against --card (band, chroma, >= 3:1) */
   --hole-lip: rgb(255 255 255 / 0.85);
   --shadow: 0 1px 2px rgb(29 37 41 / 0.08), 0 4px 14px rgb(29 37 41 / 0.07);
   --shadow-pulled: 0 2px 4px rgb(29 37 41 / 0.1), 0 12px 28px rgb(29 37 41 / 0.16);
@@ -57,6 +58,7 @@
     --primary: #8fb8e8;
     --on-primary: #0b1520;
     --focus: #8fb8e8;
+    --chart: #4a8fe0; /* validated against the dark --card */
     --bad: #ff8a80;
     --good: #8fd19e;
     --sel: #2e4a63;
@@ -1949,4 +1951,121 @@ td {
   .setting select {
     width: 100%;
   }
+}
+
+/* ---- admin insights ---------------------------------------------------------------------- */
+.tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected="true"] {
+  border-color: var(--rule-blue);
+  background: var(--card-2);
+  color: var(--ink);
+}
+
+/* trend: two small multiples over one day axis (never a dual axis) */
+.trend {
+  margin: 0;
+}
+
+.trend-readout {
+  margin: 0 0 0.4rem;
+  min-height: 1.5em;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-title {
+  margin: 0.4rem 0 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.trend svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.trend .bar {
+  fill: var(--chart);
+}
+
+.trend .grid {
+  stroke: var(--rule-blue);
+  stroke-dasharray: 2 3;
+}
+
+.trend .axis {
+  stroke: var(--muted);
+}
+
+.trend .hover-col {
+  fill: var(--card-2);
+}
+
+.trend .hit {
+  fill: transparent;
+}
+
+.trend .tick {
+  font-size: 11px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.2rem 0 0;
+  padding-inline-start: calc(40 / 640 * 100%);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.trend-table {
+  margin-top: 0.5rem;
+  font-size: 0.86rem;
+}
+
+.trend-table summary {
+  cursor: pointer;
+  color: var(--primary);
+}
+
+.problem-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.problem-link:hover strong {
+  color: var(--primary);
+}
+
+.diff {
+  font-size: 0.84rem;
+}
+
+.diff.add {
+  color: var(--good);
+}
+
+.diff.drop {
+  color: var(--muted);
+  text-decoration: line-through;
 }
