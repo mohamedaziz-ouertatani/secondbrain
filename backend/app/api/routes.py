@@ -1,5 +1,4 @@
 import json
-import threading
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Response
@@ -13,6 +12,7 @@ from ..ingest.pipeline import rescan
 from ..llm import ollama
 from ..rag.answer import ask
 from ..rag.history import delete_history, get_history, list_history
+from .jobs import exclusive
 
 router = APIRouter()
 
@@ -110,17 +110,10 @@ def file(doc_id: int) -> FileResponse:
     return FileResponse(path, media_type=mime, content_disposition_type="inline", filename=Path(row["path"]).name)
 
 
-_rescan_lock = threading.Lock()
-
-
 @router.post("/ingest/rescan")
 def rescan_endpoint() -> dict:
-    if not _rescan_lock.acquire(blocking=False):
-        raise HTTPException(409, "rescan already running")
-    try:
+    with exclusive("rescan"):
         return rescan()
-    finally:
-        _rescan_lock.release()
 
 
 @router.get("/health")

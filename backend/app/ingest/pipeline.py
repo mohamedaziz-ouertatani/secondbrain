@@ -46,18 +46,25 @@ def is_supported(path: Path) -> bool:
 
 
 def ingest_file(
-    path: Path, embedder: Embedder = ollama.embed, counter: TokenCounter | None = None
+    path: Path, embedder: Embedder | None = None, counter: TokenCounter | None = None, force: bool = False
 ) -> str:
-    """Ingest or re-ingest one file. Returns 'skipped' | 'ok' | 'empty_text' | 'error'."""
+    """Ingest or re-ingest one file. Returns 'skipped' | 'excluded' | 'ok' | 'empty_text' | 'error'.
+
+    force re-ingests even when the file and parser are unchanged (admin "Re-index").
+    """
     s = get_settings()
     rel = rel_path(path)
+    embedder = embedder or ollama.embed  # looked up per call so tests can swap it
     with _lock:
+        if is_excluded(rel):
+            return "excluded"
         digest = sha256_of(path)
         with get_pool().connection() as conn:
             row = conn.execute(
                 "SELECT sha256, status, parser_version FROM documents WHERE path = %s", (rel,)
             ).fetchone()
-        if row and row["sha256"] == digest and row["status"] != "error" and row["parser_version"] == PARSER_VERSION:
+        if (not force and row and row["sha256"] == digest and row["status"] != "error"
+                and row["parser_version"] == PARSER_VERSION):
             return "skipped"
 
         mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
@@ -113,7 +120,56 @@ def remove_file(path: Path) -> bool:
     return bool(n)
 
 
-def rescan(embedder: Embedder = ollama.embed, counter: TokenCounter | None = None) -> dict[str, int]:
+def is_excluded(rel: str) -> bool:
+    with get_pool().connection() as conn:
+        return conn.execute("SELECT 1 FROM excluded_paths WHERE path = %s", (rel,)).fetchone() is not None
+
+
+def exclude(rel: str) -> bool:
+    """Leave the file on disk but take it out of the index for good. True if a document was removed."""
+    with _lock, get_pool().connection() as conn, conn.transaction():
+        conn.execute("INSERT INTO excluded_paths (path) VALUES (%s) ON CONFLICT DO NOTHING", (rel,))
+        removed = conn.execute("DELETE FROM documents WHERE path = %s", (rel,)).rowcount > 0
+    log.info("excluded %s", rel)
+    return removed
+
+
+def include(rel: str, embedder: Embedder | None = None, counter: TokenCounter | None = None) -> str | None:
+    """Undo exclude and ingest the file again. None if it wasn't excluded, 'missing' if it's not on disk."""
+    with _lock, get_pool().connection() as conn:
+        if conn.execute("DELETE FROM excluded_paths WHERE path = %s", (rel,)).rowcount == 0:
+            return None
+    path = get_settings().inbox / rel
+    if not (path.is_file() and is_supported(path)):
+        return "missing"
+    return ingest_file(path, embedder, counter)
+
+
+def reindex(
+    rel: str | None = None, course: str | None = None,
+    embedder: Embedder | None = None, counter: TokenCounter | None = None,
+) -> dict[str, int]:
+    """Re-parse and re-embed one file or every file of one module, even if unchanged."""
+    inbox = get_settings().inbox
+    files = [inbox / rel] if rel else sorted(p for p in (inbox / course).rglob("*") if p.is_file() and is_supported(p))
+    stats: dict[str, int] = {}
+    for p in files:
+        result = ingest_file(p, embedder, counter, force=True)
+        stats[result] = stats.get(result, 0) + 1
+    return stats
+
+
+def remove_folder(path: Path) -> int:
+    """A module folder was deleted or renamed: drop every document under it."""
+    prefix = rel_path(path) + "/"
+    with _lock, get_pool().connection() as conn:
+        n = conn.execute("DELETE FROM documents WHERE starts_with(path, %s)", (prefix,)).rowcount
+    if n:
+        log.info("removed folder %s (%d documents)", prefix, n)
+    return n
+
+
+def rescan(embedder: Embedder | None = None, counter: TokenCounter | None = None) -> dict[str, int]:
     """Ingest new/changed files and drop documents whose file is gone."""
     inbox = get_settings().inbox
     inbox.mkdir(parents=True, exist_ok=True)
@@ -121,8 +177,9 @@ def rescan(embedder: Embedder = ollama.embed, counter: TokenCounter | None = Non
     seen: set[str] = set()
     for p in sorted(inbox.rglob("*")):
         if p.is_file() and is_supported(p):
-            seen.add(rel_path(p))
             result = ingest_file(p, embedder, counter)
+            if result != "excluded":  # an excluded file counts as gone, so a stale row is dropped
+                seen.add(rel_path(p))
             stats[result] = stats.get(result, 0) + 1
     with _lock, get_pool().connection() as conn:
         paths = [r["path"] for r in conn.execute("SELECT path FROM documents")]

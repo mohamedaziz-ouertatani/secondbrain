@@ -1625,3 +1625,214 @@ td {
   margin: 1.25rem auto 0;
   display: flex;
 }
+
+/* ---- admin: the cabinet's own record cards ------------------------------------------------ */
+.health-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+  margin: -0.15rem -0.3rem;
+  padding: 0.15rem 0.3rem;
+  transition: background-color 160ms var(--ease);
+}
+
+.health-link:hover,
+.health-link[aria-current="page"] {
+  background: var(--steel-2);
+}
+
+.admin-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-card {
+  background: var(--card);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem 1.1rem;
+}
+
+.admin-card h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.admin-card h3 {
+  margin: 1.4rem 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.admin-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  margin: 0;
+}
+
+.kv dt,
+.kv dd {
+  margin: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.kv dt:last-of-type,
+.kv dd:last-of-type {
+  border-bottom: 0;
+}
+
+.kv dt {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.kv dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.9rem;
+}
+
+.kv dd.ok {
+  color: var(--good);
+}
+
+.kv dd.bad {
+  color: var(--bad);
+}
+
+.vram {
+  width: 12rem;
+  height: 0.55rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--rule-blue);
+  text-align: start;
+  font-weight: 400;
+}
+
+.admin-table thead th {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.admin-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.label-card {
+  display: inline-block;
+  min-width: 3.4rem;
+  padding: 0.08rem 0.35rem 0.03rem;
+  border-radius: 2px;
+  background: var(--tint);
+  color: var(--ink);
+  font-family: var(--type);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.admin-list li:last-child {
+  border-bottom: 0;
+}
+
+.admin-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.admin-item .callno {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-actions,
+.admin-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-note {
+  font-size: 0.82rem;
+  color: var(--good);
+}
+
+.action-note.bad {
+  color: var(--bad);
+}
+
+@media (max-width: 860px) {
+  .kv {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kv dt {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .admin-list li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3) {
+    display: none; /* chunks: the least useful column on a phone */
+  }
+  .admin-card {
+    padding: 0.9rem 0.85rem 1rem;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding-inline: 0.3rem;
+  }
+  .admin-table .quiet-btn {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+.admin-card .quiet-btn {
+  white-space: nowrap;
+}

@@ -9,7 +9,7 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from ..config import get_settings
-from .pipeline import ingest_file, is_supported, remove_file, rescan
+from .pipeline import ingest_file, is_supported, remove_file, remove_folder, rescan
 
 log = logging.getLogger(__name__)
 
@@ -17,12 +17,32 @@ DEBOUNCE_S = 2.0
 MAX_RETRIES = 5
 
 
+def _is_folder(event: FileSystemEvent) -> bool:
+    """Windows can't stat a path that's gone, so watchdog reports a deleted folder as a *file* delete.
+    Only supported extensions are files to us, so any other vanished path is treated as a folder
+    (if it was an unrelated file, dropping its prefix matches nothing)."""
+    if event.is_directory:
+        return True
+    if event.event_type == "deleted":
+        return not is_supported(Path(event.src_path))
+    if event.event_type == "moved":
+        return Path(event.dest_path).is_dir()
+    return False
+
+
 class _Handler(FileSystemEventHandler):
     def __init__(self, watcher: "InboxWatcher"):
         self.w = watcher
 
     def on_any_event(self, event: FileSystemEvent) -> None:
-        if event.is_directory:
+        if _is_folder(event):
+            # A module folder deleted, renamed or pasted in can arrive as one directory event (Windows).
+            if event.event_type in ("deleted", "moved"):
+                self.w.folder_gone(Path(event.src_path))
+            if event.event_type == "moved":
+                self.w.touch_tree(Path(event.dest_path))
+            elif event.event_type == "created":
+                self.w.touch_tree(Path(event.src_path))
             return
         # The worker decides ingest vs. remove by whether the path still exists.
         if event.event_type in ("created", "modified", "closed", "deleted", "moved"):
@@ -46,6 +66,17 @@ class InboxWatcher:
         with self._cv:
             self._pending[path] = (time.monotonic(), retries)
             self._cv.notify()
+
+    def touch_tree(self, folder: Path) -> None:
+        for p in folder.rglob("*"):
+            if p.is_file():
+                self.touch(p)
+
+    def folder_gone(self, folder: Path) -> None:
+        try:
+            remove_folder(folder)
+        except Exception:
+            log.exception("failed to drop folder %s", folder)
 
     def start(self) -> None:
         self.inbox.mkdir(parents=True, exist_ok=True)

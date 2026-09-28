@@ -43,7 +43,7 @@ export function Rail() {
       </Link>
 
       <div className="views">
-        <Link href={drawerHref("/", drawer)} aria-current={base === "/" ? "page" : undefined}>
+        <Link href={drawerHref("/", drawer)} aria-current={pathname === "/" ? "page" : undefined}>
           <PenLine size={16} aria-hidden /> Ask
         </Link>
         <Link href={drawerHref("/documents", drawer)} aria-current={base === "/documents" ? "page" : undefined}>
@@ -99,7 +99,9 @@ export function Rail() {
       </div>
 
       <footer className="health" role="status">
-        <HealthLine health={health} />
+        <Link href="/admin" className="health-link" aria-current={pathname.startsWith("/admin") ? "page" : undefined}>
+          <HealthLine health={health} />
+        </Link>
         {docs && docs.length > 0 && <span className="filed">Last fiche filed {ago(newestFiled(docs))}</span>}
       </footer>
     </nav>

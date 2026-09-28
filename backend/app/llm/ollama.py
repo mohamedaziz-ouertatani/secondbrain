@@ -119,3 +119,12 @@ def status() -> dict:
         "embed_model": s.embed_model,
         "embed_pulled": pulled(s.embed_model),
     }
+
+
+def loaded() -> list[dict] | None:
+    """Models Ollama holds in memory (/api/ps), with size and size_vram; None if Ollama is unreachable."""
+    try:
+        with _client(timeout=5) as c:
+            return c.get("/api/ps").json().get("models", [])
+    except httpx.HTTPError:
+        return None
