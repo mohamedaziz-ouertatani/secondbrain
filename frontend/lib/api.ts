@@ -177,3 +177,44 @@ export async function deleteHistory(id: number): Promise<boolean> {
     return false;
   }
 }
+
+export type AdminStatus = {
+  services: { db: { ok: boolean; error?: string }; ollama: Health["ollama"] } | null;
+  llm:
+    | { loaded: false; model: string }
+    | { loaded: true; model: string; gpu_share: number; expires_at: string | null }
+    | null;
+  gpu: { available: false } | { available: true; name: string; used_mib: number; total_mib: number };
+  answers: { count: number; median_ms: number | null; max_ms: number | null; last_at: string | null } | null;
+  index: { documents: number; chunks: number; excluded: number; db_bytes: number } | null;
+};
+
+export type AdminLibrary = {
+  modules: { course: string | null; documents: number; chunks: number; problems: number }[];
+  problems: {
+    id: number;
+    path: string;
+    title: string;
+    course: string | null;
+    status: "empty_text" | "error";
+    error: string | null;
+  }[];
+  excluded: { path: string; excluded_at: string; on_disk: boolean }[];
+};
+
+/** POST JSON; throws with the backend's `detail` so the UI can show why an action failed. */
+export async function postJSON<T>(path: string, body: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(`Can't reach the backend at ${API_URL}.`);
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.detail ?? `${path} returned ${res.status}`);
+  return data as T;
+}

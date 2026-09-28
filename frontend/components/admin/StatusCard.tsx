@@ -1,0 +1,106 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { type AdminStatus, getJSON } from "@/lib/api";
+import { ago } from "@/lib/seen";
+
+const POLL_MS = 10_000;
+const secs = (ms: number | null) => (ms === null ? "–" : `${(ms / 1000).toFixed(1)} s`);
+const mb = (bytes: number) => `${(bytes / 2 ** 20).toFixed(0)} MB`;
+
+function servicesLine(s: AdminStatus["services"]): { ok: boolean; text: string } {
+  if (!s) return { ok: false, text: "Couldn't check the services." };
+  if (!s.db.ok) return { ok: false, text: "Database offline. Run docker compose up." };
+  if (!s.ollama.reachable) return { ok: false, text: "Ollama isn't running. Start it from the tray or run ollama serve." };
+  if (!s.ollama.llm_pulled || !s.ollama.embed_pulled)
+    return { ok: false, text: "A model isn't pulled yet. See the README setup." };
+  return { ok: true, text: "Database, Ollama and both models ready" };
+}
+
+function llmLine(l: AdminStatus["llm"]): string {
+  if (l === null) return "Unknown: Ollama isn't answering";
+  if (!l.loaded) return `${l.model} · not loaded (the next question loads it, ~10 s)`;
+  const until = l.expires_at
+    ? ` · unloads ${new Date(l.expires_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+    : "";
+  return `${l.model} · ${Math.round(l.gpu_share * 100)}% on the GPU${until}`;
+}
+
+/** System status, refreshed every 10 s while the tab is visible. */
+export function StatusCard() {
+  const [s, setS] = useState<AdminStatus | null>(null);
+  const [down, setDown] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () => {
+      if (document.visibilityState !== "visible") return;
+      getJSON<AdminStatus>("/admin/status")
+        .then((v) => {
+          if (!alive) return;
+          setS(v);
+          setDown(false);
+        })
+        .catch(() => alive && setDown(true));
+    };
+    load();
+    const t = window.setInterval(load, POLL_MS);
+    document.addEventListener("visibilitychange", load);
+    return () => {
+      alive = false;
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", load);
+    };
+  }, []);
+
+  if (down && !s) return <p className="notice bad">Backend offline. Start it with uvicorn.</p>;
+  if (!s) return <p className="muted">Checking the cabinet…</p>;
+
+  const svc = servicesLine(s.services);
+  const gpu = s.gpu;
+  return (
+    <section className="admin-card" aria-labelledby="status-h">
+      <h2 id="status-h">Status</h2>
+      {down && <p className="notice bad">Lost the backend. Showing the last reading.</p>}
+      <dl className="kv">
+        <dt>Services</dt>
+        <dd className={svc.ok ? "ok" : "bad"}>{svc.text}</dd>
+
+        <dt>LLM</dt>
+        <dd>{llmLine(s.llm)}</dd>
+
+        <dt>GPU</dt>
+        <dd>
+          {gpu.available ? (
+            <>
+              <span>
+                {gpu.name} · {gpu.used_mib} / {gpu.total_mib} MiB
+              </span>
+              <meter className="vram" min={0} max={gpu.total_mib} value={gpu.used_mib} high={gpu.total_mib * 0.9}>
+                {Math.round((gpu.used_mib / gpu.total_mib) * 100)}%
+              </meter>
+            </>
+          ) : (
+            "Unavailable (nvidia-smi not found)"
+          )}
+        </dd>
+
+        <dt>Answers</dt>
+        <dd>
+          {!s.answers
+            ? "–"
+            : s.answers.count === 0
+              ? "No questions asked yet"
+              : `Median ${secs(s.answers.median_ms)}, slowest ${secs(s.answers.max_ms)} over the last ${s.answers.count} · last asked ${ago(s.answers.last_at)}`}
+        </dd>
+
+        <dt>Index</dt>
+        <dd>
+          {s.index
+            ? `${s.index.documents} documents · ${s.index.chunks} chunks · ${s.index.excluded} excluded · ${mb(s.index.db_bytes)} on disk`
+            : "–"}
+        </dd>
+      </dl>
+    </section>
+  );
+}
