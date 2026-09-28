@@ -138,3 +138,11 @@ def loaded() -> list[dict] | None:
         return _client().get("/api/ps", timeout=5).json().get("models", [])
     except httpx.HTTPError:
         return None
+
+
+def pulled() -> list[str] | None:
+    """Names of the models Ollama has pulled, sorted; None if Ollama is unreachable."""
+    try:
+        return sorted(m["name"] for m in _client().get("/api/tags", timeout=5).json().get("models", []))
+    except httpx.HTTPError:
+        return None

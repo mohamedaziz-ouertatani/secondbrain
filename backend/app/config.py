@@ -1,22 +1,25 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import (
     BaseSettings,
+    DotEnvSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+BASE_CONFIG = ROOT / "config.yaml"
+LOCAL_CONFIG = ROOT / "config.local.yaml"  # written by the admin panel; git-ignored
+ENV_FILE = ROOT / ".env"
 
 
 class Settings(BaseSettings):
-    """Precedence: env vars > .env > config.yaml > defaults below."""
+    """Precedence: env vars > .env > config.local.yaml (admin panel) > config.yaml > defaults below."""
 
-    model_config = SettingsConfigDict(
-        env_file=ROOT / ".env", yaml_file=ROOT / "config.yaml", extra="ignore"
-    )
+    model_config = SettingsConfigDict(extra="ignore")
 
     database_url: str = "postgresql://secondbrain:secondbrain@localhost:5433/secondbrain"
     ollama_url: str = "http://127.0.0.1:11434"  # not localhost: on Windows that tries IPv6 first (~2 s)
@@ -34,7 +37,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 80
     embed_batch: int = 16
 
-    retrieval_mode: str = "dense"  # or "hybrid"
+    retrieval_mode: Literal["dense", "hybrid"] = "dense"
     top_k: int = 5
     candidate_k: int = 20  # per list, before fusion
     rrf_k: int = 60
@@ -52,7 +55,14 @@ class Settings(BaseSettings):
     def settings_customise_sources(
         cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (init_settings, env_settings, dotenv_settings, YamlConfigSettingsSource(settings_cls))
+        # module globals, read per call, so tests can point them at temp files
+        return (
+            init_settings,
+            env_settings,
+            DotEnvSettingsSource(settings_cls, env_file=ENV_FILE),
+            YamlConfigSettingsSource(settings_cls, yaml_file=LOCAL_CONFIG),
+            YamlConfigSettingsSource(settings_cls, yaml_file=BASE_CONFIG),
+        )
 
     @property
     def inbox(self) -> Path:

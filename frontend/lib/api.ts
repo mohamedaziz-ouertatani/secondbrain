@@ -202,19 +202,83 @@ export type AdminLibrary = {
   excluded: { path: string; excluded_at: string; on_disk: boolean }[];
 };
 
-/** POST JSON; throws with the backend's `detail` so the UI can show why an action failed. */
-export async function postJSON<T>(path: string, body: unknown): Promise<T> {
+/** An API error that keeps FastAPI's `detail` (a string, or a {field: reason} map for settings). */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public detail: unknown,
+  ) {
+    super(message);
+  }
+}
+
+export async function sendJSON<T>(method: "POST" | "PUT", path: string, body: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error(`Can't reach the backend at ${API_URL}.`);
+    throw new ApiError(`Can't reach the backend at ${API_URL}.`, 0, null);
   }
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.detail ?? `${path} returned ${res.status}`);
+  if (!res.ok) {
+    const detail = data?.detail;
+    throw new ApiError(typeof detail === "string" ? detail : `${path} returned ${res.status}`, res.status, detail);
+  }
   return data as T;
 }
+
+/** POST JSON; throws with the backend's `detail` so the UI can show why an action failed. */
+export function postJSON<T>(path: string, body: unknown): Promise<T> {
+  return sendJSON<T>("POST", path, body);
+}
+
+export type SettingRow = {
+  key: string;
+  label: string;
+  value: string | number;
+  source: "env" | "local" | "config" | "default";
+  locked_by: string | null;
+  editable: boolean;
+  control: "int" | "float" | "choice" | "text";
+  help: string;
+  min: number | null;
+  max: number | null;
+  options: string[] | null;
+};
+
+export type SettingsView = {
+  groups: { name: string; rows: SettingRow[] }[];
+  readonly: { key: string; value: string; reason: string }[];
+};
+
+export type InsightsSummary = {
+  questions: number;
+  refused: number;
+  invalid: number;
+  failed: number;
+  median_ms: number | null;
+  max_ms: number | null;
+  per_module: { course: string | null; questions: number; refused: number }[];
+  per_day: { day: string; questions: number; median_ms: number | null }[];
+};
+
+export type ProblemRow = { id: number; ts: string; question: string; course: string | null; latency_ms: number | null };
+
+export type ComparedHit = { chunk_id: number; title: string; page: number; label: string | null; score: number };
+export type CompareResult = {
+  summary: { questions: number; changed: number; flipped: number };
+  rows: {
+    question: string;
+    course: string | null;
+    dense: ComparedHit[];
+    hybrid: ComparedHit[];
+    verdict_dense: "answer" | "refuse";
+    verdict_hybrid: "answer" | "refuse";
+    changed: boolean;
+  }[];
+};

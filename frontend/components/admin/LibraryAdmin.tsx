@@ -82,7 +82,7 @@ export function LibraryAdmin() {
         </span>
       </header>
 
-      <table className="admin-table">
+      <table className="admin-table library-table">
         <thead>
           <tr>
             <th scope="col">Module</th>
