@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pymupdf
+
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -101,6 +103,26 @@ def document_pages(doc_id: int) -> dict:
             for i, (text, label) in enumerate(zip(parsed.pages, labels, strict=True), start=1)
         ],
     }
+
+
+# Rendered width in pixels, whatever the page size (slides are small, A4 is not): about twice the
+# reader column, so formulas and small print stay sharp on a high-density screen.
+PAGE_WIDTH_PX = 1400
+
+
+@router.get("/documents/{doc_id}/pages/{page}.png")
+def document_page_image(doc_id: int, page: int) -> Response:
+    """One PDF page as an image: the extracted text flattens formulas, the page itself doesn't."""
+    row, path = _document_file(doc_id)
+    if row["mime"] != "application/pdf":
+        raise HTTPException(404, "not a PDF")
+    with pymupdf.open(path) as doc:
+        if not 1 <= page <= doc.page_count:
+            raise HTTPException(404, "page not found")
+        pg = doc[page - 1]
+        zoom = PAGE_WIDTH_PX / pg.rect.width
+        png = pg.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False).tobytes("png")
+    return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
 
 
 @router.get("/files/{doc_id}")
