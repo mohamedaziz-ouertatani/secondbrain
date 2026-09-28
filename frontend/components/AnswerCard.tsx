@@ -7,6 +7,8 @@ import { tintVar } from "@/lib/modules";
 
 export type Entry = {
   id: string;
+  /** query_log id; set once the answer is saved, so it can be deleted. */
+  logId?: number;
   question: string;
   course: string | null;
   text: string;

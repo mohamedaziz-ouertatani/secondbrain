@@ -1425,3 +1425,30 @@ td {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- undo slip: a small card that sits at the foot of the viewport after a delete ---------- */
+.undo-note {
+  position: fixed;
+  inset-block-end: 1.25rem;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.45rem 0.5rem 0.45rem 0.9rem;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+
+.undo-note[hidden] {
+  display: none;
+}
+
+.undo-note.bad {
+  color: var(--bad);
+  padding-inline-end: 0.9rem;
+}
