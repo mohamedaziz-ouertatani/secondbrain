@@ -1836,3 +1836,117 @@ td {
 .admin-card .quiet-btn {
   white-space: nowrap;
 }
+
+/* ---- admin settings: one ruled row per setting ------------------------------------------ */
+.kv.settings {
+  display: block;
+}
+
+.setting {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: 0.2rem 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.setting:last-child {
+  border-bottom: 0;
+}
+
+.setting dt,
+.setting dd {
+  border: 0;
+  padding: 0;
+}
+
+.setting dt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.setting dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.setting input,
+.setting select {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  width: 12rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.setting input:disabled,
+.setting select:disabled {
+  background: var(--card-2);
+  color: var(--muted);
+}
+
+.setting .help {
+  flex-basis: 100%;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.source {
+  font-family: var(--type);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.source.local {
+  color: var(--primary);
+}
+
+.source.env {
+  color: var(--bad);
+}
+
+.field-error {
+  flex-basis: 100%;
+  font-size: 0.84rem;
+  color: var(--bad);
+}
+
+.text-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.84rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.readonly summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.readonly code {
+  font-family: var(--type);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 860px) {
+  .setting {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting input,
+  .setting select {
+    width: 100%;
+  }
+}

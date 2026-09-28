@@ -1,6 +1,7 @@
 "use client";
 
 import { LibraryAdmin } from "@/components/admin/LibraryAdmin";
+import { SettingsCard } from "@/components/admin/SettingsCard";
 import { StatusCard } from "@/components/admin/StatusCard";
 
 export default function AdminPage() {
@@ -12,6 +13,7 @@ export default function AdminPage() {
       </header>
       <StatusCard />
       <LibraryAdmin />
+      <SettingsCard />
     </div>
   );
 }
