@@ -5,6 +5,7 @@ from .lang import NAMES, detect
 SYSTEM = """You answer questions using ONLY the numbered sources below.
 Rules:
 - Cite every claim with its source number in brackets, e.g. [1] or [2][3].
+- Write every formula in LaTeX between dollar signs: $x^2$ inline, $$\\frac{{a}}{{b}}$$ on its own line.
 - If the sources do not contain the answer, say you could not find it in the notes.
 - Answer in {language}.
 - Be concise."""
