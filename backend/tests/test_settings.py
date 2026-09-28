@@ -1,7 +1,7 @@
 import pytest
 
 KEYS = ("top_k", "candidate_k", "rrf_k", "min_score", "retrieval_mode", "llm_model",
-        "temperature", "num_ctx", "llm_keep_alive", "embed_model")
+        "temperature", "num_ctx", "llm_keep_alive", "embed_model", "sync_auto_days")
 
 
 @pytest.fixture
@@ -97,7 +97,7 @@ def test_routes(cfg):
 
     client = TestClient(create_app())
     v = client.get("/admin/settings").json()
-    assert [g["name"] for g in v["groups"]] == ["Retrieval", "Answers"]
+    assert [g["name"] for g in v["groups"]] == ["Retrieval", "Answers", "Blackboard"]
     model = next(r for r in v["groups"][1]["rows"] if r["key"] == "llm_model")
     assert model["options"] == ["qwen2.5:3b", "qwen3:4b-instruct"]
     assert {r["key"] for r in v["readonly"]} >= {"embed_model", "database_url", "watch_dir"}

@@ -32,3 +32,4 @@ blackboard_browser: msedge
 # blackboard_course_map:
 #   "Big Data Analytics - 5DS2": "Big Data Analytics"
 blackboard_course_map: {}
+sync_auto_days: 7        # the backend syncs on its own this often (days); 0 = never. Also editable in /admin

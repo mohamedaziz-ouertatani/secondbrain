@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     blackboard_browser: str = "msedge"  # or "chrome": an installed browser, so no Playwright download
     blackboard_course_map: dict[str, str] = {}  # Blackboard course name or id -> inbox folder
     blackboard_delay: float = 0.5  # seconds between API requests
+    sync_auto_days: int = 7  # days between automatic syncs from the backend; 0 turns them off
 
     @classmethod
     def settings_customise_sources(
