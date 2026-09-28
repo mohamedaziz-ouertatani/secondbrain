@@ -2,7 +2,7 @@ import json
 import threading
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -12,6 +12,7 @@ from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
 from ..rag.answer import ask
+from ..rag.history import delete_history, get_history, list_history
 
 router = APIRouter()
 
@@ -46,6 +47,26 @@ def courses() -> list[str]:
     with get_pool().connection() as conn:
         rows = conn.execute("SELECT DISTINCT course FROM documents WHERE course IS NOT NULL ORDER BY course")
         return [r["course"] for r in rows]
+
+
+@router.get("/history")
+def history(course: str | None = None, q: str | None = None, before: int | None = None, limit: int = 50) -> list[dict]:
+    return list_history(course or None, (q or "").strip() or None, before, limit)
+
+
+@router.get("/history/{log_id}")
+def history_item(log_id: int) -> dict:
+    row = get_history(log_id)
+    if not row:
+        raise HTTPException(404, "message not found")
+    return row
+
+
+@router.delete("/history/{log_id}", status_code=204)
+def history_delete(log_id: int) -> Response:
+    if not delete_history(log_id):
+        raise HTTPException(404, "message not found")
+    return Response(status_code=204)
 
 
 def _document_file(doc_id: int, columns: str = "path, mime") -> tuple[dict, Path]:
