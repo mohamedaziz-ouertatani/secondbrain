@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { type AdminStatus, getJSON } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
+import { type AdminStatus, getJSON, postJSON } from "@/lib/api";
 import { ago } from "@/lib/seen";
 
 const POLL_MS = 10_000;
@@ -30,28 +30,42 @@ function llmLine(l: AdminStatus["llm"]): string {
 export function StatusCard() {
   const [s, setS] = useState<AdminStatus | null>(null);
   const [down, setDown] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [backupNote, setBackupNote] = useState<{ text: string; bad?: boolean } | null>(null);
+
+  const load = useCallback(() => {
+    if (document.visibilityState !== "visible") return;
+    getJSON<AdminStatus>("/admin/status")
+      .then((v) => {
+        setS(v);
+        setDown(false);
+      })
+      .catch(() => setDown(true));
+  }, []);
 
   useEffect(() => {
-    let alive = true;
-    const load = () => {
-      if (document.visibilityState !== "visible") return;
-      getJSON<AdminStatus>("/admin/status")
-        .then((v) => {
-          if (!alive) return;
-          setS(v);
-          setDown(false);
-        })
-        .catch(() => alive && setDown(true));
-    };
     load();
     const t = window.setInterval(load, POLL_MS);
     document.addEventListener("visibilitychange", load);
     return () => {
-      alive = false;
       window.clearInterval(t);
       document.removeEventListener("visibilitychange", load);
     };
-  }, []);
+  }, [load]);
+
+  async function backUpNow() {
+    setBackingUp(true);
+    setBackupNote(null);
+    try {
+      const r = await postJSON<{ rows: Record<string, number> }>("/admin/backup", {});
+      setBackupNote({ text: `Backed up ${r.rows.query_log} questions and ${r.rows.excluded_paths} excluded files.` });
+    } catch (e) {
+      setBackupNote({ text: (e as Error).message, bad: true });
+    } finally {
+      setBackingUp(false);
+      load();
+    }
+  }
 
   if (down && !s) return <p className="notice bad">Backend offline. Start it with uvicorn.</p>;
   if (!s) return <p className="muted">Checking the cabinet…</p>;
@@ -99,6 +113,19 @@ export function StatusCard() {
           {s.index
             ? `${s.index.documents} documents · ${s.index.chunks} chunks · ${s.index.excluded} excluded · ${mb(s.index.db_bytes)} on disk · ${s.index.ocr.available ? `OCR on · ${s.index.ocr.pages} passages` : "OCR off: language data missing (python -m app.ingest.ocr --setup)"}`
             : "–"}
+        </dd>
+
+        <dt>Backup</dt>
+        <dd>
+          <span>
+            {s.backup
+              ? `Last backup ${ago(s.backup.at)} · ${Math.max(1, Math.round(s.backup.bytes / 1024))} KB · ${s.backup.kept} kept`
+              : "No backup yet (the backend makes one within a few minutes of starting)"}
+          </span>
+          <button type="button" className="quiet-btn" onClick={backUpNow} disabled={backingUp}>
+            {backingUp ? "Backing up…" : "Back up now"}
+          </button>
+          {backupNote && <span className={`action-note${backupNote.bad ? " bad" : ""}`}>{backupNote.text}</span>}
         </dd>
       </dl>
     </section>

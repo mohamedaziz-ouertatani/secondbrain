@@ -6,6 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ..admin import backup as backups
 from ..admin import sync as sync_jobs
 from ..admin.insights import compare, problems, summary
 from ..admin.settings import Invalid, update, view
@@ -167,3 +168,9 @@ def sync_cancel() -> dict:
     if job is None:
         raise HTTPException(404, "no sync is running")
     return job
+
+
+@router.post("/backup")
+def backup_now() -> dict:
+    f = backups.backup()
+    return {**backups.last_backup(), "name": f.name, "rows": backups.counts_in(f)}

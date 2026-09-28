@@ -77,6 +77,12 @@ def _index_with_ocr() -> dict:
             "ocr": {"available": ocr.available(), "pages": idx["ocr_chunks"]}}
 
 
+def _backup() -> dict | None:
+    from . import backup
+
+    return backup.last_backup()
+
+
 def _safe(part):
     try:
         return part()
@@ -92,4 +98,5 @@ def status() -> dict:
         "gpu": _safe(_gpu) or {"available": False},
         "answers": _safe(_answers),
         "index": _safe(_index_with_ocr),
+        "backup": _safe(_backup),
     }

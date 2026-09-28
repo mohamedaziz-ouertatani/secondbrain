@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     rrf_k: int = 60
     min_score: float = 0.35
 
+    backup_keep: int = 30  # daily backups of query_log and excluded_paths kept in backend/data/backups
+
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Blackboard sync (python -m app.sync.blackboard)

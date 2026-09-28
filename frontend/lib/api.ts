@@ -201,6 +201,7 @@ export type AdminStatus = {
     db_bytes: number;
     ocr: { available: boolean; pages: number };
   } | null;
+  backup: { name: string; at: string; bytes: number; kept: number } | null;
 };
 
 export type AdminLibrary = {
