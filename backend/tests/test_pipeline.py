@@ -1,16 +1,8 @@
 """Integration: runs against a real Postgres (docker compose). Skipped if unreachable."""
 
 
-import numpy as np
-
-
-def _words(s: str) -> int:
-    return len(s.split())
-
-
-def fake_embed(texts):
-    rng = [np.random.default_rng(abs(hash(t)) % 2**32) for t in texts]
-    return [(v := r.standard_normal(1024).astype(np.float32)) / np.linalg.norm(v) for r in rng]
+from fakes import fake_embed
+from fakes import words as _words
 
 
 def chunk_count(db, rel):
