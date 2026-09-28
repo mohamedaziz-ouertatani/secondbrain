@@ -1,3 +1,4 @@
+import pytest
 from fakes import fake_embed, words
 
 
@@ -46,10 +47,10 @@ def test_rescan_drops_stale_row_of_excluded_file(env):
     assert paths(db) == []
 
 
-def test_include_missing_file(env):
+@pytest.mark.usefixtures("env")
+def test_include_missing_file():
     from app.ingest.pipeline import exclude, include
 
-    inbox, db = env
     exclude("Gone/x.md")
     assert include("Gone/x.md", fake_embed, words) == "missing"
 
@@ -57,7 +58,7 @@ def test_include_missing_file(env):
 def test_forced_reindex_of_unchanged_file_and_course(env):
     from app.ingest.pipeline import ingest_file, reindex
 
-    inbox, db = env
+    inbox, _ = env
     a = note(inbox, "Prob/a.md")
     note(inbox, "Prob/b.md")
     note(inbox, "Algo/c.md")

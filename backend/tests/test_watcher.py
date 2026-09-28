@@ -1,6 +1,5 @@
-from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent
-
 from fakes import fake_embed, words
+from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent
 
 
 def drain(w):
