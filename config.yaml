@@ -25,6 +25,9 @@ candidate_k: 20          # candidates per list before fusion
 rrf_k: 60
 min_score: 0.35          # refuse unless a passage is this close, or one passage has every keyword
 
+# Backups: the question log and excluded files, daily, in backend/data/backups (python -m app.admin.backup)
+backup_keep: 30
+
 # Blackboard sync: cd backend && uv run python -m app.sync.blackboard --probe
 blackboard_url: https://esprit.blackboard.com
 blackboard_browser: msedge

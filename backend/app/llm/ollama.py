@@ -112,6 +112,22 @@ def chat_stream(messages: list[dict]) -> Iterator[str]:
     yield from hide_leading_think(raw())
 
 
+def chat_json(messages: list[dict], schema: dict, temperature: float = 0.3) -> dict:
+    """One non-streamed reply constrained to a JSON schema (Ollama's structured output)."""
+    s = get_settings()
+    r = _client().post("/api/chat", json={
+        "model": s.llm_model, "messages": messages, "stream": False, "think": False, "format": schema,
+        "keep_alive": s.llm_keep_alive, "options": {"num_ctx": s.num_ctx, "temperature": temperature},
+    })
+    if r.status_code != 200:
+        raise OllamaError(f"chat failed ({r.status_code}): {r.text[:200]}")
+    content = strip_reasoning(r.json().get("message", {}).get("content", ""))
+    try:
+        return json.loads(content)
+    except ValueError as e:
+        raise OllamaError(f"the model didn't return JSON: {content[:200]}") from e
+
+
 def status() -> dict:
     """Reachability + whether configured models are pulled."""
     s = get_settings()

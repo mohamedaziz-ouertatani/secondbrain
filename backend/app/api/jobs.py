@@ -17,3 +17,12 @@ def exclusive(what: str) -> Iterator[None]:
         yield
     finally:
         _job.release()
+
+
+def try_acquire() -> bool:
+    """Take the index-job slot without waiting (background jobs that aren't a request)."""
+    return _job.acquire(blocking=False)
+
+
+def release() -> None:
+    _job.release()

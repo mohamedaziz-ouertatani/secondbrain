@@ -201,6 +201,7 @@ export type AdminStatus = {
     db_bytes: number;
     ocr: { available: boolean; pages: number };
   } | null;
+  backup: { name: string; at: string; bytes: number; kept: number } | null;
 };
 
 export type AdminLibrary = {
@@ -321,4 +322,41 @@ export type SyncStatus = {
   next_auto: string | null;
   auto_days: number;
   modules: string[];
+};
+
+export type EvalMode = "dense" | "hybrid";
+export type EvalMetrics = {
+  n: number;
+  "recall@1"?: number;
+  "recall@5"?: number;
+  "recall@20"?: number;
+  mrr?: number;
+  refusal_rate?: number;
+};
+export type EvalSummary = {
+  overall: Record<EvalMode, EvalMetrics>;
+  by_course: Record<string, Record<EvalMode, EvalMetrics>>;
+  by_lang: Record<string, Record<EvalMode, EvalMetrics>>;
+  by_source: Record<string, Record<EvalMode, EvalMetrics>>;
+};
+export type EvalRun = {
+  id: number;
+  ts: string;
+  kind: "retrieval" | "full";
+  params: Record<string, string | number>;
+  metrics: EvalSummary;
+};
+export type EvalJob = {
+  kind: "generate" | "retrieval" | "full";
+  state: "running" | "ok" | "failed" | "cancelled";
+  done: number;
+  total: number;
+  error: string | null;
+  result: { accepted?: number; rejected?: Record<string, number>; run_id?: number } | null;
+};
+export type EvalStatus = {
+  questions: { generated: number; labelled: number };
+  job: EvalJob | null;
+  runs: EvalRun[];
+  latest: EvalRun | null;
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { EvalCard } from "@/components/admin/EvalCard";
 import { InsightsCard } from "@/components/admin/InsightsCard";
 import { LibraryAdmin } from "@/components/admin/LibraryAdmin";
 import { SettingsCard } from "@/components/admin/SettingsCard";
@@ -15,6 +16,7 @@ export default function AdminPage() {
       </header>
       <StatusCard />
       <InsightsCard />
+      <EvalCard />
       <LibraryAdmin />
       <SyncCard />
       <SettingsCard />

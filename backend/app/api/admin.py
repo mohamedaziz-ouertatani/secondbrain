@@ -6,12 +6,14 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ..admin import backup as backups
 from ..admin import sync as sync_jobs
 from ..admin.insights import compare, problems, summary
 from ..admin.settings import Invalid, update, view
 from ..admin.status import status
 from ..config import get_settings
 from ..db import get_pool
+from ..eval import jobs as eval_jobs
 from ..ingest.pipeline import exclude, include, is_supported, reindex
 from .jobs import exclusive
 
@@ -166,4 +168,47 @@ def sync_cancel() -> dict:
     job = sync_jobs.runner.cancel()
     if job is None:
         raise HTTPException(404, "no sync is running")
+    return job
+
+
+@router.post("/backup")
+def backup_now() -> dict:
+    f = backups.backup()
+    return {**backups.last_backup(), "name": f.name, "rows": backups.counts_in(f)}
+
+
+class GenerateBody(BaseModel):
+    n: int = Field(150, ge=1, le=500)
+
+
+class RunBody(BaseModel):
+    kind: Literal["retrieval"] = "retrieval"
+
+
+@router.get("/eval")
+def eval_status() -> dict:
+    return eval_jobs.status()
+
+
+@router.post("/eval/generate", status_code=202)
+def eval_generate(body: GenerateBody) -> dict:
+    try:
+        return eval_jobs.start("generate", n=body.n)
+    except eval_jobs.Busy as e:
+        raise HTTPException(409, str(e)) from e
+
+
+@router.post("/eval/run", status_code=202)
+def eval_run(body: RunBody) -> dict:
+    try:
+        return eval_jobs.start(body.kind)
+    except eval_jobs.Busy as e:
+        raise HTTPException(409, str(e)) from e
+
+
+@router.post("/eval/cancel")
+def eval_cancel() -> dict:
+    job = eval_jobs.cancel()
+    if job is None:
+        raise HTTPException(404, "no evaluation job is running")
     return job

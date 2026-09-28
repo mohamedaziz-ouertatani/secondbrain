@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .admin.backup import BackupScheduler
 from .admin.sync import AutoSync, runner
 from .api.admin import router as admin_router
 from .api.routes import router
@@ -24,7 +25,10 @@ async def lifespan(app: FastAPI):
     watcher.start()
     autosync = AutoSync()
     autosync.start()
+    backups = BackupScheduler()
+    backups.start()
     yield
+    backups.stop()
     autosync.stop()
     runner.cancel()  # a running sync must not outlive the backend
     watcher.stop()

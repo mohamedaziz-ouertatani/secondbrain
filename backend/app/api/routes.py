@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pymupdf
-
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
