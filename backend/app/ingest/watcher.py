@@ -17,12 +17,25 @@ DEBOUNCE_S = 2.0
 MAX_RETRIES = 5
 
 
+def _is_folder(event: FileSystemEvent) -> bool:
+    """Windows can't stat a path that's gone, so watchdog reports a deleted folder as a *file* delete.
+    Only supported extensions are files to us, so any other vanished path is treated as a folder
+    (if it was an unrelated file, dropping its prefix matches nothing)."""
+    if event.is_directory:
+        return True
+    if event.event_type == "deleted":
+        return not is_supported(Path(event.src_path))
+    if event.event_type == "moved":
+        return Path(event.dest_path).is_dir()
+    return False
+
+
 class _Handler(FileSystemEventHandler):
     def __init__(self, watcher: "InboxWatcher"):
         self.w = watcher
 
     def on_any_event(self, event: FileSystemEvent) -> None:
-        if event.is_directory:
+        if _is_folder(event):
             # A module folder deleted, renamed or pasted in can arrive as one directory event (Windows).
             if event.event_type in ("deleted", "moved"):
                 self.w.folder_gone(Path(event.src_path))

@@ -1,5 +1,10 @@
 from fakes import fake_embed, words
-from watchdog.events import DirCreatedEvent, DirDeletedEvent, DirMovedEvent
+from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirMovedEvent,
+    FileDeletedEvent,
+)
 
 
 def drain(w):
@@ -43,6 +48,15 @@ def test_folder_delete_rename_and_paste(env, monkeypatch):
             f.rmdir()
     (inbox / "New").rmdir()
     handler.on_any_event(DirDeletedEvent(str(inbox / "New")))
+    assert paths(db) == ["Keep/c.md"]
+
+    # Windows can't stat a deleted path, so a deleted folder arrives as a *file* delete event
+    (inbox / "Gone").mkdir()
+    (inbox / "Gone" / "e.md").write_text("A note that will vanish with its folder. " * 10, encoding="utf-8")
+    rescan(fake_embed, words)
+    (inbox / "Gone" / "e.md").unlink()
+    (inbox / "Gone").rmdir()
+    handler.on_any_event(FileDeletedEvent(str(inbox / "Gone")))
     assert paths(db) == ["Keep/c.md"]
 
     # a folder pasted in one go

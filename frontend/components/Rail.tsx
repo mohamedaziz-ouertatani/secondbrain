@@ -43,7 +43,7 @@ export function Rail() {
       </Link>
 
       <div className="views">
-        <Link href={drawerHref("/", drawer)} aria-current={base === "/" ? "page" : undefined}>
+        <Link href={drawerHref("/", drawer)} aria-current={pathname === "/" ? "page" : undefined}>
           <PenLine size={16} aria-hidden /> Ask
         </Link>
         <Link href={drawerHref("/documents", drawer)} aria-current={base === "/documents" ? "page" : undefined}>
