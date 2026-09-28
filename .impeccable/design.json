@@ -1,0 +1,1097 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-28T06:51:16.035Z",
+  "title": "Design System: Second Brain",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Pale Steel Ground",
+        "canonical": "#dde3e6",
+        "oklch": "oklch(91.2% 0.008 228.9)",
+        "tonalRamp": [
+          "oklch(15% 0.008 228.9)",
+          "oklch(25% 0.008 228.9)",
+          "oklch(35% 0.008 228.9)",
+          "oklch(48% 0.008 228.9)",
+          "oklch(60% 0.008 228.9)",
+          "oklch(72% 0.008 228.9)",
+          "oklch(84% 0.008 228.9)",
+          "oklch(95% 0.008 228.9)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Bristol White",
+        "canonical": "#fcfcfa",
+        "oklch": "oklch(99.1% 0.003 106.4)",
+        "tonalRamp": [
+          "oklch(15% 0.003 106.4)",
+          "oklch(25% 0.003 106.4)",
+          "oklch(35% 0.003 106.4)",
+          "oklch(48% 0.003 106.4)",
+          "oklch(60% 0.003 106.4)",
+          "oklch(72% 0.003 106.4)",
+          "oklch(84% 0.003 106.4)",
+          "oklch(95% 0.003 106.4)"
+        ]
+      },
+      "card-2": {
+        "role": "neutral",
+        "displayName": "Worn Bristol",
+        "canonical": "#f1f3f2",
+        "oklch": "oklch(96.2% 0.003 165.1)",
+        "tonalRamp": [
+          "oklch(15% 0.003 165.1)",
+          "oklch(25% 0.003 165.1)",
+          "oklch(35% 0.003 165.1)",
+          "oklch(48% 0.003 165.1)",
+          "oklch(60% 0.003 165.1)",
+          "oklch(72% 0.003 165.1)",
+          "oklch(84% 0.003 165.1)",
+          "oklch(95% 0.003 165.1)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Carbon Ink",
+        "canonical": "#1d2529",
+        "oklch": "oklch(25.8% 0.014 229.6)",
+        "tonalRamp": [
+          "oklch(15% 0.014 229.6)",
+          "oklch(25% 0.014 229.6)",
+          "oklch(35% 0.014 229.6)",
+          "oklch(48% 0.014 229.6)",
+          "oklch(60% 0.014 229.6)",
+          "oklch(72% 0.014 229.6)",
+          "oklch(84% 0.014 229.6)",
+          "oklch(95% 0.014 229.6)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Pencil Grey",
+        "canonical": "#55626a",
+        "oklch": "oklch(48.8% 0.021 234.9)",
+        "tonalRamp": [
+          "oklch(15% 0.021 234.9)",
+          "oklch(25% 0.021 234.9)",
+          "oklch(35% 0.021 234.9)",
+          "oklch(48% 0.021 234.9)",
+          "oklch(60% 0.021 234.9)",
+          "oklch(72% 0.021 234.9)",
+          "oklch(84% 0.021 234.9)",
+          "oklch(95% 0.021 234.9)"
+        ]
+      },
+      "rule-red": {
+        "role": "primary",
+        "displayName": "Index Red",
+        "canonical": "#d23f36",
+        "oklch": "oklch(58.1% 0.185 27.9)",
+        "tonalRamp": [
+          "oklch(15% 0.16 27.9)",
+          "oklch(25% 0.16 27.9)",
+          "oklch(35% 0.16 27.9)",
+          "oklch(48% 0.16 27.9)",
+          "oklch(60% 0.16 27.9)",
+          "oklch(72% 0.16 27.9)",
+          "oklch(84% 0.16 27.9)",
+          "oklch(95% 0.16 27.9)"
+        ]
+      },
+      "rule-blue": {
+        "role": "neutral",
+        "displayName": "Faint Blue Ruling",
+        "canonical": "#c3d3de",
+        "oklch": "oklch(85.8% 0.023 237.7)",
+        "tonalRamp": [
+          "oklch(15% 0.023 237.7)",
+          "oklch(25% 0.023 237.7)",
+          "oklch(35% 0.023 237.7)",
+          "oklch(48% 0.023 237.7)",
+          "oklch(60% 0.023 237.7)",
+          "oklch(72% 0.023 237.7)",
+          "oklch(84% 0.023 237.7)",
+          "oklch(95% 0.023 237.7)"
+        ]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Cabinet Steel",
+        "canonical": "#243238",
+        "oklch": "oklch(30.7% 0.022 226.1)",
+        "tonalRamp": [
+          "oklch(15% 0.022 226.1)",
+          "oklch(25% 0.022 226.1)",
+          "oklch(35% 0.022 226.1)",
+          "oklch(48% 0.022 226.1)",
+          "oklch(60% 0.022 226.1)",
+          "oklch(72% 0.022 226.1)",
+          "oklch(84% 0.022 226.1)",
+          "oklch(95% 0.022 226.1)"
+        ]
+      },
+      "steel-2": {
+        "role": "neutral",
+        "displayName": "Drawer Front Steel",
+        "canonical": "#2e3e45",
+        "oklch": "oklch(35.3% 0.024 226.5)",
+        "tonalRamp": [
+          "oklch(15% 0.024 226.5)",
+          "oklch(25% 0.024 226.5)",
+          "oklch(35% 0.024 226.5)",
+          "oklch(48% 0.024 226.5)",
+          "oklch(60% 0.024 226.5)",
+          "oklch(72% 0.024 226.5)",
+          "oklch(84% 0.024 226.5)",
+          "oklch(95% 0.024 226.5)"
+        ]
+      },
+      "steel-3": {
+        "role": "neutral",
+        "displayName": "Open Drawer Steel",
+        "canonical": "#3a4d55",
+        "oklch": "oklch(40.7% 0.027 225.6)",
+        "tonalRamp": [
+          "oklch(15% 0.027 225.6)",
+          "oklch(25% 0.027 225.6)",
+          "oklch(35% 0.027 225.6)",
+          "oklch(48% 0.027 225.6)",
+          "oklch(60% 0.027 225.6)",
+          "oklch(72% 0.027 225.6)",
+          "oklch(84% 0.027 225.6)",
+          "oklch(95% 0.027 225.6)"
+        ]
+      },
+      "steel-ink": {
+        "role": "neutral",
+        "displayName": "Steel Ink",
+        "canonical": "#e6ecef",
+        "oklch": "oklch(93.9% 0.008 228.9)",
+        "tonalRamp": [
+          "oklch(15% 0.008 228.9)",
+          "oklch(25% 0.008 228.9)",
+          "oklch(35% 0.008 228.9)",
+          "oklch(48% 0.008 228.9)",
+          "oklch(60% 0.008 228.9)",
+          "oklch(72% 0.008 228.9)",
+          "oklch(84% 0.008 228.9)",
+          "oklch(95% 0.008 228.9)"
+        ]
+      },
+      "steel-muted": {
+        "role": "neutral",
+        "displayName": "Steel Muted",
+        "canonical": "#a9b8bf",
+        "oklch": "oklch(77.3% 0.019 227.4)",
+        "tonalRamp": [
+          "oklch(15% 0.019 227.4)",
+          "oklch(25% 0.019 227.4)",
+          "oklch(35% 0.019 227.4)",
+          "oklch(48% 0.019 227.4)",
+          "oklch(60% 0.019 227.4)",
+          "oklch(72% 0.019 227.4)",
+          "oklch(84% 0.019 227.4)",
+          "oklch(95% 0.019 227.4)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Catalogue Ink Blue",
+        "canonical": "#1f4e79",
+        "oklch": "oklch(41.4% 0.088 249.1)",
+        "tonalRamp": [
+          "oklch(15% 0.088 249.1)",
+          "oklch(25% 0.088 249.1)",
+          "oklch(35% 0.088 249.1)",
+          "oklch(48% 0.088 249.1)",
+          "oklch(60% 0.088 249.1)",
+          "oklch(72% 0.088 249.1)",
+          "oklch(84% 0.088 249.1)",
+          "oklch(95% 0.088 249.1)"
+        ]
+      },
+      "on-primary": {
+        "role": "primary",
+        "displayName": "On Primary",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100% 0 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 89.9)",
+          "oklch(25% 0 89.9)",
+          "oklch(35% 0 89.9)",
+          "oklch(48% 0 89.9)",
+          "oklch(60% 0 89.9)",
+          "oklch(72% 0 89.9)",
+          "oklch(84% 0 89.9)",
+          "oklch(95% 0 89.9)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus Blue",
+        "canonical": "#1f6fd1",
+        "oklch": "oklch(54.9% 0.169 256.3)",
+        "tonalRamp": [
+          "oklch(15% 0.16 256.3)",
+          "oklch(25% 0.16 256.3)",
+          "oklch(35% 0.16 256.3)",
+          "oklch(48% 0.16 256.3)",
+          "oklch(60% 0.16 256.3)",
+          "oklch(72% 0.16 256.3)",
+          "oklch(84% 0.16 256.3)",
+          "oklch(95% 0.16 256.3)"
+        ]
+      },
+      "bad": {
+        "role": "neutral",
+        "displayName": "Error Red",
+        "canonical": "#b3261e",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "oklch(15% 0.16 28.7)",
+          "oklch(25% 0.16 28.7)",
+          "oklch(35% 0.16 28.7)",
+          "oklch(48% 0.16 28.7)",
+          "oklch(60% 0.16 28.7)",
+          "oklch(72% 0.16 28.7)",
+          "oklch(84% 0.16 28.7)",
+          "oklch(95% 0.16 28.7)"
+        ]
+      },
+      "good": {
+        "role": "neutral",
+        "displayName": "Success Green",
+        "canonical": "#2e6b3a",
+        "oklch": "oklch(47.4% 0.1 148)",
+        "tonalRamp": [
+          "oklch(15% 0.1 148)",
+          "oklch(25% 0.1 148)",
+          "oklch(35% 0.1 148)",
+          "oklch(48% 0.1 148)",
+          "oklch(60% 0.1 148)",
+          "oklch(72% 0.1 148)",
+          "oklch(84% 0.1 148)",
+          "oklch(95% 0.1 148)"
+        ]
+      },
+      "sel": {
+        "role": "neutral",
+        "displayName": "Selection Blue",
+        "canonical": "#cfe0f0",
+        "oklch": "oklch(89.9% 0.029 246.5)",
+        "tonalRamp": [
+          "oklch(15% 0.029 246.5)",
+          "oklch(25% 0.029 246.5)",
+          "oklch(35% 0.029 246.5)",
+          "oklch(48% 0.029 246.5)",
+          "oklch(60% 0.029 246.5)",
+          "oklch(72% 0.029 246.5)",
+          "oklch(84% 0.029 246.5)",
+          "oklch(95% 0.029 246.5)"
+        ]
+      },
+      "tint-modeling": {
+        "role": "tertiary",
+        "displayName": "Data Modeling Blue Bristol",
+        "canonical": "#bcd6ec",
+        "oklch": "oklch(86.4% 0.041 243.8)",
+        "tonalRamp": [
+          "oklch(15% 0.041 243.8)",
+          "oklch(25% 0.041 243.8)",
+          "oklch(35% 0.041 243.8)",
+          "oklch(48% 0.041 243.8)",
+          "oklch(60% 0.041 243.8)",
+          "oklch(72% 0.041 243.8)",
+          "oklch(84% 0.041 243.8)",
+          "oklch(95% 0.041 243.8)"
+        ]
+      },
+      "tint-random": {
+        "role": "tertiary",
+        "displayName": "Random Models Yellow Bristol",
+        "canonical": "#f3de8c",
+        "oklch": "oklch(90% 0.105 95.5)",
+        "tonalRamp": [
+          "oklch(15% 0.105 95.5)",
+          "oklch(25% 0.105 95.5)",
+          "oklch(35% 0.105 95.5)",
+          "oklch(48% 0.105 95.5)",
+          "oklch(60% 0.105 95.5)",
+          "oklch(72% 0.105 95.5)",
+          "oklch(84% 0.105 95.5)",
+          "oklch(95% 0.105 95.5)"
+        ]
+      },
+      "tint-processing": {
+        "role": "tertiary",
+        "displayName": "Data Processing Orange Bristol",
+        "canonical": "#f4c99f",
+        "oklch": "oklch(86.3% 0.074 65.9)",
+        "tonalRamp": [
+          "oklch(15% 0.074 65.9)",
+          "oklch(25% 0.074 65.9)",
+          "oklch(35% 0.074 65.9)",
+          "oklch(48% 0.074 65.9)",
+          "oklch(60% 0.074 65.9)",
+          "oklch(72% 0.074 65.9)",
+          "oklch(84% 0.074 65.9)",
+          "oklch(95% 0.074 65.9)"
+        ]
+      },
+      "tint-sustainable": {
+        "role": "tertiary",
+        "displayName": "Sustainable Development Green Bristol",
+        "canonical": "#bfe0b8",
+        "oklch": "oklch(87.2% 0.064 140.2)",
+        "tonalRamp": [
+          "oklch(15% 0.064 140.2)",
+          "oklch(25% 0.064 140.2)",
+          "oklch(35% 0.064 140.2)",
+          "oklch(48% 0.064 140.2)",
+          "oklch(60% 0.064 140.2)",
+          "oklch(72% 0.064 140.2)",
+          "oklch(84% 0.064 140.2)",
+          "oklch(95% 0.064 140.2)"
+        ]
+      },
+      "tint-pro": {
+        "role": "tertiary",
+        "displayName": "Professional Life Pink Bristol",
+        "canonical": "#f1c3cb",
+        "oklch": "oklch(86% 0.053 6.5)",
+        "tonalRamp": [
+          "oklch(15% 0.053 6.5)",
+          "oklch(25% 0.053 6.5)",
+          "oklch(35% 0.053 6.5)",
+          "oklch(48% 0.053 6.5)",
+          "oklch(60% 0.053 6.5)",
+          "oklch(72% 0.053 6.5)",
+          "oklch(84% 0.053 6.5)",
+          "oklch(95% 0.053 6.5)"
+        ]
+      },
+      "tint-seminars": {
+        "role": "tertiary",
+        "displayName": "Seminars Lilac Bristol",
+        "canonical": "#d6cceb",
+        "oklch": "oklch(86.3% 0.044 300.2)",
+        "tonalRamp": [
+          "oklch(15% 0.044 300.2)",
+          "oklch(25% 0.044 300.2)",
+          "oklch(35% 0.044 300.2)",
+          "oklch(48% 0.044 300.2)",
+          "oklch(60% 0.044 300.2)",
+          "oklch(72% 0.044 300.2)",
+          "oklch(84% 0.044 300.2)",
+          "oklch(95% 0.044 300.2)"
+        ]
+      },
+      "tint-other": {
+        "role": "tertiary",
+        "displayName": "Other Drawers Grey Bristol",
+        "canonical": "#d3d9dc",
+        "oklch": "oklch(88.2% 0.008 228.9)",
+        "tonalRamp": [
+          "oklch(15% 0.008 228.9)",
+          "oklch(25% 0.008 228.9)",
+          "oklch(35% 0.008 228.9)",
+          "oklch(48% 0.008 228.9)",
+          "oklch(60% 0.008 228.9)",
+          "oklch(72% 0.008 228.9)",
+          "oklch(84% 0.008 228.9)",
+          "oklch(95% 0.008 228.9)"
+        ]
+      },
+      "ground-dark": {
+        "role": "neutral",
+        "displayName": "Pale Steel Ground (dark)",
+        "canonical": "#12181b",
+        "oklch": "oklch(20.4% 0.011 229.6)",
+        "tonalRamp": [
+          "oklch(15% 0.011 229.6)",
+          "oklch(25% 0.011 229.6)",
+          "oklch(35% 0.011 229.6)",
+          "oklch(48% 0.011 229.6)",
+          "oklch(60% 0.011 229.6)",
+          "oklch(72% 0.011 229.6)",
+          "oklch(84% 0.011 229.6)",
+          "oklch(95% 0.011 229.6)"
+        ]
+      },
+      "card-dark": {
+        "role": "neutral",
+        "displayName": "Bristol White (dark)",
+        "canonical": "#1c2327",
+        "oklch": "oklch(25.1% 0.013 233)",
+        "tonalRamp": [
+          "oklch(15% 0.013 233)",
+          "oklch(25% 0.013 233)",
+          "oklch(35% 0.013 233)",
+          "oklch(48% 0.013 233)",
+          "oklch(60% 0.013 233)",
+          "oklch(72% 0.013 233)",
+          "oklch(84% 0.013 233)",
+          "oklch(95% 0.013 233)"
+        ]
+      },
+      "card-2-dark": {
+        "role": "neutral",
+        "displayName": "Worn Bristol (dark)",
+        "canonical": "#182024",
+        "oklch": "oklch(23.7% 0.014 229.7)",
+        "tonalRamp": [
+          "oklch(15% 0.014 229.7)",
+          "oklch(25% 0.014 229.7)",
+          "oklch(35% 0.014 229.7)",
+          "oklch(48% 0.014 229.7)",
+          "oklch(60% 0.014 229.7)",
+          "oklch(72% 0.014 229.7)",
+          "oklch(84% 0.014 229.7)",
+          "oklch(95% 0.014 229.7)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Carbon Ink (dark)",
+        "canonical": "#e3e9ec",
+        "oklch": "oklch(93% 0.008 228.9)",
+        "tonalRamp": [
+          "oklch(15% 0.008 228.9)",
+          "oklch(25% 0.008 228.9)",
+          "oklch(35% 0.008 228.9)",
+          "oklch(48% 0.008 228.9)",
+          "oklch(60% 0.008 228.9)",
+          "oklch(72% 0.008 228.9)",
+          "oklch(84% 0.008 228.9)",
+          "oklch(95% 0.008 228.9)"
+        ]
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Pencil Grey (dark)",
+        "canonical": "#9eabb2",
+        "oklch": "oklch(73.3% 0.018 231)",
+        "tonalRamp": [
+          "oklch(15% 0.018 231)",
+          "oklch(25% 0.018 231)",
+          "oklch(35% 0.018 231)",
+          "oklch(48% 0.018 231)",
+          "oklch(60% 0.018 231)",
+          "oklch(72% 0.018 231)",
+          "oklch(84% 0.018 231)",
+          "oklch(95% 0.018 231)"
+        ]
+      },
+      "rule-red-dark": {
+        "role": "primary",
+        "displayName": "Index Red (dark)",
+        "canonical": "#e4675e",
+        "oklch": "oklch(66.5% 0.158 26.4)",
+        "tonalRamp": [
+          "oklch(15% 0.158 26.4)",
+          "oklch(25% 0.158 26.4)",
+          "oklch(35% 0.158 26.4)",
+          "oklch(48% 0.158 26.4)",
+          "oklch(60% 0.158 26.4)",
+          "oklch(72% 0.158 26.4)",
+          "oklch(84% 0.158 26.4)",
+          "oklch(95% 0.158 26.4)"
+        ]
+      },
+      "rule-blue-dark": {
+        "role": "neutral",
+        "displayName": "Faint Blue Ruling (dark)",
+        "canonical": "#2d3f4b",
+        "oklch": "oklch(35.7% 0.031 238)",
+        "tonalRamp": [
+          "oklch(15% 0.031 238)",
+          "oklch(25% 0.031 238)",
+          "oklch(35% 0.031 238)",
+          "oklch(48% 0.031 238)",
+          "oklch(60% 0.031 238)",
+          "oklch(72% 0.031 238)",
+          "oklch(84% 0.031 238)",
+          "oklch(95% 0.031 238)"
+        ]
+      },
+      "steel-dark": {
+        "role": "neutral",
+        "displayName": "Cabinet Steel (dark)",
+        "canonical": "#0b1013",
+        "oklch": "oklch(16.9% 0.01 234.5)",
+        "tonalRamp": [
+          "oklch(15% 0.01 234.5)",
+          "oklch(25% 0.01 234.5)",
+          "oklch(35% 0.01 234.5)",
+          "oklch(48% 0.01 234.5)",
+          "oklch(60% 0.01 234.5)",
+          "oklch(72% 0.01 234.5)",
+          "oklch(84% 0.01 234.5)",
+          "oklch(95% 0.01 234.5)"
+        ]
+      },
+      "steel-2-dark": {
+        "role": "neutral",
+        "displayName": "Drawer Front Steel (dark)",
+        "canonical": "#151d21",
+        "oklch": "oklch(22.5% 0.014 229.8)",
+        "tonalRamp": [
+          "oklch(15% 0.014 229.8)",
+          "oklch(25% 0.014 229.8)",
+          "oklch(35% 0.014 229.8)",
+          "oklch(48% 0.014 229.8)",
+          "oklch(60% 0.014 229.8)",
+          "oklch(72% 0.014 229.8)",
+          "oklch(84% 0.014 229.8)",
+          "oklch(95% 0.014 229.8)"
+        ]
+      },
+      "steel-3-dark": {
+        "role": "neutral",
+        "displayName": "Open Drawer Steel (dark)",
+        "canonical": "#1f2a30",
+        "oklch": "oklch(27.7% 0.019 232.2)",
+        "tonalRamp": [
+          "oklch(15% 0.019 232.2)",
+          "oklch(25% 0.019 232.2)",
+          "oklch(35% 0.019 232.2)",
+          "oklch(48% 0.019 232.2)",
+          "oklch(60% 0.019 232.2)",
+          "oklch(72% 0.019 232.2)",
+          "oklch(84% 0.019 232.2)",
+          "oklch(95% 0.019 232.2)"
+        ]
+      },
+      "steel-ink-dark": {
+        "role": "neutral",
+        "displayName": "Steel Ink (dark)",
+        "canonical": "#dde5e9",
+        "oklch": "oklch(91.7% 0.01 228.9)",
+        "tonalRamp": [
+          "oklch(15% 0.01 228.9)",
+          "oklch(25% 0.01 228.9)",
+          "oklch(35% 0.01 228.9)",
+          "oklch(48% 0.01 228.9)",
+          "oklch(60% 0.01 228.9)",
+          "oklch(72% 0.01 228.9)",
+          "oklch(84% 0.01 228.9)",
+          "oklch(95% 0.01 228.9)"
+        ]
+      },
+      "steel-muted-dark": {
+        "role": "neutral",
+        "displayName": "Steel Muted (dark)",
+        "canonical": "#8fa0a8",
+        "oklch": "oklch(69.5% 0.023 227.7)",
+        "tonalRamp": [
+          "oklch(15% 0.023 227.7)",
+          "oklch(25% 0.023 227.7)",
+          "oklch(35% 0.023 227.7)",
+          "oklch(48% 0.023 227.7)",
+          "oklch(60% 0.023 227.7)",
+          "oklch(72% 0.023 227.7)",
+          "oklch(84% 0.023 227.7)",
+          "oklch(95% 0.023 227.7)"
+        ]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Catalogue Ink Blue (dark)",
+        "canonical": "#8fb8e8",
+        "oklch": "oklch(77.1% 0.082 252.8)",
+        "tonalRamp": [
+          "oklch(15% 0.082 252.8)",
+          "oklch(25% 0.082 252.8)",
+          "oklch(35% 0.082 252.8)",
+          "oklch(48% 0.082 252.8)",
+          "oklch(60% 0.082 252.8)",
+          "oklch(72% 0.082 252.8)",
+          "oklch(84% 0.082 252.8)",
+          "oklch(95% 0.082 252.8)"
+        ]
+      },
+      "on-primary-dark": {
+        "role": "primary",
+        "displayName": "On Primary (dark)",
+        "canonical": "#0b1520",
+        "oklch": "oklch(19.2% 0.027 251.6)",
+        "tonalRamp": [
+          "oklch(15% 0.027 251.6)",
+          "oklch(25% 0.027 251.6)",
+          "oklch(35% 0.027 251.6)",
+          "oklch(48% 0.027 251.6)",
+          "oklch(60% 0.027 251.6)",
+          "oklch(72% 0.027 251.6)",
+          "oklch(84% 0.027 251.6)",
+          "oklch(95% 0.027 251.6)"
+        ]
+      },
+      "bad-dark": {
+        "role": "neutral",
+        "displayName": "Error Red (dark)",
+        "canonical": "#ff8a80",
+        "oklch": "oklch(75.9% 0.144 26.1)",
+        "tonalRamp": [
+          "oklch(15% 0.144 26.1)",
+          "oklch(25% 0.144 26.1)",
+          "oklch(35% 0.144 26.1)",
+          "oklch(48% 0.144 26.1)",
+          "oklch(60% 0.144 26.1)",
+          "oklch(72% 0.144 26.1)",
+          "oklch(84% 0.144 26.1)",
+          "oklch(95% 0.144 26.1)"
+        ]
+      },
+      "good-dark": {
+        "role": "neutral",
+        "displayName": "Success Green (dark)",
+        "canonical": "#8fd19e",
+        "oklch": "oklch(80.3% 0.098 150.8)",
+        "tonalRamp": [
+          "oklch(15% 0.098 150.8)",
+          "oklch(25% 0.098 150.8)",
+          "oklch(35% 0.098 150.8)",
+          "oklch(48% 0.098 150.8)",
+          "oklch(60% 0.098 150.8)",
+          "oklch(72% 0.098 150.8)",
+          "oklch(84% 0.098 150.8)",
+          "oklch(95% 0.098 150.8)"
+        ]
+      },
+      "sel-dark": {
+        "role": "neutral",
+        "displayName": "Selection Blue (dark)",
+        "canonical": "#2e4a63",
+        "oklch": "oklch(39.8% 0.054 246.6)",
+        "tonalRamp": [
+          "oklch(15% 0.054 246.6)",
+          "oklch(25% 0.054 246.6)",
+          "oklch(35% 0.054 246.6)",
+          "oklch(48% 0.054 246.6)",
+          "oklch(60% 0.054 246.6)",
+          "oklch(72% 0.054 246.6)",
+          "oklch(84% 0.054 246.6)",
+          "oklch(95% 0.054 246.6)"
+        ]
+      },
+      "tint-modeling-dark": {
+        "role": "tertiary",
+        "displayName": "Data Modeling Blue Bristol (dark)",
+        "canonical": "#2b4a63",
+        "oklch": "oklch(39.7% 0.056 244.2)",
+        "tonalRamp": [
+          "oklch(15% 0.056 244.2)",
+          "oklch(25% 0.056 244.2)",
+          "oklch(35% 0.056 244.2)",
+          "oklch(48% 0.056 244.2)",
+          "oklch(60% 0.056 244.2)",
+          "oklch(72% 0.056 244.2)",
+          "oklch(84% 0.056 244.2)",
+          "oklch(95% 0.056 244.2)"
+        ]
+      },
+      "tint-random-dark": {
+        "role": "tertiary",
+        "displayName": "Random Models Yellow Bristol (dark)",
+        "canonical": "#6a5212",
+        "oklch": "oklch(45.2% 0.084 86.7)",
+        "tonalRamp": [
+          "oklch(15% 0.084 86.7)",
+          "oklch(25% 0.084 86.7)",
+          "oklch(35% 0.084 86.7)",
+          "oklch(48% 0.084 86.7)",
+          "oklch(60% 0.084 86.7)",
+          "oklch(72% 0.084 86.7)",
+          "oklch(84% 0.084 86.7)",
+          "oklch(95% 0.084 86.7)"
+        ]
+      },
+      "tint-processing-dark": {
+        "role": "tertiary",
+        "displayName": "Data Processing Orange Bristol (dark)",
+        "canonical": "#5e4128",
+        "oklch": "oklch(40.2% 0.055 61)",
+        "tonalRamp": [
+          "oklch(15% 0.055 61)",
+          "oklch(25% 0.055 61)",
+          "oklch(35% 0.055 61)",
+          "oklch(48% 0.055 61)",
+          "oklch(60% 0.055 61)",
+          "oklch(72% 0.055 61)",
+          "oklch(84% 0.055 61)",
+          "oklch(95% 0.055 61)"
+        ]
+      },
+      "tint-sustainable-dark": {
+        "role": "tertiary",
+        "displayName": "Sustainable Development Green Bristol (dark)",
+        "canonical": "#2f5134",
+        "oklch": "oklch(40% 0.063 147.8)",
+        "tonalRamp": [
+          "oklch(15% 0.063 147.8)",
+          "oklch(25% 0.063 147.8)",
+          "oklch(35% 0.063 147.8)",
+          "oklch(48% 0.063 147.8)",
+          "oklch(60% 0.063 147.8)",
+          "oklch(72% 0.063 147.8)",
+          "oklch(84% 0.063 147.8)",
+          "oklch(95% 0.063 147.8)"
+        ]
+      },
+      "tint-pro-dark": {
+        "role": "tertiary",
+        "displayName": "Professional Life Pink Bristol (dark)",
+        "canonical": "#5b3540",
+        "oklch": "oklch(37.9% 0.057 1.4)",
+        "tonalRamp": [
+          "oklch(15% 0.057 1.4)",
+          "oklch(25% 0.057 1.4)",
+          "oklch(35% 0.057 1.4)",
+          "oklch(48% 0.057 1.4)",
+          "oklch(60% 0.057 1.4)",
+          "oklch(72% 0.057 1.4)",
+          "oklch(84% 0.057 1.4)",
+          "oklch(95% 0.057 1.4)"
+        ]
+      },
+      "tint-seminars-dark": {
+        "role": "tertiary",
+        "displayName": "Seminars Lilac Bristol (dark)",
+        "canonical": "#45395e",
+        "oklch": "oklch(37.4% 0.064 298.2)",
+        "tonalRamp": [
+          "oklch(15% 0.064 298.2)",
+          "oklch(25% 0.064 298.2)",
+          "oklch(35% 0.064 298.2)",
+          "oklch(48% 0.064 298.2)",
+          "oklch(60% 0.064 298.2)",
+          "oklch(72% 0.064 298.2)",
+          "oklch(84% 0.064 298.2)",
+          "oklch(95% 0.064 298.2)"
+        ]
+      },
+      "tint-other-dark": {
+        "role": "tertiary",
+        "displayName": "Other Drawers Grey Bristol (dark)",
+        "canonical": "#3a4449",
+        "oklch": "oklch(38% 0.016 229.4)",
+        "tonalRamp": [
+          "oklch(15% 0.016 229.4)",
+          "oklch(25% 0.016 229.4)",
+          "oklch(35% 0.016 229.4)",
+          "oklch(48% 0.016 229.4)",
+          "oklch(60% 0.016 229.4)",
+          "oklch(72% 0.016 229.4)",
+          "oklch(84% 0.016 229.4)",
+          "oklch(95% 0.016 229.4)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Drawer title (1.75rem); the reader title uses the same voice at 1.6rem."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The question at the head of an answer card."
+      },
+      "question-input": {
+        "displayName": "Question Input",
+        "purpose": "Text written on the working card's red header line; red caret."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Fiche title, which leads the card face; in-answer subheads at 1.05rem."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base UI and reading text; Arabic raises line-height to 1.85."
+      },
+      "answer": {
+        "displayName": "Answer",
+        "purpose": "Answer and reader prose within a 72ch measure (reader up to 82ch)."
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Fiche snippets (four-line clamp) and fiche backs."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rail unit names, catalogue column head, card meta; sentence case, muted, 0.76 to 0.82rem."
+      },
+      "callno": {
+        "displayName": "Call Number",
+        "purpose": "Typewritten call numbers (MODULE · CHAPTER · p. N), page labels and inline code only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(29 37 41 / 0.08), 0 4px 14px rgb(29 37 41 / 0.07)",
+        "dark": "0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.25)",
+        "purpose": "Resting shadow for every card, fiche and the catalogue."
+      },
+      {
+        "name": "pulled",
+        "value": "0 2px 4px rgb(29 37 41 / 0.1), 0 12px 28px rgb(29 37 41 / 0.16), 0 0 0 2px var(--tint)",
+        "dark": "0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px rgb(0 0 0 / 0.45), 0 0 0 2px var(--tint)",
+        "purpose": "A fiche pulled by its citation."
+      },
+      {
+        "name": "receded",
+        "value": "0 1px 1px rgb(29 37 41 / 0.06)",
+        "purpose": "Past cards and digest rows."
+      },
+      {
+        "name": "drawer-front",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -1px 0 rgb(0 0 0 / 0.25)",
+        "purpose": "Pressed-metal drawer face in the rail."
+      },
+      {
+        "name": "drawer-open",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.08), 0 4px 10px rgb(0 0 0 / 0.35)",
+        "purpose": "The open drawer, slid out 8px."
+      },
+      {
+        "name": "label-holder",
+        "value": "0 0 0 2px var(--steel-3), 0 0 0 3px rgb(255 255 255 / 0.12), inset 0 1px 1px rgb(0 0 0 / 0.18)",
+        "purpose": "Metal frame around a slotted label card."
+      },
+      {
+        "name": "label-holder-active",
+        "value": "0 0 0 2px var(--steel-ink), 0 3px 8px rgb(0 0 0 / 0.45)",
+        "purpose": "Label card of the open drawer."
+      },
+      {
+        "name": "rod-hole",
+        "value": "inset 0 2px 3px rgb(0 0 0 / 0.38), 0 1px 0 var(--hole-lip)",
+        "purpose": "Punched hole at each fiche's foot, filled with the ground; hole-lip is rgb(255 255 255 / 0.85) light, 0.07 dark."
+      },
+      {
+        "name": "margin-tab-on",
+        "value": "0 1px 3px rgb(0 0 0 / 0.2)",
+        "purpose": "A margin tab whose fiche is active."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only transition curve."
+      },
+      {
+        "name": "duration-press",
+        "value": "120ms",
+        "purpose": "Ask button lift."
+      },
+      {
+        "name": "duration-color",
+        "value": "150ms-160ms",
+        "purpose": "Background and colour changes, claim highlight, tab nudge."
+      },
+      {
+        "name": "duration-move",
+        "value": "180ms-200ms",
+        "purpose": "Drawer slide, past-card lift, fiche pull."
+      },
+      {
+        "name": "displacement",
+        "value": "1px lift / 4px tab nudge / 8px drawer / 10px pull",
+        "purpose": "Physical micro-motion distances."
+      },
+      {
+        "name": "breathe",
+        "value": "1.4s ease-in-out infinite (opacity to 0.3)",
+        "purpose": "Live status dot while searching or writing."
+      },
+      {
+        "name": "blink",
+        "value": "1s steps(2) infinite",
+        "purpose": "Red block caret while streaming."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.6s linear infinite",
+        "purpose": "Skeleton lines while searching."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "All animation and transition durations under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "desk-narrow",
+        "value": "1280px",
+        "purpose": "Fiche column narrows from 320px to 290px."
+      },
+      {
+        "name": "single-column",
+        "value": "1040px",
+        "purpose": "Fiches follow the answer, unsticky; catalogue drops the passages column."
+      },
+      {
+        "name": "top-bar",
+        "value": "860px",
+        "purpose": "Rail becomes a sticky top bar with a drawer select; margin column tightens; catalogue rows collapse."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ask Button",
+      "kind": "button",
+      "refersTo": "button-ask",
+      "description": "The one filled action: asks the question written on the working card.",
+      "html": "<button class=\"ds-ask\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg> Ask</button>",
+      "css": ".ds-ask{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;border:0;border-radius:5px;padding:.42rem .85rem;background:var(--primary);color:var(--on-primary);font:600 .92rem/1.4 \"Noto Sans\",sans-serif;cursor:pointer;transition:transform 120ms var(--ease),opacity 160ms var(--ease)}.ds-ask:hover{transform:translateY(-1px)}.ds-ask:active{transform:translateY(0)}.ds-ask:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-ask:disabled{opacity:.4;cursor:default}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary tools such as Rescan inbox and reader actions.",
+      "html": "<button class=\"ds-quiet\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8\"/><path d=\"M21 3v5h-5\"/><path d=\"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16\"/><path d=\"M8 16H3v5\"/></svg> Rescan inbox</button>",
+      "css": ".ds-quiet{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--rule-blue);border-radius:4px;background:var(--card);color:var(--ink);font:500 .86rem/1.4 \"Noto Sans\",sans-serif;padding:.38rem .7rem;cursor:pointer;transition:background-color 150ms var(--ease)}.ds-quiet:hover{background:var(--card-2)}.ds-quiet:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-quiet:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Fiche Action",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Icon plus word actions on a fiche: Passage, Read, Original.",
+      "html": "<div style=\"display:flex;gap:.25rem\"><button class=\"ds-icon-btn\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/></svg> Passage</button><button class=\"ds-icon-btn\" aria-pressed=\"true\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/></svg> Read</button></div>",
+      "css": ".ds-icon-btn{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);font:500 .8rem/1.4 \"Noto Sans\",sans-serif;padding:.2rem .45rem;cursor:pointer;transition:background-color 150ms var(--ease),color 150ms var(--ease)}.ds-icon-btn:hover,.ds-icon-btn[aria-pressed=\"true\"]{background:var(--card-2);color:var(--ink)}.ds-icon-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Drawer filter; the border turns focus blue while typing.",
+      "html": "<label class=\"ds-search\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input placeholder=\"Filter by title or folder\"></label>",
+      "css": ".ds-search{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);display:inline-flex;align-items:center;gap:.4rem;padding:0 .6rem;border:1px solid var(--rule-blue);border-radius:4px;background:var(--card);color:var(--muted)}.ds-search:focus-within{border-color:var(--focus)}.ds-search input{width:14rem;border:0;background:transparent;color:var(--ink);font:400 .9rem/1.6 \"Noto Sans\",sans-serif;padding:.38rem 0}.ds-search input:focus{outline:none}.ds-search input::placeholder{color:var(--muted)}"
+    },
+    {
+      "name": "Cabinet Rail Drawers",
+      "kind": "nav",
+      "refersTo": "drawer-front",
+      "description": "Steel drawer fronts with slotted tint label cards; the open drawer slides out and the others recede without dimming text.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-drawer\" style=\"--tint:#bcd6ec\" href=\"#\"><span class=\"ds-label\">Big Data Analytics</span><span></span><span class=\"ds-count\">12</span></a><a class=\"ds-drawer\" aria-current=\"true\" style=\"--tint:#f3de8c\" href=\"#\"><span class=\"ds-label\">Probability 2</span><span class=\"ds-fresh\">2 new</span><span class=\"ds-count\">10</span></a><a class=\"ds-drawer\" style=\"--tint:#f1c3cb\" href=\"#\"><span class=\"ds-label\">Personnal Skills F</span><span></span><span class=\"ds-count\">16</span></a><a class=\"ds-drawer ds-empty\" href=\"#\"><span class=\"ds-label\">SDG</span><span></span><span class=\"ds-count\">–</span></a></nav>",
+      "css": ".ds-rail{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);width:248px;padding:1rem .85rem;background:var(--steel);color:var(--steel-ink)}.ds-drawer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:.5rem;margin-bottom:.3rem;padding:.32rem .55rem .32rem .32rem;border-radius:4px;background:var(--steel-2);box-shadow:inset 0 1px 0 rgb(255 255 255/.05),inset 0 -1px 0 rgb(0 0 0/.25);color:var(--steel-ink);text-decoration:none;font-size:.86rem;transition:transform 180ms var(--ease),background-color 160ms var(--ease)}.ds-drawer:hover{background:var(--steel-3)}.ds-drawer:focus-visible{outline:2px solid #8fb8e8;outline-offset:2px}.ds-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.14rem .5rem .12rem;border-radius:2px;background:color-mix(in srgb,var(--tint) 62%,var(--steel-2));color:var(--ink);font-weight:500;box-shadow:0 0 0 2px var(--steel-3),0 0 0 3px rgb(255 255 255/.12),inset 0 1px 1px rgb(0 0 0/.18)}.ds-drawer:hover .ds-label{background:var(--tint)}.ds-drawer[aria-current=\"true\"]{background:var(--steel-3);transform:translateX(8px);box-shadow:inset 0 1px 0 rgb(255 255 255/.08),0 4px 10px rgb(0 0 0/.35)}.ds-drawer[aria-current=\"true\"] .ds-label{background:var(--tint);font-weight:600;box-shadow:0 0 0 2px var(--steel-ink),0 3px 8px rgb(0 0 0/.45)}.ds-empty{background:transparent;box-shadow:inset 0 0 0 1px var(--steel-2)}.ds-empty .ds-label{background:transparent;color:var(--steel-muted);font-weight:400;box-shadow:0 0 0 1px var(--steel-3)}.ds-count{font-variant-numeric:tabular-nums;color:var(--steel-muted);font-size:.8rem}.ds-fresh{font-size:.72rem;font-weight:600;line-height:1;padding:.2rem .35rem;border-radius:3px;background:#f3de8c;color:#1d2529}"
+    },
+    {
+      "name": "Fiche",
+      "kind": "card",
+      "refersTo": "fiche",
+      "description": "A cited source as a catalogue card: tint heading band with typed call number, title first, snippet, actions, rod hole. Hover or focus shows the pulled state.",
+      "html": "<article class=\"ds-fiche\" style=\"--tint:#f3de8c\"><header class=\"ds-fiche-head\"><span class=\"ds-fiche-n\">2</span><span class=\"ds-callno\">PROB2 · CH1 · p. 3</span></header><h3 class=\"ds-fiche-title\">Chapter I: Gaussian vectors</h3><p class=\"ds-fiche-snippet\">A random vector X = (X1, …, Xd) is said to be a Gaussian vector if every linear combination of its components is Gaussian.</p><footer class=\"ds-fiche-actions\"><button class=\"ds-fa\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/></svg> Passage</button><button class=\"ds-fa\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/></svg> Read</button></footer></article>",
+      "css": ".ds-fiche{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);position:relative;width:300px;margin-left:12px;padding:.75rem .9rem 1.35rem;background:var(--card);border-radius:4px;box-shadow:var(--shadow);transition:transform 200ms var(--ease),box-shadow 200ms var(--ease)}.ds-fiche:hover,.ds-fiche:focus-within{transform:translateX(-10px);box-shadow:var(--shadow-pulled),0 0 0 2px var(--tint)}.ds-fiche::after{content:\"\";position:absolute;bottom:.45rem;left:50%;width:.9rem;height:.9rem;margin-left:-.45rem;border-radius:50%;background:var(--ground);box-shadow:inset 0 2px 3px rgb(0 0 0/.38),0 1px 0 rgb(255 255 255/.85)}.ds-fiche-head{display:flex;align-items:center;gap:.55rem;margin:-.75rem -.9rem 0;padding:.45rem .9rem .4rem;border-radius:4px 4px 0 0;background:var(--tint);border-bottom:1px solid var(--rule-red)}.ds-fiche-n{min-width:1.35rem;padding:0 .3rem;border-radius:3px;background:var(--card);font-size:.75rem;font-weight:700;line-height:1.45;text-align:center;font-variant-numeric:tabular-nums}.ds-callno{font-family:\"Courier Prime\",ui-monospace,monospace;font-weight:700;font-size:.82rem;color:var(--ink);white-space:nowrap}.ds-fiche-title{margin:.7rem 0 0;font-size:1.02rem;font-weight:600;line-height:1.3}.ds-fiche-snippet{margin:.35rem 0 0;font-size:.85rem;line-height:1.5;color:var(--muted)}.ds-fiche-actions{display:flex;gap:.25rem;margin-top:.7rem}.ds-fa{display:inline-flex;align-items:center;gap:.35rem;border:0;border-radius:4px;background:transparent;color:var(--muted);font:500 .8rem/1.4 \"Noto Sans\",sans-serif;padding:.2rem .45rem;cursor:pointer}.ds-fa:hover{background:var(--card-2);color:var(--ink)}.ds-fa:focus-visible{outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Answer Card with Margin Column",
+      "kind": "custom",
+      "refersTo": "answer-card",
+      "description": "Question headline, meta, blue rule, answer with the red margin line; citation tabs sit in the margin on their claim's line and a traced claim takes the tint.",
+      "html": "<article class=\"ds-answer\" style=\"--tint:#f3de8c\"><header class=\"ds-head\"><h2 class=\"ds-q\">Qu'est-ce qu'un vecteur gaussien ?</h2><p class=\"ds-meta\"><span>Probability 2</span><span>Answered in 36 s</span></p></header><div class=\"ds-body\"><p>Un vecteur gaussien est un vecteur aléatoire dont toute combinaison linéaire est gaussienne <button class=\"ds-cite\">1</button>. <span class=\"ds-claim\"><span class=\"ds-tabs\"><span class=\"ds-tab\">2</span></span>Sa fonction caractéristique est donnée par E(e<sup>iuX</sup>) <button class=\"ds-cite\">2</button>.</span></p></div></article>",
+      "css": ".ds-answer{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);max-width:34rem;padding:1.15rem 1.35rem 1.25rem 3.25rem;background:linear-gradient(var(--rule-red),var(--rule-red)) 2.6rem 0/1px 100% no-repeat,var(--card);border-radius:4px;box-shadow:var(--shadow)}.ds-head{border-bottom:1px solid var(--rule-blue);padding-bottom:.6rem}.ds-q{margin:0;font-size:1.28rem;font-weight:600;letter-spacing:-.01em;line-height:1.25}.ds-meta{display:flex;justify-content:space-between;margin:.3rem 0 0;font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}.ds-body{position:relative;margin-top:.85rem;line-height:1.7}.ds-body p{margin:0}.ds-claim{border-radius:3px;transition:background-color 160ms var(--ease);box-decoration-break:clone;-webkit-box-decoration-break:clone}.ds-claim:hover{background:color-mix(in srgb,var(--tint) 70%,transparent)}.ds-tabs{position:absolute;left:-2.95rem;display:inline-flex;justify-content:flex-end;width:2.2rem;margin-top:.15rem;line-height:1}.ds-tab{min-width:1rem;padding:.08rem .16rem;border-radius:3px;font-size:.68rem;font-weight:600;line-height:1.35;text-align:center;font-variant-numeric:tabular-nums;background:var(--tint);transition:transform 160ms var(--ease)}.ds-claim:hover .ds-tab{transform:translateX(-4px);box-shadow:0 1px 3px rgb(0 0 0/.2)}.ds-cite{display:inline-block;min-width:1.15rem;margin:0 .08rem;padding:0 .22rem;border:0;border-radius:3px;background:transparent;color:var(--primary);font:700 .72rem/1.4 \"Noto Sans\",sans-serif;vertical-align:.45em;font-variant-numeric:tabular-nums;box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--primary) 50%,transparent);cursor:pointer}.ds-cite:hover{background:var(--tint);color:var(--ink);box-shadow:none}.ds-cite:focus-visible{background:var(--tint);color:var(--ink);box-shadow:none;outline:2px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Working Card",
+      "kind": "custom",
+      "refersTo": "working-card",
+      "description": "The question written on the red header line, beside the Ask button.",
+      "html": "<div class=\"ds-working\"><div class=\"ds-line\"><textarea rows=\"1\" placeholder=\"Ask Probability 2…\"></textarea><button class=\"ds-go\">Ask</button></div><p class=\"ds-foot\"><span>Filed under Probability 2</span><span>Enter to ask · Shift+Enter for a new line</span></p></div>",
+      "css": ".ds-working{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);max-width:34rem;padding:1.1rem 1.25rem .7rem 3.25rem;background:linear-gradient(var(--rule-red),var(--rule-red)) 2.6rem 0/1px 100% no-repeat,var(--card);border-radius:4px;box-shadow:var(--shadow)}.ds-line{display:flex;align-items:flex-end;gap:.75rem;border-bottom:2px solid var(--rule-red);padding-bottom:.4rem}.ds-line textarea{flex:1;min-height:2.2rem;resize:none;border:0;background:transparent;color:var(--ink);font:500 1.2rem/1.45 \"Noto Sans\",sans-serif;padding:.15rem 0;caret-color:var(--rule-red)}.ds-line textarea:focus{outline:none}.ds-line textarea::placeholder{color:var(--muted);font-weight:400}.ds-go{border:0;border-radius:5px;padding:.42rem .85rem;background:var(--primary);color:var(--on-primary);font:600 .92rem/1.4 \"Noto Sans\",sans-serif;cursor:pointer;transition:transform 120ms var(--ease)}.ds-go:hover{transform:translateY(-1px)}.ds-go:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-foot{display:flex;justify-content:space-between;gap:1rem;margin:.45rem 0 0;font-size:.8rem;color:var(--muted)}"
+    },
+    {
+      "name": "Receding History",
+      "kind": "card",
+      "refersTo": "past-card",
+      "description": "Past questions as single-line cards; each step back is narrower and fainter, hover or focus brings one forward.",
+      "html": "<div class=\"ds-past-stack\"><button class=\"ds-past\" style=\"--depth:0\"><span class=\"ds-pq\">Qu'est-ce qu'un processus de Wiener ?</span><span class=\"ds-pm\">Probability 2 · 3 fiches</span></button><button class=\"ds-past\" style=\"--depth:1\"><span class=\"ds-pq\">Définir la matrice de covariance</span><span class=\"ds-pm\">Probability 2 · 2 fiches</span></button><button class=\"ds-past\" style=\"--depth:2\"><span class=\"ds-pq\">Loi normale multivariée</span><span class=\"ds-pm\">Probability 2 · 1 fiche</span></button></div>",
+      "css": ".ds-past-stack{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);display:flex;flex-direction:column;gap:.4rem;max-width:34rem}.ds-past{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.75rem;width:calc(100% - var(--depth,0)*1.1rem);margin-inline:calc(var(--depth,0)*.55rem);opacity:calc(1 - var(--depth,0)*.13);padding:.55rem .9rem;border:0;border-radius:4px;text-align:start;color:var(--ink);background:var(--card-2);box-shadow:0 1px 1px rgb(29 37 41/.06);cursor:pointer;font-family:inherit;transition:transform 180ms var(--ease),box-shadow 180ms var(--ease),background-color 160ms var(--ease)}.ds-past:hover,.ds-past:focus-visible{opacity:1;background:var(--card);box-shadow:var(--shadow);transform:translateY(-1px)}.ds-past:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-pq{font-size:.95rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-pm{font-size:.78rem;color:var(--muted);white-space:nowrap}"
+    },
+    {
+      "name": "Guide Tab over Catalogue",
+      "kind": "custom",
+      "refersTo": "guide-tab",
+      "description": "Folder guide tabs in the unit tint, staggered in thirds, over a fixed-column catalogue block with blue row rules and a held new mark.",
+      "html": "<div class=\"ds-guide\" style=\"--tint:#bcd6ec\"><span class=\"ds-gtab\">Chapter 1 · The DevOps approach</span><div class=\"ds-cat\"><div class=\"ds-row\"><span class=\"ds-cn\">DEVOPS · CH1</span><a href=\"#\">Key Concepts of DevOps</a><span class=\"ds-fr\">new</span></div><div class=\"ds-row\"><span class=\"ds-cn\">DEVOPS · CH1</span><a href=\"#\">Roadmap</a><span></span></div></div><span class=\"ds-gtab ds-gtab-2\">Chapter 2 · Continuous Integration</span></div>",
+      "css": ".ds-guide{--ground:#dde3e6;--card:#fcfcfa;--card-2:#f1f3f2;--ink:#1d2529;--muted:#55626a;--rule-red:#d23f36;--rule-blue:#c3d3de;--steel:#243238;--steel-2:#2e3e45;--steel-3:#3a4d55;--steel-ink:#e6ecef;--steel-muted:#a9b8bf;--primary:#1f4e79;--on-primary:#fff;--focus:#1f6fd1;--tint-random:#f3de8c;--tint-modeling:#bcd6ec;--ease:cubic-bezier(0.16,1,0.3,1);--shadow:0 1px 2px rgb(29 37 41/.08),0 4px 14px rgb(29 37 41/.07);--shadow-pulled:0 2px 4px rgb(29 37 41/.1),0 12px 28px rgb(29 37 41/.16);font-family:\"Noto Sans\",\"Noto Sans Arabic\",system-ui,sans-serif;color:var(--ink);max-width:40rem;background:var(--ground);padding:1rem}.ds-gtab{display:inline-block;padding:.3rem .85rem .25rem;border-radius:6px 6px 0 0;background:var(--tint);color:var(--ink);font-size:.86rem;font-weight:600;white-space:nowrap}.ds-gtab-2{margin:1.4rem 0 0 9rem}.ds-cat{background:var(--card);border-radius:0 4px 4px 4px;box-shadow:var(--shadow);padding:.2rem 0}.ds-row{display:grid;grid-template-columns:10.5rem minmax(0,1fr) auto;align-items:baseline;gap:1rem;padding:.5rem .9rem;border-bottom:1px solid var(--rule-blue)}.ds-row:last-child{border-bottom:0}.ds-cn{font-family:\"Courier Prime\",ui-monospace,monospace;font-weight:700;font-size:.82rem;color:var(--muted)}.ds-row a{color:var(--ink);text-decoration:none;font-weight:500}.ds-row a:hover{color:var(--primary);text-decoration:underline}.ds-row a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}.ds-fr{font-size:.72rem;font-weight:600;line-height:1;padding:.2rem .35rem;border-radius:3px;background:var(--tint-random);color:var(--ink)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Card Catalogue",
+    "overview": "Second Brain is a library card catalogue built for one student. Every source is a bristol fiche with a typewritten call number; every question is written on the header line of a working card; every answer carries its citations in a ruled margin column, with the cited fiches pulled half out of the drawer beside it. Navigation is a dark steel cabinet whose drawer fronts carry slotted label cards. The world is physical and specific: pale steel ground, off-white card stock, a red header rule and a red margin line, small paper radii, a punched rod hole at the foot of each fiche.\n\nDensity is working-desk, not dashboard: one measure-wide card column (72ch), one 320px column of pulled fiches, one 248px cabinet rail. Colour is carried almost entirely by the six teaching-unit bristol tints, and a tint always marks where something is filed, never decoration. Depth comes from tone and soft paper shadows; motion is small physical displacement (a drawer slides out 8px, a fiche is pulled 10px, a margin tab nudges 4px). Dark mode is the same cabinet at night: dimmed card stock, deep steel, darkened tints, lighter rules.\n\nThe build explicitly rejects the chat-bubble column with source chips, coloured side stripes on cards, and dimming text to show selection.",
+    "keyCharacteristics": [
+      "Bristol card stock on a pale steel ground, red header rule and red margin line.",
+      "One bristol tint per teaching unit, used as label cards, heading bands, tabs and highlights.",
+      "Typewritten call numbers (Courier Prime 700) against Noto Sans text, with Noto Sans Arabic for RTL.",
+      "Margin citation column and sentence-level, two-way claim tracing between answer and fiche.",
+      "Small paper radii (2 to 6px), soft ambient shadows, no hard offsets.",
+      "Physical micro-motion on one expo-out curve, fully disabled under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Filing Tint Rule",
+        "body": "A tint means \"filed in this teaching unit\" and nothing else. It comes from the module map, never chosen per component, and every tinted surface carries ink text at full contrast.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Reds Rule",
+        "body": "Red draws rules and carets: the header line, the margin line, the heading-band underline, the column-header rule, and the live dot. It never fills a button and never marks an error; errors use bad.",
+        "section": "colors"
+      },
+      {
+        "name": "The Recede, Don't Dim Rule",
+        "body": "When a drawer is open, the other label cards sink by mixing their tint 62% toward steel-2; their text stays at full ink. Measured minimum contrast is 5.27:1 light and 6.06:1 dark. Selection never lowers text contrast.",
+        "section": "colors"
+      },
+      {
+        "name": "The Typed Call Number Rule",
+        "body": "Courier Prime is reserved for call numbers, page labels and inline code. It never sets headings, body text or buttons.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Count Rule",
+        "body": "Every count, citation numeral, tab, stamp and page number uses tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels and headings are sentence case at normal tracking. No uppercase tracked labels above headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Until Pulled Rule",
+        "body": "Cards rest on one shadow. Only a pulled fiche, an open drawer or a hovered past card lifts, and it lifts by displacement plus a deeper soft shadow, never by a hard offset.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do resolve every tint from the module map and pass it as the local tint variable; unknown modules take tint-other.",
+      "Do keep ink text at full contrast on every tint in both modes, and show selection by receding surfaces (color-mix toward steel-2 at 62%), not by dimming text.",
+      "Do draw the red margin line at 2.6rem inside a 3.25rem left padding on any card that carries text with citations or page content.",
+      "Do put the title first on a fiche face and carry the unit on a full-width tint heading band with the typed call number.",
+      "Do set call numbers as `MODULE · CHAPTER · p. N` in Courier Prime 700.",
+      "Do keep radii between 2px and 6px and shadows soft and ambient.",
+      "Do move things by small physical displacement (1px lift, 4px tab nudge, 8px drawer, 10px pull) on the one expo-out curve.",
+      "Do give every live wait an honest stamp with elapsed seconds.",
+      "Do set `dir=\"auto\"` and plaintext bidi on user and source text so Arabic lays out RTL at 1.85 line-height."
+    ],
+    "donts": [
+      "Don't render answers as chat bubbles or sources as chips; answers are cards and sources are fiches.",
+      "Don't mark a unit with a coloured side stripe on a card; tint belongs to heading bands, label cards, tabs and highlights that carry content.",
+      "Don't dim other items' text to show a selection.",
+      "Don't use red for fills, buttons or errors.",
+      "Don't use Courier Prime for headings, body or buttons.",
+      "Don't add uppercase tracked labels or kickers above headings.",
+      "Don't use hard offset shadows or large radii.",
+      "Don't mark material new by recency alone; freshness is first_seen after the first visit and holds until opened.",
+      "Don't let a streaming card reflow or flash a heading from a half-arrived list marker."
+    ]
+  }
+}

@@ -77,9 +77,14 @@ def test_ingest_dedupe_replace_remove(env):
     finally:
         pipeline.PARSER_VERSION -= 1
 
+    with db.get_pool().connection() as conn:
+        first_seen = conn.execute("SELECT first_seen FROM documents").fetchone()["first_seen"]
+
     note.write_text("# Sorting\n\nShort now.", encoding="utf-8")
     assert ingest_file(note, fake_embed, _words) == "ok"
     assert chunk_count(db, "Algo/notes.md") == 1
+    with db.get_pool().connection() as conn:  # re-ingesting never makes a file "new" again
+        assert conn.execute("SELECT first_seen FROM documents").fetchone()["first_seen"] == first_seen
 
     note.unlink()
     assert rescan(fake_embed, _words)["removed"] == 1

@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 _lock = threading.Lock()
 
 # Bump when parsing/chunking changes so existing files get re-ingested on the next scan.
-PARSER_VERSION = 2
+PARSER_VERSION = 3
 
 Embedder = Callable[[list[str]], list]
 

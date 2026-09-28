@@ -11,7 +11,7 @@ def dense(question: str, k: int, course: str | None = None) -> list[dict]:
         conn.execute("SET hnsw.ef_search = 100")
         return conn.execute(
             """SELECT c.id AS chunk_id, c.document_id AS doc_id, c.page, c.text, c.meta->>'label' AS label,
-                      d.title, d.course, d.mime, 1 - (c.embedding <=> %(q)s) AS score
+                      d.title, d.course, d.mime, d.path, 1 - (c.embedding <=> %(q)s) AS score
                FROM chunks c JOIN documents d ON d.id = c.document_id
                WHERE %(course)s::text IS NULL OR d.course = %(course)s
                ORDER BY c.embedding <=> %(q)s

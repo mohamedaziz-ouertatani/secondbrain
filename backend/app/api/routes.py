@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from ..config import get_settings
 from ..db import get_pool
+from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
 from ..rag.answer import ask
@@ -34,7 +35,7 @@ def documents() -> list[dict]:
     with get_pool().connection() as conn:
         return conn.execute(
             """SELECT d.id, d.path, d.title, d.course, d.mime, d.page_count, d.status, d.error,
-                      d.mtime, d.ingested_at, count(c.id) AS chunk_count
+                      d.mtime, d.ingested_at, d.first_seen, count(c.id) AS chunk_count
                FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
                GROUP BY d.id ORDER BY d.course NULLS LAST, d.title"""
         ).fetchall()
@@ -47,16 +48,42 @@ def courses() -> list[str]:
         return [r["course"] for r in rows]
 
 
-@router.get("/files/{doc_id}")
-def file(doc_id: int) -> FileResponse:
+def _document_file(doc_id: int, columns: str = "path, mime") -> tuple[dict, Path]:
+    """The document row and its file on disk; 404 unless the file sits inside the inbox."""
     with get_pool().connection() as conn:
-        row = conn.execute("SELECT path, mime FROM documents WHERE id = %s", (doc_id,)).fetchone()
+        row = conn.execute(f"SELECT {columns} FROM documents WHERE id = %s", (doc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "document not found")
     inbox = get_settings().inbox
     path = (inbox / row["path"]).resolve()
     if not path.is_relative_to(inbox) or not path.is_file():
         raise HTTPException(404, "file not found")
+    return row, path
+
+
+@router.get("/documents/{doc_id}/pages")
+def document_pages(doc_id: int) -> dict:
+    """The document's text per page/slide/section, re-parsed from the file (no chunk overlap)."""
+    row, path = _document_file(
+        doc_id, "id, path, title, course, mime, page_count, status, error, ingested_at"
+    )
+    try:
+        parsed = parse(path)
+    except Exception as e:
+        raise HTTPException(422, f"could not read {path.name}: {e}") from e
+    labels = parsed.labels or [None] * len(parsed.pages)
+    return {
+        **row,
+        "pages": [
+            {"page": i, "label": label, "text": text}
+            for i, (text, label) in enumerate(zip(parsed.pages, labels, strict=True), start=1)
+        ],
+    }
+
+
+@router.get("/files/{doc_id}")
+def file(doc_id: int) -> FileResponse:
+    row, path = _document_file(doc_id)
     mime = "text/plain; charset=utf-8" if row["mime"].startswith("text/") else row["mime"]
     # inline so the browser PDF viewer opens it and honors #page=N
     return FileResponse(path, media_type=mime, content_disposition_type="inline", filename=Path(row["path"]).name)

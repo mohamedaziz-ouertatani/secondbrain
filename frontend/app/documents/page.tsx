@@ -1,84 +1,186 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { API_URL, type DocumentRow, getJSON, partsCount } from "@/lib/api";
+import { ExternalLink, RefreshCw, Search } from "lucide-react";
+import Link from "next/link";
+import { Suspense, useState } from "react";
+import { API_URL, callNumber, type DocumentRow, fileUrl, kindOf, partsCount, readerUrl } from "@/lib/api";
+import { folderOf, tintVar, unitOf } from "@/lib/modules";
+import { ago, isNew, markSeen, newestFiled } from "@/lib/seen";
+import { useDrawer, useLibrary } from "@/lib/useLibrary";
 
 const PROBLEM: Record<Exclude<DocumentRow["status"], "ok">, string> = {
-  empty_text: "No text found. It looks like a scanned PDF, so it can't be searched yet.",
+  empty_text: "No text layer: a scanned file, not searchable yet",
   error: "Couldn't be read",
 };
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const loose = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 
-export default function DocumentsPage() {
-  const [docs, setDocs] = useState<DocumentRow[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+/** Synced notes are titled "Page — Section"; under that section's guide card the suffix is noise. */
+function shortTitle(d: DocumentRow): string {
+  const section = d.path.split("/").slice(-2, -1)[0] ?? "";
+  const m = /^(.*) — (.+)$/.exec(d.title);
+  return m && section && loose(m[2]) === loose(section) ? m[1] : d.title;
+}
+
+function DrawerView() {
+  const drawer = useDrawer();
+  const { docs, error, reload } = useLibrary();
+  const [query, setQuery] = useState("");
   const [scanning, setScanning] = useState(false);
-
-  const load = useCallback(() => {
-    getJSON<DocumentRow[]>("/documents")
-      .then((d) => {
-        setDocs(d);
-        setError(null);
-      })
-      .catch(() => setError(`Can't reach the backend at ${API_URL}.`));
-  }, []);
-
-  useEffect(load, [load]);
+  const [scanNote, setScanNote] = useState<string | null>(null);
 
   async function rescan() {
     setScanning(true);
+    setScanNote(null);
     try {
-      await fetch(`${API_URL}/ingest/rescan`, { method: "POST" });
+      const r = await fetch(`${API_URL}/ingest/rescan`, { method: "POST" });
+      const s = await r.json();
+      setScanNote(
+        r.ok
+          ? `Rescanned: ${s.ok ?? 0} filed, ${s.skipped ?? 0} unchanged, ${s.removed ?? 0} removed.`
+          : "A rescan is already running.",
+      );
     } catch {
-      setError(`Can't reach the backend at ${API_URL}.`);
+      setScanNote(`Can't reach the backend at ${API_URL}.`);
     } finally {
       setScanning(false);
-      load();
+      reload();
     }
   }
 
+  const q = query.trim().toLowerCase();
+  const rows = (docs ?? []).filter(
+    (d) => (drawer === null || d.course === drawer) && (!q || `${d.title} ${d.path}`.toLowerCase().includes(q)),
+  );
   const groups = new Map<string, DocumentRow[]>();
-  for (const d of docs ?? []) {
-    const k = d.course ?? "Loose notes";
-    groups.set(k, [...(groups.get(k) ?? []), d]);
+  for (const d of rows) {
+    const folder = folderOf(d.path);
+    const key = drawer === null ? [d.course ?? "Loose notes", folder].filter(Boolean).join(" › ") : folder || "Top of the drawer";
+    groups.set(key, [...(groups.get(key) ?? []), d]);
   }
+  const total = (docs ?? []).filter((d) => drawer === null || d.course === drawer);
 
   return (
-    <>
-      <div className="lib-head">
-        <h1>Library</h1>
-        <button type="button" onClick={rescan} disabled={scanning}>
-          {scanning ? "Rescanning…" : "Rescan inbox"}
-        </button>
-      </div>
-      {error && <p className="notice error">{error}</p>}
-      {docs?.length === 0 && (
-        <p className="empty">
-          Your library is empty. Put files in <code>inbox/&lt;course&gt;/</code> and they&apos;ll be added
-          automatically.
-        </p>
+    <div className="drawer-view" style={{ "--tint": tintVar(drawer) } as React.CSSProperties}>
+      <header className="drawer-head">
+        <div>
+          <h1>{drawer ?? "All drawers"}</h1>
+          <p>
+            {drawer ? `${unitOf(drawer).name} · ` : ""}
+            {total.length} fiche{total.length === 1 ? "" : "s"}
+            {total.length > 0 && ` · last filed ${ago(newestFiled(total))}`}
+          </p>
+        </div>
+        <div className="drawer-tools">
+          <label className="search">
+            <Search size={15} aria-hidden />
+            <span className="sr-only">Filter this drawer</span>
+            <input
+              type="search"
+              dir="auto"
+              value={query}
+              placeholder="Filter by title or folder"
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+          <button type="button" className="quiet-btn" onClick={rescan} disabled={scanning}>
+            <RefreshCw size={15} aria-hidden className={scanning ? "spin" : undefined} />
+            {scanning ? "Rescanning…" : "Rescan inbox"}
+          </button>
+        </div>
+      </header>
+
+      {scanNote && <p className="notice">{scanNote}</p>}
+      {error && <p className="notice bad">{error} Start it with uvicorn, then reload.</p>}
+
+      {docs && total.length === 0 && (
+        <section className="digest">
+          <h2>This drawer is empty</h2>
+          <p>
+            Nothing has been posted on Blackboard for it yet, or it hasn&apos;t been synced. Run{" "}
+            <code>uv run python -m app.sync.blackboard --headless</code> in <code>backend/</code>.
+          </p>
+        </section>
       )}
-      {[...groups].map(([course, rows]) => (
-        <section key={course} className="course">
-          <h2>{course}</h2>
-          <ul className="docs">
-            {rows.map((d) => (
-              <li key={d.id}>
-                <a href={`${API_URL}/files/${d.id}`} target="_blank" rel="noreferrer" dir="auto">
-                  {d.title}
-                </a>
-                <span className="facts">
-                  {[partsCount(d.mime, d.page_count), plural(d.chunk_count, "passage")].filter(Boolean).join(", ")}
-                </span>
-                {d.status !== "ok" && (
-                  <span className="problem" title={d.error ?? undefined}>{PROBLEM[d.status]}</span>
-                )}
-              </li>
-            ))}
-          </ul>
+      {docs && total.length > 0 && rows.length === 0 && <p className="notice">No fiche matches “{query}”.</p>}
+
+      {rows.length > 0 && (
+        <div className="drawer-table" role="table" aria-label={`Fiches in ${drawer ?? "all drawers"}`}>
+          <div className="row head" role="row">
+            <span role="columnheader">Call number</span>
+            <span role="columnheader">Title</span>
+            <span role="columnheader">Kind</span>
+            <span role="columnheader">Passages</span>
+            <span role="columnheader">
+              <span className="sr-only">Original</span>
+            </span>
+          </div>
+      {[...groups]
+        .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }))
+        .map(([folder, list], i) => (
+        <section
+          key={folder}
+          className="guide"
+          role="rowgroup"
+          aria-label={folder}
+          style={{ "--stagger": i % 3 } as React.CSSProperties}
+        >
+          <h2 className="guide-tab" dir="auto">
+            {folder}
+          </h2>
+          <div className="catalogue">
+            {list.map((d) => {
+              const fresh = isNew(d);
+              return (
+                <div key={d.id} role="row" className={`row${d.status !== "ok" ? " problem" : ""}`}>
+                  <span role="cell" className="callno">
+                    {callNumber({ ...d, page: 0, mime: "" })}
+                  </span>
+                  <span role="cell" className="title-cell">
+                    <Link href={readerUrl(d.id)} dir="auto" onClick={() => markSeen(d.id)}>
+                      {shortTitle(d)}
+                    </Link>
+                    {fresh && <span className="fresh">new</span>}
+                    {d.status !== "ok" && (
+                      <span className="problem-note" title={d.error ?? undefined}>
+                        {PROBLEM[d.status]}
+                      </span>
+                    )}
+                  </span>
+                  <span role="cell" className="num">
+                    {[kindOf(d.mime), partsCount(d.mime, d.page_count)].filter(Boolean).join(" · ")}
+                  </span>
+                  <span role="cell" className="num">
+                    {d.chunk_count}
+                  </span>
+                  <span role="cell">
+                    <a
+                      className="icon-only"
+                      href={fileUrl({ doc_id: d.id, mime: d.mime })}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open the original of ${d.title}`}
+                      onClick={() => markSeen(d.id)}
+                    >
+                      <ExternalLink size={15} aria-hidden />
+                    </a>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </section>
       ))}
-    </>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense>
+      <DrawerView />
+    </Suspense>
   );
 }

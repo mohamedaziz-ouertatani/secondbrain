@@ -83,3 +83,4 @@ def test_clean_title():
     assert clean_title("Diapositive 1", f) == "chap1"
     assert clean_title("", f) == "chap1"
     assert clean_title("Big Data Analytics", f) == "Big Data Analytics"
+    assert clean_title("Template ESPRIT", f) == "chap1"  # the school's slide template, not the deck

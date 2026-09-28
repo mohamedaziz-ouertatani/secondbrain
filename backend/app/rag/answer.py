@@ -58,7 +58,7 @@ def ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
             citations.append({
                 "n": new_n, "chunk_id": src["chunk_id"], "doc_id": src["doc_id"],
                 "title": src["title"], "page": src["page"], "label": src["label"], "course": src["course"],
-                "mime": src["mime"], "snippet": _snippet(src["text"]),
+                "mime": src["mime"], "path": src["path"], "snippet": _snippet(src["text"]), "text": src["text"],
             })
         entry.update(answer=v.text, citations=citations, citation_valid=v.valid)
         if v.invalid:

@@ -24,7 +24,10 @@ def embed(texts: list[str]) -> list[np.ndarray]:
     with _client() as c:
         for i in range(0, len(texts), s.embed_batch):
             batch = texts[i : i + s.embed_batch]
-            r = c.post("/api/embed", json={"model": s.embed_model, "input": batch})
+            body = {"model": s.embed_model, "input": batch}
+            if s.embed_on_cpu:
+                body["options"] = {"num_gpu": 0}  # never evicts the chat model from VRAM
+            r = c.post("/api/embed", json=body)
             if r.status_code != 200:
                 raise OllamaError(f"embed failed ({r.status_code}): {r.text[:200]}")
             for v in r.json()["embeddings"]:
@@ -73,6 +76,7 @@ def chat_stream(messages: list[dict]) -> Iterator[str]:
         "messages": messages,
         "stream": True,
         "think": False,  # skip reasoning on models that support it; ignored by others
+        "keep_alive": s.llm_keep_alive,
         "options": {"num_ctx": s.num_ctx, "temperature": s.temperature},
     }
 

@@ -5,8 +5,11 @@ ollama_url: http://localhost:11434
 # Models (4 GB VRAM: keep the LLM around 4B at Q4)
 llm_model: qwen3:4b-instruct   # non-thinking; alternatives: qwen2.5:3b, qwen2.5:7b-instruct (CPU offload)
 embed_model: bge-m3
+# 4 GB VRAM holds one model: keep embeddings on the CPU (ms per question) so the LLM is never evicted
+embed_on_cpu: true
+llm_keep_alive: 30m      # stay loaded through a revision session instead of reloading (~9 s)
 embed_dim: 1024
-num_ctx: 6144
+num_ctx: 4096            # 5 passages x ~500 tokens + answer; smaller = more of the model on the GPU
 temperature: 0.2
 
 # Ingestion

@@ -1,4 +1,10 @@
+import { chapterCode, moduleCode } from "./modules";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export const PDF = "application/pdf";
+export const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+export const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export type Citation = {
   n: number;
@@ -9,7 +15,9 @@ export type Citation = {
   label: string | null;
   course: string | null;
   mime: string;
+  path: string;
   snippet: string;
+  text: string;
 };
 
 export type Done = {
@@ -29,29 +37,56 @@ export type DocumentRow = {
   status: "ok" | "empty_text" | "error";
   error: string | null;
   ingested_at: string;
+  first_seen: string;
   chunk_count: number;
 };
 
-const PDF = "application/pdf";
-const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+export type DocumentPages = Omit<DocumentRow, "chunk_count"> & {
+  pages: { page: number; label: string | null; text: string }[];
+};
 
-/** Where in the file a citation points: "p. 3", "slide 3", a Word section heading, or "note". */
-export function locator(c: Pick<Citation, "mime" | "page" | "label">): string {
+export type Health = {
+  ok: boolean;
+  db: { ok: boolean; error?: string };
+  ollama: { reachable: boolean; llm_model?: string; llm_pulled?: boolean; embed_pulled?: boolean; error?: string };
+};
+
+type Locatable = { mime: string; page: number; label?: string | null };
+
+/** Where in the file: "p. 3", "slide 3", a Word section heading, or "note". */
+export function locator(c: Locatable): string {
   if (c.mime === PDF) return `p. ${c.page}`;
   if (c.mime === PPTX) return `slide ${c.page}`;
   return c.label ?? "note";
 }
 
-/** "12 pages", "30 slides", "4 sections" — null for single-part notes. */
+/** Library call number: PROB2 · CH1 · p. 3 */
+export function callNumber(c: Locatable & { course: string | null; path: string }): string {
+  const parts = [moduleCode(c.course), chapterCode(c.path)];
+  if (c.mime === PDF || c.mime === PPTX || (c.mime === DOCX && c.label)) parts.push(locator(c));
+  return parts.filter(Boolean).join(" · ");
+}
+
+/** "12 pages", "30 slides", "4 sections"; null for single-part notes. */
 export function partsCount(mime: string, n: number): string | null {
   const unit = mime === PDF ? "page" : mime === PPTX ? "slide" : mime === DOCX ? "section" : null;
   return unit && `${n} ${unit}${n === 1 ? "" : "s"}`;
 }
 
-export function fileUrl(c: Pick<Citation, "doc_id" | "page" | "mime">): string {
+export function kindOf(mime: string): string {
+  if (mime === PDF) return "PDF";
+  if (mime === PPTX) return "Slides";
+  if (mime === DOCX) return "Word";
+  return "Note";
+}
+
+export function fileUrl(c: { doc_id: number; page?: number; mime: string }): string {
   const base = `${API_URL}/files/${c.doc_id}`;
-  return c.mime === PDF ? `${base}#page=${c.page}` : base;
+  return c.mime === PDF && c.page ? `${base}#page=${c.page}` : base;
+}
+
+export function readerUrl(docId: number, page?: number): string {
+  return `/documents/${docId}${page ? `#p-${page}` : ""}`;
 }
 
 type Handlers = {
@@ -75,7 +110,7 @@ export async function askStream(question: string, course: string | null, h: Hand
     return;
   }
   if (!res.ok || !res.body) {
-    h.onError(`The backend returned ${res.status}.`);
+    h.onError(`The backend answered ${res.status}. Check its log for the cause.`);
     return;
   }
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();

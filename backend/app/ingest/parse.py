@@ -23,7 +23,7 @@ MIN_CHARS_PER_PAGE = 30
 # Metadata titles that say nothing about the content; fall back to the file name.
 _GENERIC_TITLES = re.compile(
     r"^(powerpoint presentation|présentation powerpoint|presentation|présentation|diapositive \d+|slide \d+|"
-    r"document|untitled|sans titre|microsoft word - .*)$",
+    r"document|untitled|sans titre|microsoft word - .*|(template|modèle|modele)\b.*)$",
     re.IGNORECASE,
 )
 

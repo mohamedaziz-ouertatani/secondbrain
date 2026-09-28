@@ -8,3 +8,8 @@ node_modules/
 inbox/*
 !inbox/.gitkeep
 backend/data/
+
+# impeccable working files (screenshots, decision-page state)
+.impeccable/review/
+.impeccable/questions/
+.impeccable/brief-body.md

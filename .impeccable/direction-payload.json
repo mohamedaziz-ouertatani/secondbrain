@@ -1,0 +1,132 @@
+{
+  "title": "Choose the visual world for Second Brain",
+  "question": "The roll assigned the card catalogue: every source becomes an index card with a call number. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Fiches bristol · the card catalogue",
+      "kicker": "THE ROLL",
+      "lineage": "Library card catalogues and the ruled bristol index cards French-school students revise with",
+      "thesis": "Every source is a fiche with a call number; every answer is written on a working card with its cited fiches pulled from the drawer beside it.",
+      "palette": ["#26343A", "#F7F6F1", "#D8423A", "#9DB7C9", "#F2D65C", "#9CCB9A"],
+      "materials": ["ruled bristol card stock with the red header line", "blue-grey steel catalogue drawers with label holders", "typewritten call numbers", "a rod hole at each card's foot"],
+      "viewport": "Left: a steel cabinet rail of module drawers grouped by teaching unit, with card counts and new-since-sync marks. Centre: the working card, question on its red header line, answer typed on its ruled lines. Right: the cited fiches, each with a call number like PROB2 · CH1 · p. 3.",
+      "risk": "Can slide into costume if the card texture turns decorative; the ruling, colour-per-module and call numbers must each do a job or be cut.",
+      "raised": [
+        {"from": "Orizuru fold sequence", "raise": "Citation numbers sit in a strict margin column on the card's red margin line, aligned to the paragraph they support."},
+        {"from": "Tensegrity column", "raise": "Tracing runs both ways: focus a fiche and every sentence that leans on it lights up in the answer."},
+        {"from": "Split-flap concourse", "raise": "The library drawer is a fixed-column grid (call number, title, parts, status) whose columns never move; only rows change."},
+        {"from": "Cracktro scroller", "raise": "Stillness while reading: the working card never moves while an answer streams; past cards recede by depth, not clutter."},
+        {"from": "Leather reading shelf", "raise": "You handle the object: a fiche flips to show the full passage on its back, the gesture future flashcards will reuse."},
+        {"from": "Boarding pass and gate board", "raise": "Changes stay lit until noticed: newly synced material keeps its mark in the drawer until you open it."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "The lab notebook (Jupyter)",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Jupyter notebooks, the data-science student's daily working surface",
+      "thesis": "Each question is an input cell and each answer an executed output, its sources returned like a cell's printed results.",
+      "palette": ["#FFFFFF", "#1F2328", "#F37626", "#2F6FEB", "#E8EDF3"],
+      "materials": ["numbered In [n] / Out [n] cells", "a kernel-status bar", "monospaced prompts beside proportional prose"],
+      "viewport": "A notebook of cells scoped to one module kernel: run a question with Shift+Enter, the output streams below with numbered source outputs.",
+      "risk": "The most familiar choice: it looks like work rather than revision, and code-editor grammar handles Arabic right-to-left prose poorly."
+    },
+    {
+      "id": "challenger-orizuru",
+      "label": "Orizuru fold sequence",
+      "verdict": "declined",
+      "lineage": "origami crane instruction sequences",
+      "thesis": "One sheet passing through numbered folds from flat square to finished crane.",
+      "palette": ["#C8372D", "#F4EFE6", "#1C1C1C", "#C9A227"],
+      "materials": ["vermilion washi", "crease lines"],
+      "viewport": "A strict numbered margin column beside a centred diagram.",
+      "case": "Fuses poorly: a student revising probability does not recognise themself in paper folding, and answers are not step sequences.",
+      "risk": "Pure metaphor; nothing in the product folds.",
+      "kept": "Its strict numbered margin column, now carrying the citations.",
+      "hero": "https://impeccable.style/worlds/cards/paper-folds-pleats-deployable-orizuru-crane-sequence-hero.webp"
+    },
+    {
+      "id": "challenger-tensegrity",
+      "label": "Tensegrity column",
+      "verdict": "declined",
+      "lineage": "kinetic tension sculpture",
+      "thesis": "Trace any load to its counterforce through a network of rods and cords.",
+      "palette": ["#1A1A1A", "#D9D6CF", "#C23B2E", "#8C8C8C"],
+      "materials": ["carbon rods", "red cord"],
+      "viewport": "Annotations pinned to nodes on leader lines.",
+      "case": "Fuses partly: tracing a claim to its source maps well, but the sculpture means nothing to the student.",
+      "risk": "Engineering-art costume over a study tool.",
+      "kept": "Two-way tracing between claims and the sources they lean on.",
+      "hero": "https://impeccable.style/worlds/cards/kinetic-sculpture-automata-tensegrity-breathing-column-hero.webp"
+    },
+    {
+      "id": "challenger-splitflap",
+      "label": "Split-flap concourse",
+      "verdict": "declined",
+      "lineage": "rail departure boards",
+      "thesis": "Rows ranked by time on a board whose columns never move.",
+      "palette": ["#111111", "#F2F2F2", "#E0A030", "#8E2B2B"],
+      "materials": ["black flaps", "brushed steel"],
+      "viewport": "A ruled board of rows cascading on change.",
+      "case": "Fuses poorly: answers are prose, not departures; it only suits the library list.",
+      "risk": "Novelty cascade on a reading surface.",
+      "kept": "Fixed columns that never move in the library drawer.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse-hero.webp"
+    },
+    {
+      "id": "challenger-cracktro",
+      "label": "Cracktro scroller queue",
+      "verdict": "declined",
+      "lineage": "demoscene title screens",
+      "thesis": "One still line of bitmap text over drifting depth layers.",
+      "palette": ["#050505", "#EDE6D6", "#6E6E6E", "#E8A33A"],
+      "materials": ["bitmap type", "emissive void"],
+      "viewport": "Layers stacked by depth, the front plane still while read.",
+      "case": "Fuses poorly: bitmap type cannot carry dense French, English and Arabic course text for hours.",
+      "risk": "Unreadable at revision length.",
+      "kept": "Stillness while reading, and depth as state for past answers.",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-cracktro-scroller-queue-hero.webp"
+    },
+    {
+      "id": "challenger-leather",
+      "label": "Leather reading shelf",
+      "verdict": "declined",
+      "lineage": "skeuomorphic app design",
+      "thesis": "Digital things rendered as loved physical objects on a shelf.",
+      "palette": ["#8B5A2B", "#E9E4DA", "#5A3A22", "#F6F1E7"],
+      "materials": ["stitched leather", "linen", "torn paper"],
+      "viewport": "Books on shelves, pages that curl.",
+      "case": "Fuses poorly: lamplight and leather are the warm-bookish rut, and texture fights formula-heavy reading.",
+      "risk": "Nostalgic and heavy.",
+      "kept": "Handling the object: flipping a fiche to read its back.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-skeuomorph-leather-studio-hero.webp"
+    },
+    {
+      "id": "challenger-boardingpass",
+      "label": "Boarding pass and gate board",
+      "verdict": "declined",
+      "lineage": "travel documents and gate displays",
+      "thesis": "A segmented pass plus a board that reranks in place and holds changes lit.",
+      "palette": ["#FFFFFF", "#101820", "#FFB400", "#5B6770"],
+      "materials": ["segmented pass stubs", "tabular figures"],
+      "viewport": "Citations as pass segments, the library as a live board.",
+      "case": "Fuses partly: good for sync freshness, but a student does not recognise revision as travel.",
+      "risk": "Airport chrome on a study desk.",
+      "kept": "Newly synced material stays marked until you open it.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code"},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A chat-with-your-notes assistant: centred conversation column, source chips under each answer, notebooks in a sidebar.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB", "#F3F4F6"],
+    "materials": ["clean chat column", "source chips", "sidebar of notebooks"],
+    "viewport": "Sidebar of modules, centred chat thread, input pinned at the bottom.",
+    "risk": "Indistinguishable from every AI chat product by design."
+  },
+  "steer": true
+}

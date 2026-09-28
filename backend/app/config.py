@@ -23,8 +23,10 @@ class Settings(BaseSettings):
 
     llm_model: str = "qwen3:4b-instruct"
     embed_model: str = "bge-m3"
+    embed_on_cpu: bool = True
+    llm_keep_alive: str = "30m"
     embed_dim: int = 1024
-    num_ctx: int = 6144
+    num_ctx: int = 4096
     temperature: float = 0.2
 
     watch_dir: Path = Path("inbox")
