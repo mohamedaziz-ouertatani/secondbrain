@@ -71,6 +71,7 @@ def test_status_parts(env, client, monkeypatch):
     assert s["gpu"] == {"available": True, "name": "NVIDIA GeForce RTX 2050", "used_mib": 3712, "total_mib": 4096}
     assert s["answers"] == {"count": 0, "median_ms": None, "max_ms": None, "last_at": None}
     assert s["index"]["documents"] == 0 and s["index"]["excluded"] == 0 and s["index"]["db_bytes"] > 0
+    assert s["index"]["ocr"]["pages"] == 0 and "available" in s["index"]["ocr"]
 
     with db.get_pool().connection() as conn:
         for ms in (4000, 8000, 60000):

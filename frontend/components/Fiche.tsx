@@ -35,6 +35,11 @@ export function Fiche({
       <header className="fiche-head">
         <span className="fiche-n">{c.n}</span>
         <span className="callno">{callNumber(c)}</span>
+        {c.ocr && (
+          <span className="ocr-tag" title="Read from an image; may contain recognition errors">
+            OCR
+          </span>
+        )}
       </header>
 
       {flipped ? (

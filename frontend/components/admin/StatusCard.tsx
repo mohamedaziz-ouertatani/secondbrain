@@ -97,7 +97,7 @@ export function StatusCard() {
         <dt>Index</dt>
         <dd>
           {s.index
-            ? `${s.index.documents} documents · ${s.index.chunks} chunks · ${s.index.excluded} excluded · ${mb(s.index.db_bytes)} on disk`
+            ? `${s.index.documents} documents · ${s.index.chunks} chunks · ${s.index.excluded} excluded · ${mb(s.index.db_bytes)} on disk · ${s.index.ocr.available ? `OCR on · ${s.index.ocr.pages} passages` : "OCR off: language data missing (python -m app.ingest.ocr --setup)"}`
             : "–"}
         </dd>
       </dl>

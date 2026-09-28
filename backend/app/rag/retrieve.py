@@ -33,6 +33,7 @@ def keywords(question: str) -> list[str]:
 
 
 _COLUMNS = """c.id AS chunk_id, c.document_id AS doc_id, c.page, c.text, c.meta->>'label' AS label,
+              (c.meta->>'ocr')::boolean IS TRUE AS ocr,
               d.title, d.course, d.mime, d.path, 1 - (c.embedding <=> %(q)s) AS score"""
 _COURSE = "(%(course)s::text IS NULL OR d.course = %(course)s)"
 

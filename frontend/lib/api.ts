@@ -18,6 +18,8 @@ export type Citation = {
   path: string;
   snippet: string;
   text: string;
+  /** read from an image by OCR; absent on answers saved before OCR existed */
+  ocr?: boolean;
 };
 
 export type Done = {
@@ -192,7 +194,13 @@ export type AdminStatus = {
     | null;
   gpu: { available: false } | { available: true; name: string; used_mib: number; total_mib: number };
   answers: { count: number; median_ms: number | null; max_ms: number | null; last_at: string | null } | null;
-  index: { documents: number; chunks: number; excluded: number; db_bytes: number } | null;
+  index: {
+    documents: number;
+    chunks: number;
+    excluded: number;
+    db_bytes: number;
+    ocr: { available: boolean; pages: number };
+  } | null;
 };
 
 export type AdminLibrary = {

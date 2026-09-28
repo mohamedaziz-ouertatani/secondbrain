@@ -64,8 +64,17 @@ def _index() -> dict:
         return conn.execute(
             """SELECT (SELECT count(*) FROM documents) AS documents, (SELECT count(*) FROM chunks) AS chunks,
                       (SELECT count(*) FROM excluded_paths) AS excluded,
+                      (SELECT count(*) FROM chunks WHERE (meta->>'ocr')::boolean) AS ocr_chunks,
                       pg_database_size(current_database()) AS db_bytes"""
         ).fetchone()
+
+
+def _index_with_ocr() -> dict:
+    from ..ingest import ocr
+
+    idx = _index()
+    return {**{k: v for k, v in idx.items() if k != "ocr_chunks"},
+            "ocr": {"available": ocr.available(), "pages": idx["ocr_chunks"]}}
 
 
 def _safe(part):
@@ -82,5 +91,5 @@ def status() -> dict:
         "llm": _safe(_llm),
         "gpu": _safe(_gpu) or {"available": False},
         "answers": _safe(_answers),
-        "index": _safe(_index),
+        "index": _safe(_index_with_ocr),
     }

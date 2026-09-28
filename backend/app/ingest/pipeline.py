@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 _lock = threading.Lock()
 
 # Bump when parsing/chunking changes so existing files get re-ingested on the next scan.
-PARSER_VERSION = 3
+PARSER_VERSION = 4
 
 Embedder = Callable[[list[str]], list]
 
@@ -72,10 +72,12 @@ def ingest_file(
                "title": path.stem, "mime": SUPPORTED[path.suffix.lower()], "page_count": 0,
                "status": "ok", "error": None, "parser_version": PARSER_VERSION}
         chunks, vectors, labels = [], [], None
+        ocr_pages: set[int] = set()
         try:
             parsed = parse(path)
             doc.update(title=parsed.title, mime=parsed.mime, page_count=len(parsed.pages))
             labels = parsed.labels
+            ocr_pages = parsed.ocr_pages
             if not parsed.has_text:
                 doc["status"] = "empty_text"
             else:
@@ -103,12 +105,20 @@ def ingest_file(
                 with conn.cursor() as cur:
                     cur.executemany(
                         "INSERT INTO chunks (document_id, ord, page, text, n_tokens, embedding, meta) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                        [(doc_id, i, c.page, c.text, c.n_tokens, v,
-                          Jsonb({**meta, "label": labels[c.page - 1]} if labels else meta))
+                        [(doc_id, i, c.page, c.text, c.n_tokens, v, Jsonb(_chunk_meta(meta, labels, ocr_pages, c.page)))
                          for i, (c, v) in enumerate(zip(chunks, vectors, strict=True))],
                     )
         log.info("ingested %s: %s, %d chunks", rel, doc["status"], len(chunks))
         return doc["status"]
+
+
+def _chunk_meta(meta: dict, labels, ocr_pages: set[int], page: int) -> dict:
+    m = {**meta}
+    if labels:
+        m["label"] = labels[page - 1]
+    if page in ocr_pages:
+        m["ocr"] = True  # text read from an image; the fiche says so
+    return m
 
 
 def remove_file(path: Path) -> bool:
