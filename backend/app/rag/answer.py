@@ -26,10 +26,13 @@ def ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
         "question": question,
         "llm_model": s.llm_model,
         "embed_model": s.embed_model,
-        "params": {"top_k": s.top_k, "min_score": s.min_score, "mode": "dense", "course": course},
+        "params": {"top_k": s.top_k, "min_score": s.min_score, "mode": s.retrieval_mode, "course": course,
+                   **({"candidate_k": s.candidate_k, "rrf_k": s.rrf_k} if s.retrieval_mode == "hybrid" else {})},
         "retrieved": [
             {"chunk_id": h["chunk_id"], "doc_id": h["doc_id"], "page": h["page"],
-             "score": round(float(h["score"]), 4), "rank": i, "used": h in sources}
+             "score": round(float(h["score"]), 4), "rank": i, "used": h in sources,
+             **{key: h[key] for key in ("dense_rank", "lex_rank") if key in h},
+             **({"rrf": round(h["rrf"], 5)} if "rrf" in h else {})}
             for i, h in enumerate(candidates, start=1)
         ],
         "answer": None,

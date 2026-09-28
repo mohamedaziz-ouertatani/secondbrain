@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     chunk_overlap: int = 80
     embed_batch: int = 16
 
+    retrieval_mode: str = "dense"  # or "hybrid"
     top_k: int = 5
+    candidate_k: int = 20  # per list, before fusion
+    rrf_k: int = 60
     min_score: float = 0.35
 
     cors_origins: list[str] = ["http://localhost:3000"]
