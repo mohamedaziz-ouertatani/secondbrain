@@ -93,3 +93,22 @@ def test_ocr_off_means_no_ocr_and_no_error(tmp_path, monkeypatch):
         assert parsed.ocr_pages == set() and parsed.pages == [""]
     finally:
         config.get_settings.cache_clear()
+
+
+@needs_data
+def test_pipeline_tags_ocr_chunks(env):
+    from fakes import fake_embed, words
+
+    from app.ingest.pipeline import ingest_file
+
+    inbox, db = env
+    doc = pymupdf.open()
+    doc.new_page().insert_text((72, 72), "A real text page about stochastic processes and brownian motion. " * 4)
+    doc.new_page().insert_image(pymupdf.Rect(72, 72, 472, 192), stream=text_png("docker compose up"))
+    (inbox / "DEVOPS").mkdir()
+    f = inbox / "DEVOPS" / "ws.pdf"
+    doc.save(f)
+    assert ingest_file(f, fake_embed, words) == "ok"
+    with db.get_pool().connection() as conn:
+        rows = conn.execute("SELECT page, (meta->>'ocr')::boolean IS TRUE AS ocr FROM chunks ORDER BY page").fetchall()
+    assert [(r["page"], r["ocr"]) for r in rows] == [(1, False), (2, True)]

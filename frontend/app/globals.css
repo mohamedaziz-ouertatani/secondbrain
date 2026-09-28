@@ -2169,3 +2169,15 @@ td {
     width: 6.5rem;
   }
 }
+
+/* a fiche whose text was read from an image: said plainly, next to the call number */
+.ocr-tag {
+  margin-inline-start: 0.4rem;
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-family: var(--type);
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
