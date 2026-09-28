@@ -34,3 +34,21 @@ def test_language_detection():
     assert detect("Quelle est la différence entre TCP et UDP") == "fr"
     assert detect("What does third normal form remove?") == "en"
     assert detect("Explain B-tree indexes") == "en"
+
+
+def test_ollama_client_is_shared_and_follows_the_url(monkeypatch):
+    from app.config import get_settings
+    from app.llm import ollama
+
+    monkeypatch.setattr(ollama, "_shared", None)
+    first = ollama._client()
+    assert ollama._client() is first  # reused: no per-call client or connection setup
+    assert str(first.base_url).startswith("http://127.0.0.1:11434")
+
+    monkeypatch.setenv("OLLAMA_URL", "http://127.0.0.1:9")
+    get_settings.cache_clear()
+    try:
+        moved = ollama._client()
+        assert moved is not first and str(moved.base_url).startswith("http://127.0.0.1:9")
+    finally:
+        get_settings.cache_clear()

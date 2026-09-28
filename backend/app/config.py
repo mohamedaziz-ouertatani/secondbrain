@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "postgresql://secondbrain:secondbrain@localhost:5433/secondbrain"
-    ollama_url: str = "http://localhost:11434"
+    ollama_url: str = "http://127.0.0.1:11434"  # not localhost: on Windows that tries IPv6 first (~2 s)
 
     llm_model: str = "qwen3:4b-instruct"
     embed_model: str = "bge-m3"
