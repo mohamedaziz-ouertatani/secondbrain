@@ -2235,3 +2235,22 @@ td {
   background: var(--card);
   color: var(--ink);
 }
+
+/* ---- labels: your rating of an answer and marks on its fiches, which feed the evaluation ----- */
+.rate {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.rate .icon-btn[aria-pressed="true"] {
+  color: var(--primary);
+  background: var(--card-2);
+}
+
+.relevant-mark.yes {
+  color: var(--good);
+}
+
+.relevant-mark.no {
+  color: var(--bad);
+}

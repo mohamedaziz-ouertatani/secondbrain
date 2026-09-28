@@ -7,7 +7,7 @@ import { AnswerCard, type Entry, PastCard } from "@/components/AnswerCard";
 import { DrawerDigest } from "@/components/DrawerDigest";
 import { Fiche } from "@/components/Fiche";
 import { UndoNote } from "@/components/UndoNote";
-import { askStream, fetchHistory, fetchHistoryItem } from "@/lib/api";
+import { askStream, fetchHistory, fetchHistoryItem, putLabels } from "@/lib/api";
 import { toEntry, useUndoDelete } from "@/lib/history";
 import { tintVar } from "@/lib/modules";
 import { useDrawer, useLibrary } from "@/lib/useLibrary";
@@ -79,6 +79,28 @@ function AskDesk() {
 
   const update = (id: string, patch: (e: Entry) => Partial<Entry>) =>
     setEntries((all) => all.map((e) => (e.id === id ? { ...e, ...patch(e) } : e)));
+
+  // Labels (answer rating, relevant fiches) are saved at once; shown optimistically, undone if saving fails.
+  const [labelError, setLabelError] = useState<string | null>(null);
+  async function saveLabels(entry: Entry, patch: Partial<Entry>, body: Parameters<typeof putLabels>[1]) {
+    if (!entry.logId) return;
+    const before = { feedback: entry.feedback, relevant: entry.relevant };
+    setLabelError(null);
+    update(entry.id, () => patch);
+    try {
+      await putLabels(entry.logId, body);
+    } catch {
+      update(entry.id, () => before);
+      setLabelError("Couldn't save your mark. Is the backend running?");
+    }
+  }
+  const rate = (entry: Entry, v: -1 | 1 | null) => saveLabels(entry, { feedback: v }, { feedback: v });
+  function markRelevant(entry: Entry, n: number, v: boolean | null) {
+    const relevant = { ...(entry.relevant ?? {}) };
+    if (v === null) delete relevant[String(n)];
+    else relevant[String(n)] = v;
+    return saveLabels(entry, { relevant }, { relevant: { [String(n)]: v } });
+  }
 
   async function submit() {
     const q = question.trim();
@@ -165,6 +187,8 @@ function AskDesk() {
             onActiveCite={setActiveCite}
             onPull={pull}
             onDelete={active.logId ? () => remove(active.logId!) : undefined}
+            onRate={active.logId ? (v) => rate(active, v) : undefined}
+            labelError={labelError}
           />
         ) : (
           <DrawerDigest docs={docs} drawer={drawer} />
@@ -194,7 +218,14 @@ function AskDesk() {
       <aside className="fiches" aria-label="Cited fiches">
         {active && active.citations.length > 0 ? (
           active.citations.map((c) => (
-            <Fiche key={c.n} c={c} active={activeCite === c.n} onActive={setActiveCite} />
+            <Fiche
+              key={c.n}
+              c={c}
+              active={activeCite === c.n}
+              onActive={setActiveCite}
+              relevant={active.relevant?.[String(c.n)]}
+              onRelevant={active.logId && active.status === "done" ? (v) => markRelevant(active, c.n, v) : undefined}
+            />
           ))
         ) : (
           <p className="fiches-empty">
