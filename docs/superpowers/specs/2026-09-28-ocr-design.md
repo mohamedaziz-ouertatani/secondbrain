@@ -27,7 +27,8 @@ Measured on the current inbox:
 
 This leads to two rules:
 - **Image areas only** (`full=False`), so the existing text layer isn't read twice.
-- **A line filter:** an OCR line is kept only if it has at least 2 words of 2 or more letters or digits, and at least 60% of its non-space characters are letters or digits. Everything else is dropped.
+- **A line filter:** an OCR line is kept only if it has at least 2 words of 3 or more letters or digits, and at least 60% of its non-space characters are letters or digits. Everything else is dropped. (With 2-letter words the junk line above would pass: "ny" and "As", 64% alphanumeric.)
+- With `full=False`, MuPDF's text page holds both the existing text and the OCR text. Only lines that aren't already in the page's text layer are kept as OCR text.
 
 ## Components
 
