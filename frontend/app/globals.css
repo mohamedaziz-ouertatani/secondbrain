@@ -760,33 +760,75 @@ td {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.55rem 0.9rem;
-  border: 0;
-  text-align: start;
+  gap: 0.25rem;
+  /* older cards sit further back in the stack: narrower, flatter, fainter, one step per card */
+  width: calc(100% - var(--depth, 0) * 1.1rem);
+  margin-inline: calc(var(--depth, 0) * 0.55rem);
+  padding: 0 0.4rem 0 0;
   color: var(--ink);
   background: var(--card-2);
   box-shadow: 0 1px 1px rgb(29 37 41 / 0.06);
+  opacity: calc(1 - var(--depth, 0) * 0.13);
   transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), background-color 160ms var(--ease);
 }
 
-/* older cards sit further back in the stack: narrower, flatter, fainter, one step per card */
-.card.past {
-  width: calc(100% - var(--depth, 0) * 1.1rem);
-  margin-inline: calc(var(--depth, 0) * 0.55rem);
-  opacity: calc(1 - var(--depth, 0) * 0.13);
-}
-
 .card.past:hover,
-.card.past:focus-visible {
+.card.past:focus-within {
   opacity: 1;
   background: var(--card);
   box-shadow: var(--shadow);
   transform: translateY(-1px);
 }
 
+/* the card's face opens it; the delete control sits beside it (a button can't hold a button) */
+.past-open {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.55rem 0.5rem 0.55rem 0.9rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
 
+.past-open:focus-visible {
+  outline-offset: -2px;
+}
+
+/* delete stays quiet until the card is being looked at */
+.card.past .delete {
+  opacity: 0;
+}
+
+.card.past:hover .delete,
+.card.past:focus-within .delete {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .card.past .delete {
+    opacity: 1;
+  }
+}
+
+/* on the open answer: course on the left, then the stamp and delete together on the right */
+.card-meta:has(.delete) {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.card-meta:has(.delete) .stamp {
+  margin-inline-start: auto;
+}
+
+.card-meta .delete {
+  margin-block: -0.2rem;
+}
 
 .card.past .question {
   font-size: 0.95rem;

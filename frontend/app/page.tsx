@@ -1,23 +1,19 @@
 "use client";
 
 import { ArrowUp } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnswerCard, type Entry, PastCard } from "@/components/AnswerCard";
 import { DrawerDigest } from "@/components/DrawerDigest";
 import { Fiche } from "@/components/Fiche";
-import { askStream } from "@/lib/api";
+import { UndoNote } from "@/components/UndoNote";
+import { askStream, fetchHistory, fetchHistoryItem } from "@/lib/api";
+import { toEntry, useUndoDelete } from "@/lib/history";
 import { tintVar } from "@/lib/modules";
 import { useDrawer, useLibrary } from "@/lib/useLibrary";
 
-const HISTORY_KEY = "sb.history.v1";
-
-function loadHistory(): Entry[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
+const LEGACY_HISTORY_KEY = "sb.history.v1"; // browser-only history from before the server kept it
+const DESK_HISTORY = 40;
 
 function AskDesk() {
   const drawer = useDrawer();
@@ -28,20 +24,56 @@ function AskDesk() {
   const [activeCite, setActiveCite] = useState<number | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
 
-  // History lives in localStorage, which only exists after hydration; reading it in render would mismatch SSR.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setEntries(loadHistory()), []);
+  const openParam = useSearchParams().get("open");
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const { hidden, remove, undo, pending, failed } = useUndoDelete();
+
   useEffect(() => {
     try {
-      const settled = entries.filter((e) => e.status === "done" || e.status === "error").slice(0, 40);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(settled));
+      localStorage.removeItem(LEGACY_HISTORY_KEY);
     } catch {
-      /* history is a convenience */
+      /* storage may be blocked */
     }
-  }, [entries]);
+    const ctl = new AbortController();
+    fetchHistory({ limit: DESK_HISTORY }, ctl.signal)
+      .then((items) => {
+        // keep anything asked while this was loading; it isn't in the list yet
+        setEntries((live) => [...live.filter((e) => !e.logId), ...items.map(toEntry)]);
+        setLoaded(true);
+      })
+      .catch((e) => {
+        if (e?.name !== "AbortError") {
+          setLoadError(true);
+          setLoaded(true);
+        }
+      });
+    return () => ctl.abort();
+  }, []);
 
-  const inDrawer = entries.filter((e) => drawer === null || e.course === drawer);
-  const active = inDrawer.find((e) => e.id === activeId) ?? inDrawer[0] ?? null;
+  // /?open=<id> (from the History page): bring that message to the front. It is fetched on its own
+  // because it may be older than the desk's 40; one small request is simpler than checking first.
+  useEffect(() => {
+    const id = Number(openParam);
+    if (!openParam || !loaded || !Number.isInteger(id)) return;
+    let cancelled = false;
+    fetchHistoryItem(id)
+      .then((h) => {
+        if (cancelled) return;
+        setEntries((cur) => (cur.some((e) => e.logId === id) ? cur : [toEntry(h), ...cur]));
+        setActiveId(String(id));
+        setActiveCite(null);
+      })
+      .catch(() => {}); // deleted meanwhile: the desk just shows its usual front card
+    return () => {
+      cancelled = true;
+    };
+  }, [openParam, loaded]);
+
+  const shown = entries.filter((e) => !(e.logId && hidden.has(e.logId)));
+  const inDrawer = shown.filter((e) => drawer === null || e.course === drawer);
+  // activeId is a client id for answers asked here, or a query_log id when opened from History
+  const active = inDrawer.find((e) => e.id === activeId || String(e.logId) === activeId) ?? inDrawer[0] ?? null;
   const past = inDrawer.filter((e) => e !== active);
   const busy = entries.some((e) => e.status === "searching" || e.status === "writing");
 
@@ -67,6 +99,7 @@ function AskDesk() {
           citations: d.citations,
           valid: d.citation_valid,
           status: "done",
+          logId: d.log_id ?? undefined,
           endedAt: Date.now(),
         })),
       onError: (msg) => update(id, () => ({ status: "error", error: msg, endedAt: Date.now() })),
@@ -126,7 +159,13 @@ function AskDesk() {
         </form>
 
         {active ? (
-          <AnswerCard entry={active} activeCite={activeCite} onActiveCite={setActiveCite} onPull={pull} />
+          <AnswerCard
+            entry={active}
+            activeCite={activeCite}
+            onActiveCite={setActiveCite}
+            onPull={pull}
+            onDelete={active.logId ? () => remove(active.logId!) : undefined}
+          />
         ) : (
           <DrawerDigest docs={docs} drawer={drawer} />
         )}
@@ -144,10 +183,12 @@ function AskDesk() {
                   setActiveCite(null);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
+                onDelete={e.logId ? () => remove(e.logId!) : undefined}
               />
             ))}
           </section>
         )}
+        {loadError && <p className="notice bad">Couldn&apos;t load your earlier questions. Is the backend running?</p>}
       </div>
 
       <aside className="fiches" aria-label="Cited fiches">
@@ -163,6 +204,8 @@ function AskDesk() {
           </p>
         )}
       </aside>
+
+      <UndoNote pending={pending} failed={failed} onUndo={undo} />
     </div>
   );
 }
