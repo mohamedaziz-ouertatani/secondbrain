@@ -2206,3 +2206,32 @@ td {
   font-weight: 700;
   opacity: 0.75;
 }
+
+/* ---- admin evaluation ------------------------------------------------------------------ */
+.eval-table caption {
+  caption-side: bottom;
+  text-align: start;
+  padding-top: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.eval-better {
+  font-weight: 700;
+}
+
+.eval-delta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.eval-n {
+  width: 5rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+}
