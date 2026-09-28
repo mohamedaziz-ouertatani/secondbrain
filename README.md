@@ -48,7 +48,7 @@ Drop PDF, PPTX, DOCX, `.md` or `.txt` files into `inbox/<course>/`. The subfolde
 
 The backend watches the folder:
 - New and changed files are ingested within a few seconds.
-- Deleted files leave the index. Deleting or renaming a whole folder isn't picked up yet: press **Rescan inbox** in the Drawer view afterwards.
+- Deleted files leave the index, and so does a deleted or renamed module folder (a renamed one is re-filed under its new name).
 - Scanned PDFs with no text layer are listed in the Drawer as not searchable. OCR is planned.
 
 ## History
@@ -57,6 +57,14 @@ Every question you ask is kept on the server, so it survives browser clears and 
 - **Desk:** the 40 most recent questions are stacked under the answer, filtered to the open drawer.
 - **History page** (`/history`, in the rail): every question, grouped by day, with a drawer filter, search over questions and answers, and "Load older questions". Click one to reopen it on the desk with its fiches.
 - **Delete:** the bin button on a History row, a past card or the open answer. You get 5 seconds to undo, then the question is **deleted permanently**: it also leaves the query log below.
+
+## Admin panel
+
+Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to open `/admin`:
+- **Status:** database, Ollama and models, how much of the LLM is on the GPU and when it unloads, VRAM used, recent answer times, and index size.
+- **Insights:** over 7 days, 30 days or all time, the number of questions, refusals, invalid citations and answer times. Also a daily trend, counts per module, the refused, invalid and slowest questions (each opens on the desk), and a dense vs hybrid comparison of your recent questions.
+- **Library:** counts per module, files that couldn't be read, **Rescan inbox**, and **Re-index** a module or file even if unchanged. **Exclude** keeps a file on disk but out of your answers, and **Include** brings it back.
+- **Settings:** retrieval mode, passages per answer, refusal threshold, model, temperature, context window and keep-alive. They're saved to `config.local.yaml` and apply from the next question, with no restart. See Configuration below.
 
 ## Syncing from Blackboard
 
@@ -84,13 +92,19 @@ How it behaves:
 
 ## Configuration
 
-`config.yaml` holds the models, chunk size, `top_k` and the relevance threshold. Environment variables or a `.env` file override it; see `.env.example`.
+`config.yaml` holds the models, chunk size, `top_k` and the relevance threshold. Settings are layered, highest first:
+1. environment variables, then a `.env` file (see `.env.example`);
+2. `config.local.yaml`, which the admin panel writes. It's ignored by Git, and **Reset** in the panel removes a key from it;
+3. `config.yaml`;
+4. the defaults in `backend/app/config.py`.
+
+A setting fixed by an environment variable shows as locked in the panel. The embedding model and chunk sizes can't be changed from the panel, because changing them means re-indexing everything.
 
 Retrieval has two modes, set with `retrieval_mode`:
 - `dense` (default): vector search only.
 - `hybrid`: vector search plus Postgres full-text search, fused with RRF. It's off by default because on French questions about English course pages it ranked the French exercise sheets above the course notes. It's meant to feed a reranker later.
 
-To see what a change does to real questions, replay the query log through both modes:
+To see what a change does to real questions, press **Compare** under Insights in the admin panel, or replay the query log from the command line:
 
 ```bash
 cd backend && uv run python -m app.rag.compare
@@ -113,6 +127,6 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 ## Roadmap
 
 - **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync.
-- **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (orders passages well but takes 17–68 s on the CPU, so it needs a faster runtime first), and document tags/summaries.
-- **v3:** chat history (done), related notes and flashcards.
+- **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (parked: it orders passages well but takes 12–23 s per question on the CPU), and document tags/summaries.
+- **v3:** chat history (done), the admin panel (status, library, settings and insights done; Blackboard sync from the browser next), related notes and flashcards.
 - **v4:** a Chrome extension to save from Blackboard, and an eval set built from the query log.
