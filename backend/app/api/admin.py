@@ -1,10 +1,12 @@
 """Admin panel: system status and library maintenance (exclude, include, forced re-index)."""
 
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from ..admin.settings import Invalid, update, view
 from ..admin.status import status
 from ..config import get_settings
 from ..db import get_pool
@@ -89,3 +91,16 @@ def admin_include(body: PathBody) -> dict:
     if result is None:
         raise HTTPException(404, "that file isn't excluded")
     return {"status": result}
+
+
+@router.get("/settings")
+def get_settings_view() -> dict:
+    return view()
+
+
+@router.put("/settings")
+def put_settings(changes: dict[str, Any]) -> dict:
+    try:
+        return update(changes)
+    except Invalid as e:
+        raise HTTPException(422, e.errors) from e
