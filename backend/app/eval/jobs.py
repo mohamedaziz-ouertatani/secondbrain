@@ -69,8 +69,11 @@ def wait(timeout: float = 30) -> None:
 def status() -> dict:
     with get_pool().connection() as conn:
         generated = conn.execute("SELECT count(*) AS n FROM eval_questions").fetchone()["n"]
+        labelled = conn.execute(
+            """SELECT count(*) AS n FROM query_log WHERE labels ? 'relevant' AND EXISTS
+                 (SELECT 1 FROM jsonb_each(labels->'relevant') e WHERE e.value = 'true'::jsonb)""").fetchone()["n"]
         runs = conn.execute("SELECT id, ts, kind, params, metrics FROM eval_runs ORDER BY id DESC LIMIT 10").fetchall()
         latest = conn.execute("SELECT * FROM eval_runs ORDER BY id DESC LIMIT 1").fetchone()
     with _lock:
         job = dict(_state) if _state else None
-    return {"questions": {"generated": generated, "labelled": 0}, "job": job, "runs": runs, "latest": latest}
+    return {"questions": {"generated": generated, "labelled": labelled}, "job": job, "runs": runs, "latest": latest}
