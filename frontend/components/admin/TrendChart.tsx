@@ -7,6 +7,7 @@ const W = 640;
 const H = 96;
 const PAD = { l: 40, r: 8, t: 8, b: 4 };
 const GAP = 2; // surface gap between adjacent bars
+const MAX_BAR = 22; // thin marks: a 7-day view must not turn into slabs
 const R = 4; // rounded data end, flat at the baseline
 
 type Day = { day: string; questions: number; median_ms: number | null };
@@ -64,11 +65,12 @@ function Panel({
         </text>
         {series.map((d, i) => {
           const v = value(d);
-          const x = PAD.l + i * bw + GAP / 2;
+          const w = Math.max(1, Math.min(bw - GAP, MAX_BAR));
+          const x = PAD.l + i * bw + (bw - w) / 2;
           return (
             <g key={d.day}>
               {hover === i && <rect className="hover-col" x={PAD.l + i * bw} y={PAD.t} width={bw} height={base - PAD.t} />}
-              {v !== null && v > 0 && <path className="bar" d={barPath(x, Math.max(1, bw - GAP), y(v), base)} />}
+              {v !== null && v > 0 && <path className="bar" d={barPath(x, w, y(v), base)} />}
               {/* hit target: the whole column, bigger than the mark */}
               <rect
                 className="hit"

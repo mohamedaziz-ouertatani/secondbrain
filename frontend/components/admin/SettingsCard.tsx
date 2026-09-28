@@ -90,7 +90,7 @@ export function SettingsCard() {
         return (
           <section key={g.name} className="admin-card" aria-labelledby={`g-${g.name}`}>
             <header className="admin-card-head">
-              <h2 id={`g-${g.name}`}>{g.name} settings</h2>
+              <h2 id={`g-${g.name}`}>Settings · {g.name}</h2>
               <span className="admin-actions">
                 {note?.group === g.name && (
                   <span className={`action-note${note.bad ? " bad" : ""}`}>{note.text}</span>

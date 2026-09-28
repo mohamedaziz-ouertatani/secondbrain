@@ -1819,8 +1819,8 @@ td {
     flex-direction: column;
     align-items: stretch;
   }
-  .admin-table th:nth-child(3),
-  .admin-table td:nth-child(3) {
+  .library-table th:nth-child(3),
+  .library-table td:nth-child(3) {
     display: none; /* chunks: the least useful column on a phone */
   }
   .admin-card {
@@ -1941,6 +1941,7 @@ td {
 .readonly code {
   font-family: var(--type);
   font-size: 0.84rem;
+  overflow-wrap: anywhere; /* long paths and URLs wrap instead of widening the card on a phone */
 }
 
 @media (max-width: 860px) {
