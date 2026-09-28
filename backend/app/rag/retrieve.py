@@ -89,14 +89,19 @@ def answerable(hits: list[dict], min_score: float) -> bool:
 
 def retrieve(question: str, course: str | None = None, mode: str | None = None) -> tuple[list[dict], list[dict]]:
     """Returns (all candidates, the ones passed to the LLM)."""
+    return retrieve_with_vector(ollama.embed([question])[0], question, course, mode)
+
+
+def retrieve_with_vector(
+    qvec, question: str, course: str | None = None, mode: str | None = None
+) -> tuple[list[dict], list[dict]]:
+    """retrieve() with the question already embedded, so one vector can serve both modes."""
     s = get_settings()
     mode = mode or s.retrieval_mode
-    if mode == "dense":
-        hits = dense(question, s.top_k, course)
-        return hits, [h for h in hits if h["score"] >= s.min_score]
-
-    qvec = ollama.embed([question])[0]
     with get_pool().connection() as conn:
+        if mode == "dense":
+            hits = _dense(conn, qvec, s.top_k, course)
+            return hits, [h for h in hits if h["score"] >= s.min_score]
         dense_hits = _dense(conn, qvec, s.candidate_k, course)
         lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course)
     hits = fuse(dense_hits, lexical_hits, s.rrf_k)

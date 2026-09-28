@@ -1,11 +1,12 @@
 """Admin panel: system status and library maintenance (exclude, include, forced re-index)."""
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from ..admin.insights import compare, problems, summary
 from ..admin.settings import Invalid, update, view
 from ..admin.status import status
 from ..config import get_settings
@@ -104,3 +105,28 @@ def put_settings(changes: dict[str, Any]) -> dict:
         return update(changes)
     except Invalid as e:
         raise HTTPException(422, e.errors) from e
+
+
+class CompareBody(BaseModel):
+    limit: int = Field(20, ge=1, le=50)
+
+
+@router.get("/insights")
+def insights(days: int = 7, tz: str = "UTC") -> dict:
+    if days < 0:
+        raise HTTPException(400, "days must be 0 (all time) or more")
+    try:
+        return summary(days, tz)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@router.get("/insights/problems")
+def insight_problems(kind: Literal["refused", "invalid", "slow"], days: int = 7, limit: int = 50) -> list[dict]:
+    return problems(kind, max(0, days), max(1, min(limit, 200)))
+
+
+@router.post("/compare")
+def admin_compare(body: CompareBody) -> dict:
+    with exclusive("compare"):
+        return compare(body.limit)
