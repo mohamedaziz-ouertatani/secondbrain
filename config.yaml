@@ -18,3 +18,11 @@ embed_batch: 16
 # Retrieval
 top_k: 5
 min_score: 0.35
+
+# Blackboard sync: cd backend && uv run python -m app.sync.blackboard --probe
+blackboard_url: https://esprit.blackboard.com
+blackboard_browser: msedge
+# Courses are matched to inbox folders by name. Add overrides here if a match is wrong:
+# blackboard_course_map:
+#   "Big Data Analytics - 5DS2": "Big Data Analytics"
+blackboard_course_map: {}

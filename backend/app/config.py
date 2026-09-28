@@ -37,6 +37,12 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Blackboard sync (python -m app.sync.blackboard)
+    blackboard_url: str = "https://esprit.blackboard.com"
+    blackboard_browser: str = "msedge"  # or "chrome": an installed browser, so no Playwright download
+    blackboard_course_map: dict[str, str] = {}  # Blackboard course name or id -> inbox folder
+    blackboard_delay: float = 0.5  # seconds between API requests
+
     @classmethod
     def settings_customise_sources(
         cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings

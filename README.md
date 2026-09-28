@@ -51,6 +51,30 @@ The backend watches the folder:
 - Deleted files leave the index.
 - Scanned PDFs with no text layer are listed in the Library as not searchable. OCR is planned.
 
+## Syncing from Blackboard
+
+The sync script downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Everything goes into the matching `inbox/<module>/` folder.
+
+```bash
+cd backend && uv run python -m app.sync.blackboard --probe
+```
+
+This opens an Edge window for you to log in, then shows how your Blackboard courses map to inbox folders. It downloads nothing. After that:
+
+```bash
+cd backend && uv run python -m app.sync.blackboard --dry-run --headless
+```
+
+```bash
+cd backend && uv run python -m app.sync.blackboard --headless
+```
+
+How it behaves:
+- **Course matching:** courses match inbox folders by name, ignoring the class suffix such as `__5DS1`. Courses without a folder are skipped. Wrong matches can be fixed with `blackboard_course_map` in `config.yaml`.
+- **What's downloaded:** only readable types (PDF, PPTX, DOCX, MD, TXT), and only when new or changed on Blackboard.
+- **Nothing is deleted.** If you delete a synced file yourself, it isn't downloaded again unless it changes on Blackboard.
+- **Login:** your session is saved in `backend/data/`, which Git ignores. When it expires, run once without `--headless` to log in again.
+
 ## Configuration
 
 `config.yaml` holds the models, chunk size, `top_k` and the relevance threshold. Environment variables or a `.env` file override it; see `.env.example`.
