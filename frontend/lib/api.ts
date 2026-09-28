@@ -86,6 +86,11 @@ export function fileUrl(c: { doc_id: number; page?: number; mime: string }): str
   return c.mime === PDF && c.page ? `${base}#page=${c.page}` : base;
 }
 
+/** A PDF page rendered as an image: formulas survive, unlike the extracted text. */
+export function pageImageUrl(docId: number, page: number): string {
+  return `${API_URL}/documents/${docId}/pages/${page}.png`;
+}
+
 export function readerUrl(docId: number, page?: number): string {
   return `/documents/${docId}${page ? `#p-${page}` : ""}`;
 }

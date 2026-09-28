@@ -12,6 +12,7 @@ import {
   getJSON,
   kindOf,
   locator,
+  pageImageUrl,
   partsCount,
   PDF,
 } from "@/lib/api";
@@ -94,7 +95,25 @@ export default function ReaderPage() {
               )}
             </p>
           )}
-          {p.text.trim() ? (
+          {doc.mime === PDF ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- served by the API, not Next's image pipeline */}
+              <img
+                className="page-image"
+                src={pageImageUrl(doc.id, p.page)}
+                alt={p.text.trim() ? `Page ${p.page}` : `Page ${p.page}, no text layer`}
+                loading="lazy"
+              />
+              {p.text.trim() && (
+                <details className="page-text">
+                  <summary>Indexed text</summary>
+                  <div className="plain" dir="auto">
+                    {p.text}
+                  </div>
+                </details>
+              )}
+            </>
+          ) : p.text.trim() ? (
             markdown ? (
               <div className="prose" dir="auto">
                 <NoteProse text={p.page === 1 ? withoutLeadingTitle(p.text) : p.text} />

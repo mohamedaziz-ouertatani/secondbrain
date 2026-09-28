@@ -1330,6 +1330,31 @@ td {
   color: inherit;
 }
 
+/* PDF pages as rendered: the page is white paper in both themes, so it gets a rule, not a shadow. */
+.page-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.page-text {
+  margin-top: 0.6rem;
+}
+
+.page-text summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.page-text .plain {
+  margin-top: 0.5rem;
+}
+
 .plain {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
