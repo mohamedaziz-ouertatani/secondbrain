@@ -64,11 +64,21 @@ Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to 
 - **Status:** database, Ollama and models, how much of the LLM is on the GPU and when it unloads, VRAM used, recent answer times, and index size.
 - **Insights:** over 7 days, 30 days or all time, the number of questions, refusals, invalid citations and answer times. Also a daily trend, counts per module, the refused, invalid and slowest questions (each opens on the desk), and a dense vs hybrid comparison of your recent questions.
 - **Library:** counts per module, files that couldn't be read, **Rescan inbox**, and **Re-index** a module or file even if unchanged. **Exclude** keeps a file on disk but out of your answers, and **Include** brings it back.
+- **Blackboard sync:** Sync now, Sync one module, Preview and Course mapping, with live progress, Cancel and recent runs. See Syncing from Blackboard below.
 - **Settings:** retrieval mode, passages per answer, refusal threshold, model, temperature, context window and keep-alive. They're saved to `config.local.yaml` and apply from the next question, with no restart. See Configuration below.
 
 ## Syncing from Blackboard
 
-The sync script downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Everything goes into the matching `inbox/<module>/` folder.
+The sync downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Everything goes into the matching `inbox/<module>/` folder.
+
+### From the admin panel
+
+The **Blackboard sync** section in `/admin` does everything below without a terminal:
+- Sync now, Sync this module, Preview (what would be downloaded) and Course mapping. Progress shows file by file, grouped by module, and you can cancel.
+- **Automatic sync:** the backend syncs on its own every `sync_auto_days` days (default 7; 0 turns it off; editable under Settings · Blackboard). A sync from the command line counts too.
+- **Session expired:** the panel and the rail footer say "log in needed", and automatic syncs pause. **Log in** opens an Edge window; sign in there and the session is saved.
+
+### From the command line
 
 ```bash
 cd backend && uv run python -m app.sync.blackboard --probe
@@ -88,7 +98,8 @@ How it behaves:
 - **Course matching:** courses match inbox folders by name, ignoring the class suffix such as `__5DS1`. Courses without a folder are skipped. Wrong matches can be fixed with `blackboard_course_map` in `config.yaml`.
 - **What's downloaded:** only readable types (PDF, PPTX, DOCX, MD, TXT), and only when new or changed on Blackboard.
 - **Nothing is deleted.** If you delete a synced file yourself, it isn't downloaded again unless it changes on Blackboard.
-- **Login:** your session is saved in `backend/data/`, which Git ignores. When it expires, run once without `--headless` to log in again.
+- **Login:** your session is saved in `backend/data/`, which Git ignores. When it expires, press **Log in** in the admin panel, or run once without `--headless`.
+- **Run history:** the admin panel keeps the last 20 runs in `backend/data/sync-runs.json`.
 
 ## Configuration
 
@@ -128,5 +139,5 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 
 - **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync.
 - **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (parked: it orders passages well but takes 12–23 s per question on the CPU), and document tags/summaries.
-- **v3:** chat history (done), the admin panel (status, library, settings and insights done; Blackboard sync from the browser next), related notes and flashcards.
+- **v3:** chat history (done), the admin panel (done: status, library, settings, insights and Blackboard sync), related notes and flashcards.
 - **v4:** a Chrome extension to save from Blackboard, and an eval set built from the query log.
