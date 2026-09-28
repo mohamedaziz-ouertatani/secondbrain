@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     chunk_tokens: int = 500
     chunk_overlap: int = 80
     embed_batch: int = 16
+    ocr_enabled: bool = True  # read text inside images (backend/data/tessdata; python -m app.ingest.ocr --setup)
+    ocr_min_words: int = 25  # PDF pages with fewer words than this (and an image) are OCR'd
+    ocr_languages: str = "eng+fra"  # Tesseract languages; add +ara for Arabic slides
 
     retrieval_mode: Literal["dense", "hybrid"] = "dense"
     top_k: int = 5
