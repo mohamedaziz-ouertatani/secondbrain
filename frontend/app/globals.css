@@ -1494,3 +1494,98 @@ td {
   color: var(--bad);
   padding-inline-end: 0.9rem;
 }
+
+/* ---- history: one catalogue slip per question, filed by day ------------------------------ */
+.history-day {
+  margin-top: 1.25rem;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding-inline-end: 0.4rem;
+  border-radius: 4px;
+  background: var(--card);
+  box-shadow: 0 1px 1px rgb(29 37 41 / 0.06);
+  border-inline-start: 4px solid var(--tint, var(--rule-blue));
+  transition: box-shadow 160ms var(--ease);
+}
+
+.history-row:hover,
+.history-row:focus-within {
+  box-shadow: var(--shadow);
+}
+
+.history-open {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "call q time" "call a time";
+  column-gap: 0.8rem;
+  align-items: baseline;
+  min-width: 0;
+  padding: 0.55rem 0.5rem 0.55rem 0.8rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.history-open:focus-visible {
+  outline-offset: -2px;
+}
+
+.history-open .callno {
+  grid-area: call;
+}
+
+.history-open .question {
+  grid-area: q;
+  font-size: 0.95rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-answer {
+  grid-area: a;
+  font-size: 0.84rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-open time {
+  grid-area: time;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.history-row .delete {
+  opacity: 0;
+}
+
+.history-row:hover .delete,
+.history-row:focus-within .delete {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .history-row .delete {
+    opacity: 1;
+  }
+}
+
+.load-more {
+  margin: 1.25rem auto 0;
+  display: flex;
+}

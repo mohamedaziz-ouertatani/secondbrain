@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, PenLine } from "lucide-react";
+import { Archive, History, PenLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ export function Rail() {
     getJSON<Health>("/health").then(setHealth).catch(() => setHealth("down"));
   }, []);
 
-  const base = pathname.startsWith("/documents") ? "/documents" : "/";
+  const base = pathname.startsWith("/documents") ? "/documents" : pathname.startsWith("/history") ? "/history" : "/";
   const counts = new Map<string, { n: number; fresh: number }>();
   for (const d of docs ?? []) {
     const k = d.course ?? "";
@@ -48,6 +48,9 @@ export function Rail() {
         </Link>
         <Link href={drawerHref("/documents", drawer)} aria-current={base === "/documents" ? "page" : undefined}>
           <Archive size={16} aria-hidden /> Drawer
+        </Link>
+        <Link href={drawerHref("/history", drawer)} aria-current={base === "/history" ? "page" : undefined}>
+          <History size={16} aria-hidden /> History
         </Link>
       </div>
 
