@@ -134,8 +134,46 @@ export async function askStream(question: string, course: string | null, h: Hand
   }
 }
 
-export async function getJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+export async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, { cache: "no-store", signal });
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
   return res.json();
+}
+
+/** One past question, as query_log stored it. answer is null if the stream failed before any text. */
+export type HistoryItem = {
+  id: number;
+  ts: string;
+  question: string;
+  course: string | null;
+  answer: string | null;
+  citations: Citation[];
+  citation_valid: boolean | null;
+  latency_ms: number | null;
+};
+
+export function fetchHistory(
+  opts: { course?: string | null; q?: string; before?: number; limit?: number },
+  signal?: AbortSignal,
+): Promise<HistoryItem[]> {
+  const p = new URLSearchParams();
+  if (opts.course) p.set("course", opts.course);
+  if (opts.q) p.set("q", opts.q);
+  if (opts.before !== undefined) p.set("before", String(opts.before));
+  if (opts.limit !== undefined) p.set("limit", String(opts.limit));
+  return getJSON<HistoryItem[]>(`/history?${p}`, signal);
+}
+
+export function fetchHistoryItem(id: number): Promise<HistoryItem> {
+  return getJSON<HistoryItem>(`/history/${id}`);
+}
+
+/** Permanent. keepalive lets it finish while the page unloads. A 404 means it's already gone. */
+export async function deleteHistory(id: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/history/${id}`, { method: "DELETE", keepalive: true });
+    return res.ok || res.status === 404;
+  } catch {
+    return false;
+  }
 }

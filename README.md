@@ -44,12 +44,19 @@ Open http://localhost:3000. `GET http://localhost:8000/health` reports whether t
 
 ## Adding material
 
-Drop PDFs, `.md` or `.txt` files into `inbox/<course>/`. The subfolder name becomes the course, e.g. `inbox/Reseaux/cours-tcp.pdf`.
+Drop PDF, PPTX, DOCX, `.md` or `.txt` files into `inbox/<course>/`. The subfolder name becomes the course, e.g. `inbox/Probability 2/Serie 1.pdf`.
 
 The backend watches the folder:
 - New and changed files are ingested within a few seconds.
-- Deleted files leave the index.
-- Scanned PDFs with no text layer are listed in the Library as not searchable. OCR is planned.
+- Deleted files leave the index. Deleting or renaming a whole folder isn't picked up yet: press **Rescan inbox** in the Drawer view afterwards.
+- Scanned PDFs with no text layer are listed in the Drawer as not searchable. OCR is planned.
+
+## History
+
+Every question you ask is kept on the server, so it survives browser clears and works on any port.
+- **Desk:** the 40 most recent questions are stacked under the answer, filtered to the open drawer.
+- **History page** (`/history`, in the rail): every question, grouped by day, with a drawer filter, search over questions and answers, and "Load older questions". Click one to reopen it on the desk with its fiches.
+- **Delete:** the bin button on a History row, a past card or the open answer. You get 5 seconds to undo, then the question is **deleted permanently**: it also leaves the query log below.
 
 ## Syncing from Blackboard
 
@@ -79,11 +86,21 @@ How it behaves:
 
 `config.yaml` holds the models, chunk size, `top_k` and the relevance threshold. Environment variables or a `.env` file override it; see `.env.example`.
 
+Retrieval has two modes, set with `retrieval_mode`:
+- `dense` (default): vector search only.
+- `hybrid`: vector search plus Postgres full-text search, fused with RRF. It's off by default because on French questions about English course pages it ranked the French exercise sheets above the course notes. It's meant to feed a reranker later.
+
+To see what a change does to real questions, replay the query log through both modes:
+
+```bash
+cd backend && uv run python -m app.rag.compare
+```
+
 On a 4 GB GPU, keep the LLM around 4B parameters at Q4. A 7B model runs, but part of it spills over to the CPU.
 
 ## Query log
 
-Every question is stored in the `query_log` table, including the retrieved chunks and their scores, the answer, the citations and whether they validated. This becomes the evaluation set later.
+Every question is stored in the `query_log` table, including the retrieved chunks and their scores (with dense and keyword ranks in hybrid mode), the answer, the citations and whether they validated. The History page reads this table, and this becomes the evaluation set later. There is no backup: a question deleted from History is gone for good.
 
 ## Tests
 
@@ -95,7 +112,7 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 
 ## Roadmap
 
-- **v1 (done):** watch-folder ingestion and cited Q&A.
-- **v2:** hybrid search (vector + full-text with RRF), the bge-reranker-v2-m3 reranker, and document tags/summaries.
-- **v3:** related notes, flashcards and chat history.
+- **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync.
+- **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (orders passages well but takes 17–68 s on the CPU, so it needs a faster runtime first), and document tags/summaries.
+- **v3:** chat history (done), related notes and flashcards.
 - **v4:** a Chrome extension to save from Blackboard, and an eval set built from the query log.

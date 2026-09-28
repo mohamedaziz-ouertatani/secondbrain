@@ -199,22 +199,24 @@ button {
   padding: 0 0.4rem;
 }
 
+/* three views across the cabinet top: icon over label, so they fit the 248px rail on one row */
 .views {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
 }
 
 .views a {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.2rem;
   padding: 0.4rem 0.5rem;
   border-radius: 5px;
   color: var(--steel-muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   transition: background-color 160ms var(--ease), color 160ms var(--ease);
 }
@@ -760,33 +762,75 @@ td {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.55rem 0.9rem;
-  border: 0;
-  text-align: start;
+  gap: 0.25rem;
+  /* older cards sit further back in the stack: narrower, flatter, fainter, one step per card */
+  width: calc(100% - var(--depth, 0) * 1.1rem);
+  margin-inline: calc(var(--depth, 0) * 0.55rem);
+  padding: 0 0.4rem 0 0;
   color: var(--ink);
   background: var(--card-2);
   box-shadow: 0 1px 1px rgb(29 37 41 / 0.06);
+  opacity: calc(1 - var(--depth, 0) * 0.13);
   transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), background-color 160ms var(--ease);
 }
 
-/* older cards sit further back in the stack: narrower, flatter, fainter, one step per card */
-.card.past {
-  width: calc(100% - var(--depth, 0) * 1.1rem);
-  margin-inline: calc(var(--depth, 0) * 0.55rem);
-  opacity: calc(1 - var(--depth, 0) * 0.13);
-}
-
 .card.past:hover,
-.card.past:focus-visible {
+.card.past:focus-within {
   opacity: 1;
   background: var(--card);
   box-shadow: var(--shadow);
   transform: translateY(-1px);
 }
 
+/* the card's face opens it; the delete control sits beside it (a button can't hold a button) */
+.past-open {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.55rem 0.5rem 0.55rem 0.9rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
 
+.past-open:focus-visible {
+  outline-offset: -2px;
+}
+
+/* delete stays quiet until the card is being looked at */
+.card.past .delete {
+  opacity: 0;
+}
+
+.card.past:hover .delete,
+.card.past:focus-within .delete {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .card.past .delete {
+    opacity: 1;
+  }
+}
+
+/* on the open answer: course on the left, then the stamp and delete together on the right */
+.card-meta:has(.delete) {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.card-meta:has(.delete) .stamp {
+  margin-inline-start: auto;
+}
+
+.card-meta .delete {
+  margin-block: -0.2rem;
+}
 
 .card.past .question {
   font-size: 0.95rem;
@@ -1365,7 +1409,12 @@ td {
     display: none;
   }
   .views {
-    grid-template-columns: auto auto;
+    grid-template-columns: auto auto auto;
+  }
+  .views a {
+    flex-direction: row;
+    gap: 0.4rem;
+    font-size: 0.9rem;
   }
   .drawer-select {
     display: block;
@@ -1424,4 +1473,155 @@ td {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---- undo slip: a small card that sits at the foot of the viewport after a delete ---------- */
+.undo-note {
+  position: fixed;
+  inset-block-end: 1.25rem;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.45rem 0.5rem 0.45rem 0.9rem;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+
+.undo-note[hidden] {
+  display: none;
+}
+
+.undo-note.bad {
+  color: var(--bad);
+  padding-inline-end: 0.9rem;
+}
+
+/* ---- history: each day is one ruled catalogue card; each question a row filed under its call number */
+.history-day {
+  margin-top: 1.6rem;
+}
+
+.history-day .stack-label {
+  margin-bottom: 0.4rem;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.2rem 0;
+  background: var(--card);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  padding-inline-end: 0.5rem;
+  border-bottom: 1px solid var(--rule-blue);
+  transition: background-color 160ms var(--ease);
+}
+
+.history-row:last-child {
+  border-bottom: 0;
+}
+
+.history-row:hover,
+.history-row:focus-within {
+  background: var(--card-2);
+}
+
+.history-open {
+  display: grid;
+  grid-template-columns: 4.8rem minmax(0, 1fr) auto;
+  grid-template-areas: "call q time" "call a time";
+  column-gap: 0.9rem;
+  row-gap: 0.1rem;
+  align-items: baseline;
+  min-width: 0;
+  padding: 0.55rem 0.4rem 0.55rem 0.9rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.history-open:focus-visible {
+  outline-offset: -2px;
+}
+
+/* the call number is the row's bristol label: the module's unit tint, ink text, a paper radius */
+.history-open .callno {
+  grid-area: call;
+  align-self: start;
+  justify-self: start;
+  margin-top: 0.1rem;
+  padding: 0.1rem 0.4rem 0.05rem;
+  border-radius: 2px;
+  background: var(--tint);
+  color: var(--ink);
+}
+
+.history-open .question {
+  grid-area: q;
+  font-size: 0.95rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-open:hover .question {
+  color: var(--primary);
+}
+
+.history-answer {
+  grid-area: a;
+  font-size: 0.84rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-open time {
+  grid-area: time;
+  font-family: var(--type);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.history-row .delete {
+  opacity: 0;
+  transition: opacity 150ms var(--ease);
+}
+
+.history-row:hover .delete,
+.history-row:focus-within .delete {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .history-row .delete {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .history-open {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "call time" "q q" "a a";
+    padding-inline-start: 0.75rem;
+  }
+}
+
+.load-more {
+  margin: 1.25rem auto 0;
+  display: flex;
 }

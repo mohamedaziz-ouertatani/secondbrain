@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AnswerProse } from "@/components/Prose";
 import type { Citation } from "@/lib/api";
@@ -7,6 +8,8 @@ import { tintVar } from "@/lib/modules";
 
 export type Entry = {
   id: string;
+  /** query_log id; set once the answer is saved, so it can be deleted. */
+  logId?: number;
   question: string;
   course: string | null;
   text: string;
@@ -53,11 +56,13 @@ export function AnswerCard({
   activeCite,
   onActiveCite,
   onPull,
+  onDelete,
 }: {
   entry: Entry;
   activeCite: number | null;
   onActiveCite: (n: number | null) => void;
   onPull: (n: number) => void;
+  onDelete?: () => void;
 }) {
   const known = new Set(entry.citations.map((c) => c.n));
   return (
@@ -73,6 +78,11 @@ export function AnswerCard({
         <p className="card-meta">
           <span>{entry.course ?? "All drawers"}</span>
           <Stamp entry={entry} />
+          {onDelete && (
+            <button type="button" className="icon-btn delete" onClick={onDelete} aria-label="Delete this answer">
+              <Trash2 size={14} aria-hidden />
+            </button>
+          )}
         </p>
       </header>
 
@@ -103,21 +113,33 @@ export function AnswerCard({
 }
 
 /** A past card, receded: question only; click to bring it back to the front. */
-export function PastCard({ entry, depth, onOpen }: { entry: Entry; depth: number; onOpen: () => void }) {
+export function PastCard({
+  entry,
+  depth,
+  onOpen,
+  onDelete,
+}: {
+  entry: Entry;
+  depth: number;
+  onOpen: () => void;
+  onDelete?: () => void;
+}) {
   return (
-    <button
-      type="button"
-      className="card past"
-      onClick={onOpen}
-      style={{ "--tint": tintVar(entry.course), "--depth": depth } as React.CSSProperties}
-    >
-      <span className="question" dir="auto">
-        {entry.question}
-      </span>
-      <span className="past-meta">
-        {entry.course ?? "All drawers"}
-        {entry.citations.length ? ` · ${entry.citations.length} fiche${entry.citations.length > 1 ? "s" : ""}` : ""}
-      </span>
-    </button>
+    <div className="card past" style={{ "--tint": tintVar(entry.course), "--depth": depth } as React.CSSProperties}>
+      <button type="button" className="past-open" onClick={onOpen}>
+        <span className="question" dir="auto">
+          {entry.question}
+        </span>
+        <span className="past-meta">
+          {entry.course ?? "All drawers"}
+          {entry.citations.length ? ` · ${entry.citations.length} fiche${entry.citations.length > 1 ? "s" : ""}` : ""}
+        </span>
+      </button>
+      {onDelete && (
+        <button type="button" className="icon-btn delete" onClick={onDelete} aria-label={`Delete “${entry.question}”`}>
+          <Trash2 size={14} aria-hidden />
+        </button>
+      )}
+    </div>
   );
 }
