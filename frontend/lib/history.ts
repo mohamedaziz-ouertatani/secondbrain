@@ -20,6 +20,8 @@ export function toEntry(h: HistoryItem): Entry {
     valid: h.citation_valid,
     startedAt: ended - (h.latency_ms ?? 0),
     endedAt: ended,
+    feedback: h.feedback ?? null,
+    relevant: h.labels?.relevant ?? {},
   };
 }
 

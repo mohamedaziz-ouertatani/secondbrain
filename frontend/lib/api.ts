@@ -158,7 +158,19 @@ export type HistoryItem = {
   citations: Citation[];
   citation_valid: boolean | null;
   latency_ms: number | null;
+  /** your rating of the answer: 1 good, -1 wrong */
+  feedback?: -1 | 1 | null;
+  /** fiches you marked relevant (true) or not (false), by citation number */
+  labels?: { relevant?: Record<string, boolean> } | null;
 };
+
+/** Rate an answer and/or mark fiches relevant; null clears. Omitted fields are left as they are. */
+export function putLabels(
+  id: number,
+  body: { feedback?: -1 | 1 | null; relevant?: Record<string, boolean | null> },
+): Promise<HistoryItem> {
+  return sendJSON<HistoryItem>("PUT", `/history/${id}/labels`, body);
+}
 
 export function fetchHistory(
   opts: { course?: string | null; q?: string; before?: number; limit?: number },

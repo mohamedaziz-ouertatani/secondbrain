@@ -141,3 +141,22 @@ def test_eval_routes_and_busy(env, monkeypatch):
     assert s["latest"]["kind"] == "retrieval" and "dense" in s["latest"]["metrics"]["overall"]
     assert client.post("/admin/eval/cancel").status_code == 404
     assert client.post("/admin/eval/generate", json={"n": 0}).status_code == 422
+
+
+def test_labelled_real_questions_join_the_evaluation(env):
+    from psycopg.types.json import Jsonb
+
+    from app.eval import jobs, run
+
+    _, db = env
+    cites = Jsonb([{"n": 1, "path": "Prob/a.md", "page": 1}, {"n": 2, "path": "Prob/b.md", "page": 3}])
+    with db.get_pool().connection() as conn:
+        good = conn.execute(
+            """INSERT INTO query_log (question, params, citations, labels) VALUES (%s, %s, %s, %s) RETURNING id""",
+            ("Qu'est-ce qu'un vecteur gaussien ?", Jsonb({"course": "Prob"}), cites,
+             Jsonb({"relevant": {"1": True, "2": False}}))).fetchone()["id"]
+        conn.execute("INSERT INTO query_log (question, citations, feedback) VALUES ('only a thumbs down', %s, -1)", (cites,))
+    real = [q for q in run.questions() if q["source"] == "real"]
+    assert [(q["id"], q["course"], q["truth"]) for q in real] == [(good, "Prob", {("Prob/a.md", 1)})]
+    assert real[0]["lang"] == "fr"
+    assert jobs.status()["questions"]["labelled"] == 1

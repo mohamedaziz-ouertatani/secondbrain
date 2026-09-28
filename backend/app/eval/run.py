@@ -11,6 +11,7 @@ from ..config import get_settings
 from ..db import get_pool
 from ..ingest.pipeline import PARSER_VERSION
 from ..llm import ollama
+from ..llm.lang import detect
 from ..rag.retrieve import retrieve_with_vector
 
 K = 20
@@ -47,11 +48,21 @@ def summarize(per_question: list[dict]) -> dict:
 
 
 def questions() -> list[dict]:
-    """Generated questions (stage 2 adds labelled real ones), each with its set of right (path, page)."""
+    """Generated questions plus your labelled ones, each with its set of right (path, page)."""
     with get_pool().connection() as conn:
         rows = conn.execute("SELECT id, question, course, lang, doc_path, page FROM eval_questions ORDER BY id").fetchall()
-    return [{"source": "generated", "id": r["id"], "question": r["question"], "course": r["course"],
-             "lang": r["lang"], "truth": {(r["doc_path"], r["page"])}} for r in rows]
+        labelled = conn.execute(
+            """SELECT id, question, params->>'course' AS course, citations, labels FROM query_log
+               WHERE labels ? 'relevant' ORDER BY id""").fetchall()
+    out = [{"source": "generated", "id": r["id"], "question": r["question"], "course": r["course"],
+            "lang": r["lang"], "truth": {(r["doc_path"], r["page"])}} for r in rows]
+    for r in labelled:
+        marks = r["labels"]["relevant"]
+        truth = {(c["path"], c["page"]) for c in r["citations"] if marks.get(str(c["n"])) is True}
+        if truth:  # a question with only "not relevant" marks has no right page to measure against
+            out.append({"source": "real", "id": r["id"], "question": r["question"], "course": r["course"],
+                        "lang": detect(r["question"]), "truth": truth})
+    return out
 
 
 def run(kind: str = "retrieval", progress=None, cancelled=None) -> int:

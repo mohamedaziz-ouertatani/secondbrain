@@ -21,7 +21,8 @@ def test_newest_first_with_keyset_paging(env):
     first = page[0]
     assert first["question"] == "q4" and first["course"] is None and first["latency_ms"] == 4200
     assert first["citations"] == [{"n": 1, "text": "passage"}] and first["citation_valid"] is True
-    assert set(first) == {"id", "ts", "question", "course", "answer", "citations", "citation_valid", "latency_ms"}
+    assert set(first) == {"id", "ts", "question", "course", "answer", "citations", "citation_valid", "latency_ms",
+                          "feedback", "labels"}
 
 
 def test_course_filter_search_and_limit_clamp(env):
@@ -62,3 +63,24 @@ def test_routes_get_and_delete(env):
         headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "DELETE"},
     )
     assert pre.status_code == 200
+
+
+def test_labels_merge_and_clear(env):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    _, db = env
+    qid = add(db, "labelled question", citations=[{"n": 1, "path": "Prob/a.md", "page": 1},
+                                                  {"n": 2, "path": "Prob/b.md", "page": 3}])
+    client = TestClient(create_app())
+    r = client.put(f"/history/{qid}/labels", json={"feedback": 1, "relevant": {"1": True, "2": False}})
+    assert r.status_code == 200 and r.json()["feedback"] == 1
+    assert r.json()["labels"] == {"relevant": {"1": True, "2": False}}
+    r = client.put(f"/history/{qid}/labels", json={"relevant": {"2": None}})  # feedback absent: unchanged
+    assert r.json()["feedback"] == 1 and r.json()["labels"] == {"relevant": {"1": True}}
+    r = client.put(f"/history/{qid}/labels", json={"feedback": None, "relevant": {"1": None}})
+    assert r.json()["feedback"] is None and r.json()["labels"] is None
+    assert client.put("/history/999999/labels", json={"feedback": 1}).status_code == 404
+    assert client.put(f"/history/{qid}/labels", json={"feedback": 2}).status_code == 422
+    assert set(client.get(f"/history/{qid}").json()) >= {"feedback", "labels"}

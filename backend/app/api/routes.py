@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Literal
 
 import pymupdf
 from fastapi import APIRouter, HTTPException, Response
@@ -13,7 +14,7 @@ from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
 from ..rag.answer import ask
-from ..rag.history import delete_history, get_history, list_history
+from ..rag.history import UNSET, delete_history, get_history, list_history, set_labels
 from .jobs import exclusive
 
 router = APIRouter()
@@ -59,6 +60,21 @@ def history(course: str | None = None, q: str | None = None, before: int | None 
 @router.get("/history/{log_id}")
 def history_item(log_id: int) -> dict:
     row = get_history(log_id)
+    if not row:
+        raise HTTPException(404, "message not found")
+    return row
+
+
+class LabelsBody(BaseModel):
+    feedback: Literal[-1, 1] | None = None
+    relevant: dict[str, bool | None] | None = None
+
+
+@router.put("/history/{log_id}/labels")
+def history_labels(log_id: int, body: LabelsBody) -> dict:
+    """Rate an answer and mark its fiches relevant; labelled questions join the evaluation set."""
+    feedback = body.feedback if "feedback" in body.model_fields_set else UNSET
+    row = set_labels(log_id, feedback, body.relevant)
     if not row:
         raise HTTPException(404, "message not found")
     return row

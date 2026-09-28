@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AnswerProse } from "@/components/Prose";
 import type { Citation } from "@/lib/api";
@@ -19,6 +19,10 @@ export type Entry = {
   startedAt: number;
   endedAt?: number;
   error?: string;
+  /** your rating of the answer; labelled answers feed the evaluation */
+  feedback?: -1 | 1 | null;
+  /** fiches marked relevant (true) or not (false), by citation number */
+  relevant?: Record<string, boolean>;
 };
 
 /**
@@ -57,12 +61,17 @@ export function AnswerCard({
   onActiveCite,
   onPull,
   onDelete,
+  onRate,
+  labelError,
 }: {
   entry: Entry;
   activeCite: number | null;
   onActiveCite: (n: number | null) => void;
   onPull: (n: number) => void;
   onDelete?: () => void;
+  /** rate the answer: 1 good, -1 wrong, null to clear (pressing the active one again) */
+  onRate?: (v: -1 | 1 | null) => void;
+  labelError?: string | null;
 }) {
   const known = new Set(entry.citations.map((c) => c.n));
   return (
@@ -78,6 +87,30 @@ export function AnswerCard({
         <p className="card-meta">
           <span>{entry.course ?? "All drawers"}</span>
           <Stamp entry={entry} />
+          {onRate && entry.status === "done" && (
+            <span className="rate" role="group" aria-label="Rate this answer">
+              <button
+                type="button"
+                className="icon-btn"
+                aria-pressed={entry.feedback === 1}
+                aria-label="Good answer"
+                title="Good answer"
+                onClick={() => onRate(entry.feedback === 1 ? null : 1)}
+              >
+                <ThumbsUp size={14} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-pressed={entry.feedback === -1}
+                aria-label="Wrong answer"
+                title="Wrong answer"
+                onClick={() => onRate(entry.feedback === -1 ? null : -1)}
+              >
+                <ThumbsDown size={14} aria-hidden />
+              </button>
+            </span>
+          )}
           {onDelete && (
             <button type="button" className="icon-btn delete" onClick={onDelete} aria-label="Delete this answer">
               <Trash2 size={14} aria-hidden />
@@ -103,6 +136,7 @@ export function AnswerCard({
       </div>
 
       {entry.status === "error" && <p className="notice bad">{entry.error}</p>}
+      {labelError && <p className="notice bad">{labelError}</p>}
       {entry.status === "done" && entry.valid === false && (
         <p className="notice">
           This answer doesn&apos;t cite your fiches properly. Check it against the sources before relying on it.
