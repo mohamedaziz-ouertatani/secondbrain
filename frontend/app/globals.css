@@ -1821,4 +1821,18 @@ td {
   .admin-table td:nth-child(3) {
     display: none; /* chunks: the least useful column on a phone */
   }
+  .admin-card {
+    padding: 0.9rem 0.85rem 1rem;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding-inline: 0.3rem;
+  }
+  .admin-table .quiet-btn {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+.admin-card .quiet-btn {
+  white-space: nowrap;
 }

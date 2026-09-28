@@ -108,9 +108,11 @@ export function LibraryAdmin() {
                 <td>{m.documents}</td>
                 <td>{m.chunks}</td>
                 <td>{m.problems || "–"}</td>
-                <td className="row-actions">
-                  {inline(key)}
-                  {m.course && btn(key, "Re-index", () => reindex(key, { course: m.course! }))}
+                <td>
+                  <span className="row-actions">
+                    {inline(key)}
+                    {m.course && btn(key, "Re-index", () => reindex(key, { course: m.course! }))}
+                  </span>
                 </td>
               </tr>
             );
