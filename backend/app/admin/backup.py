@@ -1,4 +1,5 @@
-"""Backups of what a rescan can't rebuild: query_log (every question, answer and citation) and excluded_paths.
+"""Backups of what a rescan can't rebuild: query_log (questions, answers, citations, labels), excluded_paths,
+and the evaluation set and its runs.
 
     uv run python -m app.admin.backup                  # back up now
     uv run python -m app.admin.backup --list           # list backups
@@ -28,9 +29,12 @@ log = logging.getLogger(__name__)
 
 # table -> (primary key, jsonb columns)
 TABLES = {
-    "query_log": ("id", {"params", "retrieved", "citations"}),
+    "query_log": ("id", {"params", "retrieved", "citations", "labels"}),
     "excluded_paths": ("path", set()),
+    "eval_questions": ("id", set()),
+    "eval_runs": ("id", {"params", "metrics", "per_question"}),
 }
+SEQUENCES = ("query_log", "eval_questions", "eval_runs")
 PREFIX, SUFFIX = "secondbrain-", ".jsonl.gz"
 DAY = 86_400
 _COLUMN = re.compile(r"^[a-z_]+$")
@@ -103,9 +107,8 @@ def restore(path: Path) -> dict[str, int]:
             inserted[table] += conn.execute(
                 f"INSERT INTO {table} ({cols}) VALUES ({params}) ON CONFLICT ({key}) DO NOTHING", values
             ).rowcount
-        # restored ids must not be handed out again
-        conn.execute("SELECT setval(pg_get_serial_sequence('query_log', 'id'), "
-                     "GREATEST((SELECT max(id) FROM query_log), 1))")
+        for t in SEQUENCES:  # restored ids must not be handed out again
+            conn.execute(f"SELECT setval(pg_get_serial_sequence('{t}', 'id'), GREATEST((SELECT max(id) FROM {t}), 1))")
     log.info("restored from %s: %s", path.name, inserted)
     return inserted
 

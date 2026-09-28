@@ -94,14 +94,15 @@ def retrieve(question: str, course: str | None = None, mode: str | None = None) 
 
 
 def retrieve_with_vector(
-    qvec, question: str, course: str | None = None, mode: str | None = None
+    qvec, question: str, course: str | None = None, mode: str | None = None, k: int | None = None
 ) -> tuple[list[dict], list[dict]]:
-    """retrieve() with the question already embedded, so one vector can serve both modes."""
+    """retrieve() with the question already embedded, so one vector can serve both modes.
+    k: dense candidate depth (the evaluation uses 20; /ask uses top_k)."""
     s = get_settings()
     mode = mode or s.retrieval_mode
     with get_pool().connection() as conn:
         if mode == "dense":
-            hits = _dense(conn, qvec, s.top_k, course)
+            hits = _dense(conn, qvec, k or s.top_k, course)
             return hits, [h for h in hits if h["score"] >= s.min_score]
         dense_hits = _dense(conn, qvec, s.candidate_k, course)
         lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course)

@@ -34,9 +34,10 @@ def test_backup_then_restore_brings_back_deleted_rows_exactly(env, tmp_path):
     with db.get_pool().connection() as conn:
         conn.execute("DELETE FROM query_log WHERE id = ANY(%s)", (ids[:2],))
         conn.execute("DELETE FROM excluded_paths")
-    assert backup.restore(f) == {"query_log": 2, "excluded_paths": 1}
+    r = backup.restore(f)
+    assert (r["query_log"], r["excluded_paths"]) == (2, 1)
     assert rows(db) == before
-    assert backup.restore(f) == {"query_log": 0, "excluded_paths": 0}  # nothing missing: nothing added
+    assert set(backup.restore(f).values()) == {0}  # nothing missing: nothing added
 
     with db.get_pool().connection() as conn:  # the id sequence moved past the restored rows
         new_id = conn.execute("INSERT INTO query_log (question) VALUES ('after restore') RETURNING id").fetchone()["id"]
@@ -82,6 +83,6 @@ def test_back_up_now_route_and_status(env, tmp_path, monkeypatch):
     monkeypatch.setattr(backup, "backup_dir", lambda: tmp_path)
     client = TestClient(create_app())
     r = client.post("/admin/backup")
-    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1}
+    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1, "eval_questions": 0, "eval_runs": 0}
     last = client.get("/admin/status").json()["backup"]
     assert last["kept"] == 1 and last["bytes"] > 0 and last["name"] == r.json()["name"]
