@@ -199,22 +199,24 @@ button {
   padding: 0 0.4rem;
 }
 
+/* three views across the cabinet top: icon over label, so they fit the 248px rail on one row */
 .views {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
 }
 
 .views a {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.2rem;
   padding: 0.4rem 0.5rem;
   border-radius: 5px;
   color: var(--steel-muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
   transition: background-color 160ms var(--ease), color 160ms var(--ease);
 }
@@ -1407,7 +1409,12 @@ td {
     display: none;
   }
   .views {
-    grid-template-columns: auto auto;
+    grid-template-columns: auto auto auto;
+  }
+  .views a {
+    flex-direction: row;
+    gap: 0.4rem;
+    font-size: 0.9rem;
   }
   .drawer-select {
     display: block;
@@ -1495,45 +1502,51 @@ td {
   padding-inline-end: 0.9rem;
 }
 
-/* ---- history: one catalogue slip per question, filed by day ------------------------------ */
+/* ---- history: each day is one ruled catalogue card; each question a row filed under its call number */
 .history-day {
-  margin-top: 1.25rem;
+  margin-top: 1.6rem;
+}
+
+.history-day .stack-label {
+  margin-bottom: 0.4rem;
 }
 
 .history-list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  padding: 0.2rem 0;
+  background: var(--card);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
 }
 
 .history-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  padding-inline-end: 0.4rem;
-  border-radius: 4px;
-  background: var(--card);
-  box-shadow: 0 1px 1px rgb(29 37 41 / 0.06);
-  border-inline-start: 4px solid var(--tint, var(--rule-blue));
-  transition: box-shadow 160ms var(--ease);
+  padding-inline-end: 0.5rem;
+  border-bottom: 1px solid var(--rule-blue);
+  transition: background-color 160ms var(--ease);
+}
+
+.history-row:last-child {
+  border-bottom: 0;
 }
 
 .history-row:hover,
 .history-row:focus-within {
-  box-shadow: var(--shadow);
+  background: var(--card-2);
 }
 
 .history-open {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 4.8rem minmax(0, 1fr) auto;
   grid-template-areas: "call q time" "call a time";
-  column-gap: 0.8rem;
+  column-gap: 0.9rem;
+  row-gap: 0.1rem;
   align-items: baseline;
   min-width: 0;
-  padding: 0.55rem 0.5rem 0.55rem 0.8rem;
+  padding: 0.55rem 0.4rem 0.55rem 0.9rem;
   color: var(--ink);
   text-decoration: none;
 }
@@ -1542,8 +1555,16 @@ td {
   outline-offset: -2px;
 }
 
+/* the call number is the row's bristol label: the module's unit tint, ink text, a paper radius */
 .history-open .callno {
   grid-area: call;
+  align-self: start;
+  justify-self: start;
+  margin-top: 0.1rem;
+  padding: 0.1rem 0.4rem 0.05rem;
+  border-radius: 2px;
+  background: var(--tint);
+  color: var(--ink);
 }
 
 .history-open .question {
@@ -1553,6 +1574,10 @@ td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.history-open:hover .question {
+  color: var(--primary);
 }
 
 .history-answer {
@@ -1566,12 +1591,15 @@ td {
 
 .history-open time {
   grid-area: time;
-  font-size: 0.78rem;
+  font-family: var(--type);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
 .history-row .delete {
   opacity: 0;
+  transition: opacity 150ms var(--ease);
 }
 
 .history-row:hover .delete,
@@ -1582,6 +1610,14 @@ td {
 @media (hover: none) {
   .history-row .delete {
     opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .history-open {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "call time" "q q" "a a";
+    padding-inline-start: 0.75rem;
   }
 }
 
