@@ -9,7 +9,7 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from ..config import get_settings
-from .pipeline import ingest_file, is_supported, remove_file, rescan
+from .pipeline import ingest_file, is_supported, remove_file, remove_folder, rescan
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +23,13 @@ class _Handler(FileSystemEventHandler):
 
     def on_any_event(self, event: FileSystemEvent) -> None:
         if event.is_directory:
+            # A module folder deleted, renamed or pasted in can arrive as one directory event (Windows).
+            if event.event_type in ("deleted", "moved"):
+                self.w.folder_gone(Path(event.src_path))
+            if event.event_type == "moved":
+                self.w.touch_tree(Path(event.dest_path))
+            elif event.event_type == "created":
+                self.w.touch_tree(Path(event.src_path))
             return
         # The worker decides ingest vs. remove by whether the path still exists.
         if event.event_type in ("created", "modified", "closed", "deleted", "moved"):
@@ -46,6 +53,17 @@ class InboxWatcher:
         with self._cv:
             self._pending[path] = (time.monotonic(), retries)
             self._cv.notify()
+
+    def touch_tree(self, folder: Path) -> None:
+        for p in folder.rglob("*"):
+            if p.is_file():
+                self.touch(p)
+
+    def folder_gone(self, folder: Path) -> None:
+        try:
+            remove_folder(folder)
+        except Exception:
+            log.exception("failed to drop folder %s", folder)
 
     def start(self) -> None:
         self.inbox.mkdir(parents=True, exist_ok=True)
