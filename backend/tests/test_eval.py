@@ -160,3 +160,28 @@ def test_labelled_real_questions_join_the_evaluation(env):
     assert [(q["id"], q["course"], q["truth"]) for q in real] == [(good, "Prob", {("Prob/a.md", 1)})]
     assert real[0]["lang"] == "fr"
     assert jobs.status()["questions"]["labelled"] == 1
+
+
+def test_full_run_measures_answers_without_logging(env, monkeypatch):
+    from app.eval import run
+    from app.eval.generate import generate
+    from app.ingest.pipeline import rescan
+
+    inbox, db = env
+    notes(inbox)
+    rescan(fake_embed, words)
+    generate(n=4, chat=fake_chat)
+    monkeypatch.setattr(run.ollama, "embed", seeded_embed(db))
+    monkeypatch.setattr(run.ollama, "chat_stream", lambda messages: iter(["The answer ", "[1]."]))
+    with db.get_pool().connection() as conn:
+        logged = conn.execute("SELECT count(*) AS n FROM query_log").fetchone()["n"]
+
+    run_id = run.run(kind="full")
+    with db.get_pool().connection() as conn:
+        r = conn.execute("SELECT kind, metrics, per_question FROM eval_runs WHERE id = %s", (run_id,)).fetchone()
+        assert conn.execute("SELECT count(*) AS n FROM query_log").fetchone()["n"] == logged  # nothing logged
+    a = r["metrics"]["answers"]
+    assert r["kind"] == "full" and isinstance(a.pop("median_ms"), int)
+    assert a == {"n": 4, "refusal_rate": 0.0, "citation_valid_rate": 1.0, "cited_right_rate": 1.0}
+    assert all(q["answer"] == {"refused": False, "valid": True, "cited_right": True, "ms": q["answer"]["ms"]}
+               for q in r["per_question"])
