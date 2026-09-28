@@ -2070,3 +2070,102 @@ td {
   color: var(--muted);
   text-decoration: line-through;
 }
+
+/* ---- admin sync ---------------------------------------------------------------------------- */
+.sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.6rem 0;
+}
+
+.sync-one {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sync-one select {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.sync-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.sync-job .bad,
+.sync-log .bad {
+  color: var(--bad);
+}
+
+.sync-log {
+  max-height: 22rem;
+  overflow: auto;
+  border-top: 1px solid var(--rule-blue);
+  margin-top: 0.5rem;
+}
+
+.sync-log h3 {
+  margin: 0.7rem 0 0.2rem;
+}
+
+.sync-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sync-log li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  font-size: 0.86rem;
+}
+
+.sync-action {
+  flex: none;
+  width: 8.5rem;
+  color: var(--muted);
+}
+
+.sync-log .callno {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.sync-runs {
+  margin-top: 0.8rem;
+}
+
+.sync-runs summary {
+  cursor: pointer;
+  color: var(--primary);
+}
+
+.bb-login {
+  display: block;
+  margin-top: 0.3rem;
+  color: #ffb4ab; /* the rail's own "bad" ink, as .health .bad */
+  text-decoration: none;
+}
+
+.bb-login:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 860px) {
+  .sync-action {
+    width: 6.5rem;
+  }
+}
