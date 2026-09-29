@@ -114,7 +114,8 @@ def run(kind: str = "retrieval", progress=None, cancelled=None) -> int:
     s = get_settings()
     params = {"questions": len(per), "top_k": s.top_k, "candidate_k": s.candidate_k, "rrf_k": s.rrf_k,
               "min_score": s.min_score, "embed_model": s.embed_model, "llm_model": s.llm_model,
-              "parser_version": PARSER_VERSION, "retrieval_mode": s.retrieval_mode, "k": K}
+              "parser_version": PARSER_VERSION, "retrieval_mode": s.retrieval_mode, "k": K,
+              "doc_boost": s.doc_boost, "doc_context": s.doc_context}
     with get_pool().connection() as conn:
         return conn.execute(
             "INSERT INTO eval_runs (kind, params, metrics, per_question) VALUES (%s, %s, %s, %s) RETURNING id",

@@ -418,3 +418,76 @@ def test_tag_routes(env, monkeypatch, tmp_path):
     assert c.delete(f"/admin/tags/{ids['docker']}").status_code == 404
     monkeypatch.setattr(vocab.ollama, "embed", EMBED)
     assert c.post("/admin/tags/vocab", json={"course": "Course0"}).json()["new_raw"] == 0
+
+
+def unit(*pairs):
+    v = np.zeros(1024, dtype=np.float32)
+    for i, x in pairs:
+        v[i] = x
+    return v / np.linalg.norm(v)
+
+
+def boost_fixture(db):
+    """Chunk A is closer to the question (0.9 vs 0.85), but B's file summary matches the question and A's doesn't."""
+    ids = []
+    for path, chunk_vec, summary_vec in (("C/a.md", unit((0, 0.9), (1, 0.436)), unit((1, 1.0))),
+                                         ("C/b.md", unit((0, 0.85), (2, 0.527)), unit((0, 1.0)))):
+        with db.get_pool().connection() as conn:
+            d = conn.execute(
+                """INSERT INTO documents (path, sha256, course, title, mime, status, summary, summary_embedding)
+                   VALUES (%s, 'x', 'C', %s, 'text/markdown', 'ok', 'About it. More.', %s) RETURNING id""",
+                (path, path, summary_vec)).fetchone()["id"]
+            conn.execute("INSERT INTO chunks (document_id, ord, page, text, n_tokens, embedding) VALUES (%s, 0, 1, 't', 1, %s)",
+                         (d, chunk_vec))
+        ids.append(d)
+    return ids
+
+
+def test_doc_boost_reorders_by_summary_and_refusal_uses_the_raw_score(env, monkeypatch):
+    from app.config import get_settings
+    from app.rag.retrieve import retrieve_with_vector
+
+    _, db = env
+    a, b = boost_fixture(db)
+    q = unit((0, 1.0))
+    hits, _ = retrieve_with_vector(q, "q", mode="dense", k=2)
+    assert [h["doc_id"] for h in hits] == [a, b]  # doc_boost 0: today's order
+
+    monkeypatch.setenv("DOC_BOOST", "0.1")
+    get_settings.cache_clear()
+    hits, _ = retrieve_with_vector(q, "q", mode="dense", k=2)
+    assert [h["doc_id"] for h in hits] == [b, a]
+    assert round(hits[0]["score"], 2) == 0.85  # the score shown and used for refusal is unchanged
+    monkeypatch.setenv("MIN_SCORE", "0.88")
+    get_settings.cache_clear()
+    _, sources = retrieve_with_vector(q, "q", mode="dense", k=2)
+    assert [s["doc_id"] for s in sources] == [a]
+    get_settings.cache_clear()
+
+
+def test_doc_context_adds_the_summary_line(monkeypatch):
+    from app.config import get_settings
+    from app.llm.prompts import first_sentence, format_context
+
+    src = [{"title": "Chap 1", "page": 2, "mime": "application/pdf", "label": None, "text": "Body.",
+            "summary": "Covers gradient descent. Also momentum."}]
+    assert first_sentence("Covers gradient descent. Also momentum.") == "Covers gradient descent."
+    assert "About this file" not in format_context(src)
+    monkeypatch.setenv("DOC_CONTEXT", "on")
+    get_settings.cache_clear()
+    assert "[1] (Chap 1, p. 2)\nAbout this file: Covers gradient descent.\nBody." in format_context(src)
+    get_settings.cache_clear()
+
+
+def test_worker_embeds_summaries_and_backfills_missing_ones(env):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    e = Enricher(chat=good_chat, embed=fake_embed)
+    e.step()
+    assert doc(db, a)["summary_embedding"] is not None
+    with db.get_pool().connection() as conn:
+        conn.execute("UPDATE documents SET summary_embedding = NULL")
+    assert e.step() is True  # nothing pending: embeds the summary that lacks a vector
+    assert doc(db, a)["summary_embedding"] is not None and e.step() is False

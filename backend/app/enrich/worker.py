@@ -119,8 +119,8 @@ class Enricher:
             chunks = conn.execute(
                 "SELECT text, n_tokens FROM chunks WHERE document_id = %s ORDER BY ord", (doc["id"],)
             ).fetchall() if doc else []
-        if doc is None:
-            return False
+        if doc is None:  # nothing to summarise: backfill vectors for summaries made before stage 3
+            return self._embed_pending_summaries() > 0
         chat = self.chat or ollama.chat_json
 
         def gated(messages, schema):
@@ -161,7 +161,10 @@ class Enricher:
         self._after_write(doc, ok=out is not None)
 
     def _after_write(self, doc: dict, ok: bool) -> None:
-        """Link raw tags that already have an alias; run the vocabulary pass once the module has no pending files."""
+        """Embed the new summary; link raw tags that already have an alias; run the vocabulary pass once the
+        module has no pending files."""
+        if ok:
+            self._embed_pending_summaries()
         with get_pool().connection() as conn, conn.transaction():
             vocab.relink(conn, doc["course"])
             pending = conn.execute(
@@ -169,6 +172,21 @@ class Enricher:
                 (doc["course"],)).fetchone()
         if pending is None:
             vocab.run(doc["course"], embed=self.embed)
+
+    def _embed_pending_summaries(self, limit: int = 16) -> int:
+        """bge-m3 vectors (CPU) for current summaries that lack one. Returns how many were embedded."""
+        with get_pool().connection() as conn:
+            rows = conn.execute(
+                """SELECT id, sha256, summary FROM documents
+                   WHERE enrich_status = 'ok' AND enriched_sha = sha256 AND summary IS NOT NULL
+                     AND summary_embedding IS NULL ORDER BY id LIMIT %s""", (limit,)).fetchall()
+            if not rows:
+                return 0
+            vectors = (self.embed or ollama.embed)([r["summary"] for r in rows])
+            for r, v in zip(rows, vectors, strict=True):
+                conn.execute("UPDATE documents SET summary_embedding = %s WHERE id = %s AND sha256 = %s",
+                             (v, r["id"], r["sha256"]))
+        return len(rows)
 
     def _loop(self) -> None:
         while not self._stop.is_set():
