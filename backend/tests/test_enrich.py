@@ -163,7 +163,7 @@ def test_changed_file_is_requeued_but_a_forced_reindex_of_the_same_file_is_not(e
     from app.enrich.worker import Enricher, counts
     from app.ingest.pipeline import ingest_file
 
-    inbox, db = env
+    inbox, _ = env
     f = inbox / "Course0" / "note.md"
     f.parent.mkdir(parents=True)
     f.write_text("Le gradient est un vecteur de dérivées partielles.", encoding="utf-8")
@@ -241,3 +241,48 @@ def test_pause_resume_and_rerun(env, tmp_path, monkeypatch):
     assert e.rerun(course="Course0") == 1 and counts()["pending"] == 1
     assert e.rerun(document_id=a) == 1
     config.get_settings.cache_clear()
+
+
+def client(monkeypatch, tmp_path):
+    from fastapi.testclient import TestClient
+
+    from app import config
+    from app.main import create_app
+
+    monkeypatch.setattr(config, "LOCAL_CONFIG", tmp_path / "config.local.yaml")
+    config.get_settings.cache_clear()
+    return TestClient(create_app())  # no `with`: no lifespan, so no background worker
+
+
+def test_documents_carry_summary_fields(env, monkeypatch, tmp_path):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    b = add_doc(db, "Course0/b.md")
+    Enricher(chat=good_chat, embed=fake_embed).step()
+    rows = {r["id"]: r for r in client(monkeypatch, tmp_path).get("/documents").json()}
+    assert rows[a]["summary"] == "Un résumé." and rows[a]["concepts"] == ["Gradient descent", "Loss"]
+    assert (rows[a]["enrich_status"], rows[b]["enrich_status"]) == ("ok", "pending")
+
+
+def test_enrich_admin_routes(env, monkeypatch, tmp_path):
+    _, db = env
+    add_doc(db, "Course0/a.md")
+    c = client(monkeypatch, tmp_path)
+    assert c.get("/admin/enrich").json()["counts"]["pending"] == 1
+    assert c.post("/admin/enrich/pause").json()["paused"] is True
+    assert c.post("/admin/enrich/resume").json()["paused"] is False
+    assert c.post("/admin/enrich/rerun", json={}).status_code == 400
+    assert c.post("/admin/enrich/rerun", json={"course": "Course0"}).json() == {"queued": 1}
+    assert c.get("/admin/status").json()["enrichment"]["counts"]["pending"] == 1
+
+
+def test_library_lists_files_that_could_not_be_summarised(env, monkeypatch, tmp_path):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    Enricher(chat=lambda m, s, temperature=0.3: {"summary": ""}, embed=fake_embed).step()
+    errors = client(monkeypatch, tmp_path).get("/admin/library").json()["summary_errors"]
+    assert [e["id"] for e in errors] == [a] and "missing a summary" in errors[0]["error"]

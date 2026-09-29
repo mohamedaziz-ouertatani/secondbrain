@@ -13,6 +13,7 @@ from ..admin.settings import Invalid, update, view
 from ..admin.status import status
 from ..config import get_settings
 from ..db import get_pool
+from ..enrich.worker import worker as enricher
 from ..eval import jobs as eval_jobs
 from ..ingest.pipeline import exclude, include, is_supported, reindex
 from .jobs import exclusive
@@ -58,9 +59,15 @@ def library() -> dict:
                WHERE status <> 'ok' ORDER BY course NULLS LAST, title"""
         ).fetchall()
         excluded = conn.execute("SELECT path, excluded_at FROM excluded_paths ORDER BY path").fetchall()
+        summary_errors = conn.execute(
+            """SELECT id, path, title, course, enrich_error AS error FROM documents
+               WHERE status = 'ok' AND enriched_sha = sha256 AND enrich_status = 'error'
+               ORDER BY course NULLS LAST, title"""
+        ).fetchall()
     return {
         "modules": modules,
         "problems": problems,
+        "summary_errors": summary_errors,
         "excluded": [{**e, "on_disk": (inbox / e["path"]).is_file()} for e in excluded],
     }
 
@@ -212,3 +219,32 @@ def eval_cancel() -> dict:
     if job is None:
         raise HTTPException(404, "no evaluation job is running")
     return job
+
+
+class RerunBody(BaseModel):
+    course: str | None = None
+    document_id: int | None = None
+
+
+@router.get("/enrich")
+def enrich_status() -> dict:
+    return enricher.status()
+
+
+@router.post("/enrich/pause")
+def enrich_pause() -> dict:
+    enricher.pause()
+    return enricher.status()
+
+
+@router.post("/enrich/resume")
+def enrich_resume() -> dict:
+    enricher.resume()
+    return enricher.status()
+
+
+@router.post("/enrich/rerun")
+def enrich_rerun(body: RerunBody) -> dict:
+    if (body.course is None) == (body.document_id is None):
+        raise HTTPException(400, "give exactly one of course or document_id")
+    return {"queued": enricher.rerun(course=body.course, document_id=body.document_id)}

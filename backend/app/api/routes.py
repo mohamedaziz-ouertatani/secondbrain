@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from ..admin import sync as sync_jobs
 from ..config import get_settings
 from ..db import get_pool
+from ..enrich.worker import ENRICH_STATE
 from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
@@ -38,8 +39,9 @@ def ask_endpoint(req: AskRequest) -> StreamingResponse:
 def documents() -> list[dict]:
     with get_pool().connection() as conn:
         return conn.execute(
-            """SELECT d.id, d.path, d.title, d.course, d.mime, d.page_count, d.status, d.error,
-                      d.mtime, d.ingested_at, d.first_seen, count(c.id) AS chunk_count
+            f"""SELECT d.id, d.path, d.title, d.course, d.mime, d.page_count, d.status, d.error,
+                      d.mtime, d.ingested_at, d.first_seen, count(c.id) AS chunk_count,
+                      d.summary, d.concepts, d.enrich_error, {ENRICH_STATE} AS enrich_status
                FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
                GROUP BY d.id ORDER BY d.course NULLS LAST, d.title"""
         ).fetchall()
@@ -104,7 +106,8 @@ def _document_file(doc_id: int, columns: str = "path, mime") -> tuple[dict, Path
 def document_pages(doc_id: int) -> dict:
     """The document's text per page/slide/section, re-parsed from the file (no chunk overlap)."""
     row, path = _document_file(
-        doc_id, "id, path, title, course, mime, page_count, status, error, ingested_at"
+        doc_id, f"id, path, title, course, mime, page_count, status, error, ingested_at, "
+                f"summary, concepts, enrich_error, {ENRICH_STATE} AS enrich_status"
     )
     try:
         parsed = parse(path)
