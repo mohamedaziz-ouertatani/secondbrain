@@ -68,12 +68,14 @@ The backend watches the folder:
 Every question you ask is kept on the server, so it survives browser clears and works on any port.
 - **Desk:** the 40 most recent questions are stacked under the answer, filtered to the open drawer.
 - **History page** (`/history`, in the rail): every question, grouped by day, with a drawer filter, search over questions and answers, and "Load older questions". Click one to reopen it on the desk with its fiches.
-- **Delete:** the bin button on a History row, a past card or the open answer. You get 5 seconds to undo, then the question is **deleted permanently**: it also leaves the query log below.
+- **Delete:** the bin button on a History row, a past card or the open answer. You get 5 seconds to undo, then the question is deleted from the database. The daily backup keeps a copy (see Backups below).
+- **Rate and label:** 👍/👎 on an answer, and **Relevant?** on each fiche (unmarked → Relevant → Not relevant). Marks save immediately. A question with at least one fiche marked relevant joins the evaluation set (see Evaluation below).
 
 ## Admin panel
 
 Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to open `/admin`:
-- **Status:** database, Ollama and models, how much of the LLM is on the GPU and when it unloads, VRAM used, recent answer times, and index size.
+- **Status:** database, Ollama and models, how much of the LLM is on the GPU and when it unloads, VRAM used, recent answer times, index size, OCR, and the last backup (with **Back up now**).
+- **Evaluation:** generate a question set, run an evaluation, and compare runs. See Evaluation below.
 - **Insights:** over 7 days, 30 days or all time, the number of questions, refusals, invalid citations and answer times. Also a daily trend, counts per module, the refused, invalid and slowest questions (each opens on the desk), and a dense vs hybrid comparison of your recent questions.
 - **Library:** counts per module, files that couldn't be read, **Rescan inbox**, and **Re-index** a module or file even if unchanged. **Exclude** keeps a file on disk but out of your answers, and **Include** brings it back.
 - **Blackboard sync:** Sync now, Sync one module, Preview and Course mapping, with live progress, Cancel and recent runs. See Syncing from Blackboard below.
@@ -137,7 +139,63 @@ On a 4 GB GPU, keep the LLM around 4B parameters at Q4. A 7B model runs, but par
 
 ## Query log
 
-Every question is stored in the `query_log` table, including the retrieved chunks and their scores (with dense and keyword ranks in hybrid mode), the answer, the citations and whether they validated. The History page reads this table, and this becomes the evaluation set later. There is no backup: a question deleted from History is gone for good.
+Every question is stored in the `query_log` table, including:
+- the retrieved chunks and their scores (with dense and keyword ranks in hybrid mode);
+- the answer, the citations and whether they validated;
+- your rating and fiche labels.
+
+The History page reads this table, and labelled rows feed the evaluation.
+
+## Backups
+
+The data a rescan can't rebuild is backed up once a day while the backend runs: the question log (with your labels), excluded files, and the evaluation set and its runs. Each backup is a gzipped JSON-lines file in `backend/data/backups/`, which Git ignores. The newest 30 are kept (`backup_keep`). The index itself isn't backed up, because a rescan rebuilds it from `inbox/`.
+
+```bash
+cd backend && uv run python -m app.admin.backup --list
+```
+
+```bash
+cd backend && uv run python -m app.admin.backup --restore secondbrain-2026-09-28_211828.jsonl.gz
+```
+
+A restore only adds rows that are missing, such as deleted history. It never overwrites anything. Backups live on the same disk, so they protect against mistakes, not against losing the disk.
+
+## Evaluation
+
+Measures how often retrieval finds the right page, and optionally how well answers cite it. Everything stays in the database, never in the repository, because the questions quote your course material.
+
+**The question set:**
+- **Generated:** your local model writes a question for each sampled page, and that page is the right answer. Pages are sampled across modules in proportion to their size, with at least 5 per module. Questions that copy the passage are rejected. About 5 minutes for 150.
+- **Yours:** questions where you marked at least one fiche relevant. Their right answers are the pages you marked.
+
+```bash
+cd backend && uv run python -m app.eval.generate --n 150
+```
+
+**A run** (also from the admin Evaluation section):
+
+```bash
+cd backend && uv run python -m app.eval.run
+```
+
+- The default run takes about 3 minutes. It retrieves 20 passages per question in dense and hybrid mode and reports:
+  - **recall@1, @5 and @20:** the share of questions whose right page is first, in the top 5, or in the top 20;
+  - **MRR:** the average of 1/rank of the right page;
+  - **the refusal rate.**
+
+  Results are broken down overall, per module, per language, and generated vs yours.
+- `--full` (about 20 minutes) also answers every question with the current settings, without writing to the query log. It reports **citations valid**, **cited the right page** and the median answer time.
+
+Every run is saved with the settings it used, so you can compare runs before and after a change. First baseline (137 generated questions):
+
+| | Dense | Hybrid |
+|---|---|---|
+| recall@1 | 45% | 35% |
+| recall@5 | 84% | 72% |
+| recall@20 | 96% | 96% |
+| MRR | 0.62 | 0.52 |
+
+The full run (dense): citations valid 94%, cited the right page 68%, median answer 6.7 s.
 
 ## Tests
 
@@ -150,6 +208,6 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 ## Roadmap
 
 - **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync, OCR of images in PDFs, slides and Word files.
-- **v2:** hybrid search (built, off by default), the bge-reranker-v2-m3 reranker (parked: it orders passages well but takes 12–23 s per question on the CPU), and document tags/summaries.
-- **v3:** chat history (done), the admin panel (done: status, library, settings, insights and Blackboard sync), related notes and flashcards.
-- **v4:** a Chrome extension to save from Blackboard, and an eval set built from the query log.
+- **v2:** hybrid search (built, off by default; dense wins in the evaluation) and the bge-reranker-v2-m3 reranker. The reranker is parked: it takes 12–23 s per question on the CPU, but the evaluation shows room for it (the right page is in the top 20 for 96% of questions, first for 45%), so GPU and ONNX options are next. Also document tags/summaries.
+- **v3:** chat history (done), the admin panel (done: status, library, settings, insights, Blackboard sync, evaluation), daily backups (done), related notes and flashcards.
+- **v4:** the evaluation set (done: generated and labelled questions, retrieval and full runs), and a Chrome extension to save from Blackboard.
