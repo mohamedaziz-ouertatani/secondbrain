@@ -147,7 +147,13 @@ A setting fixed by an environment variable shows as locked in the panel. The emb
 
 Retrieval has two modes, set with `retrieval_mode`:
 - `dense` (default): vector search only.
-- `hybrid`: vector search plus Postgres full-text search, fused with RRF. It's off by default because on French questions about English course pages it ranked the French exercise sheets above the course notes. It's meant to feed a reranker later.
+- `hybrid`: vector search plus Postgres full-text search, fused with RRF. It's off by default because on French questions about English course pages it ranked the French exercise sheets above the course notes.
+
+The reranker (see Reranker) reorders the candidates in either mode:
+- `rerank` (on): a cross-encoder on the GPU reorders the `candidate_k` (20) candidates before the top `top_k` go to the model. Editable in the admin panel.
+- `rerank_max_length` (384): tokens per question+passage pair. 512 doesn't fit beside the LLM in 4 GB of VRAM.
+- `rerank_keep_alive` (30): minutes idle before the reranker leaves the GPU.
+- `rerank_model_path` (`data/models/bge-reranker-v2-m3.fp16.onnx`): relative to `backend/`.
 
 Two experiments with summaries are off by default, and editable in the admin panel. Neither helped in the evaluation (see Evaluation):
 - `doc_boost` (0): ranks passages higher when their file's summary matches the question.
@@ -239,6 +245,45 @@ File context in prompts (`doc_context`), in two full runs off vs on:
 
 **Decision:** both stay off. Neither changes answers beyond noise, and file context makes answers 28% slower. Summaries earn their place in browsing and filtering, not in ranking. The right page is already in the top 20 for 96% of questions, so a reranker remains the better lead.
 
+## Reranker
+
+`bge-reranker-v2-m3`, exported to fp16 ONNX and run with ONNX Runtime on DirectML, reorders the 20 best dense candidates before the top 5 go to the model. It loads on the first question (a few seconds) and leaves the GPU after 30 idle minutes.
+
+- **Refusals are unchanged:** the cosine `min_score` gate decides whether to answer. Each question's best reranker score is logged (`params.top_rerank_score` in the query log) so that a refusal gate can be tuned on real questions later.
+- **It never breaks a question:** if the model file is missing, DirectML isn't available (it's Windows-only), or scoring fails, retrieval uses the plain order. The admin Status card and `/health` say why.
+- **The model file** is `backend/data/models/bge-reranker-v2-m3.fp16.onnx` (1.1 GB, not in Git). To build it, which needs about 200 MB of CPU PyTorch in a separate dependency group and the 2.2 GB model from Hugging Face:
+
+```bash
+cd backend && uv run --group export python -m app.rag.rerank_export
+```
+
+The script checks the fp16 file against the full-precision model on six question/passage pairs (English, French, Arabic, one off-topic) and refuses to save it if any score differs by more than 0.1. The current file differs by 0.07 on DirectML.
+
+**Spike** (2026-09-29, the 137 generated questions, dense top 20 reranked, RTX 2050 with 4 GB):
+
+| max_length | recall@1 | recall@5 | MRR | ms per question beside qwen3:4b |
+|---|---|---|---|---|
+| no reranker | 44.5% | 83.9% | 0.617 | – |
+| 256 | 54.0% | 86.1% | 0.694 | – |
+| 384 | 56.9% | 89.1% | 0.720 | ~900 |
+| 512 | 56.9% | 90.5% | 0.721 | 4,380 (VRAM full) |
+
+French recall@1 went from 44% to 72%.
+
+**Evaluation** (2026-09-29, runs 9 and 10: the same 137 questions on the 109-file library, reranker off then on):
+
+| | dense | reranked |
+|---|---|---|
+| recall@1 | 43.8% | 56.2% |
+| recall@5 | 82.5% | 88.3% |
+| MRR | 0.611 | 0.715 |
+| French recall@1 (18) | 44.4% | 72.2% |
+| cited the right page | 67.9% | 72.3% |
+| citations valid | 94.9% | 95.6% |
+| median answer, generation only | 6.95 s | 7.88 s |
+
+The evaluation's answer time starts after retrieval. Reranking itself adds 0.88 s per question (median, measured separately), so the full wait goes from about 7.0 s to about 8.8 s. That's 0.3 s over the 1.5 s the design allowed. It stays on: ranking gains 12 points (28 on French questions) and right citations 4 points. `rerank_max_length: 256` roughly halves the reranker's time for about 3 points of recall.
+
 ## Tests
 
 ```bash
@@ -250,6 +295,6 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 ## Roadmap
 
 - **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync, OCR of images in PDFs, slides and Word files.
-- **v2:** hybrid search (built, off by default; dense wins in the evaluation) and the bge-reranker-v2-m3 reranker. The reranker is parked: it takes 12–23 s per question on the CPU, but the evaluation shows room for it (the right page is in the top 20 for 96% of questions, first for 45%), so GPU and ONNX options are next. Document summaries, concepts and tags (done; they don't help ranking, see Evaluation).
+- **v2:** hybrid search (built, off by default; dense wins in the evaluation) and the bge-reranker-v2-m3 reranker. The reranker is on: fp16 ONNX on DirectML, 0.9 s per question; the right page first 44% → 56%, cited 68% → 72% (see Reranker). Document summaries, concepts and tags (done; they don't help ranking, see Evaluation).
 - **v3:** chat history (done), the admin panel (done: status, library, settings, insights, Blackboard sync, evaluation), daily backups (done), related notes and flashcards.
 - **v4:** the evaluation set (done: generated and labelled questions, retrieval and full runs), and a Chrome extension to save from Blackboard.
