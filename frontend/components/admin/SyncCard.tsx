@@ -26,7 +26,7 @@ function until(iso: string): string {
   return days <= 0 ? "at the next hourly check" : `in ${days} day${days === 1 ? "" : "s"}`;
 }
 
-function outcome(j: SyncJob): string {
+function fileOutcome(j: SyncJob): string {
   const c = j.counts;
   if (j.state === "running") return `${MODE[j.mode]} running…`;
   if (j.state === "cancelled") return "Cancelled.";
@@ -40,6 +40,23 @@ function outcome(j: SyncJob): string {
   }
   const n = c.downloaded + c.saved_page;
   return `Done: ${n} file${n === 1 ? "" : "s"}, ${mb(j.bytes)}${c.failed ? `, ${c.failed} failed (retried next time)` : ""}.`;
+}
+
+function deadlineNote(j: SyncJob): string {
+  const d = j.deadlines;
+  if (!d || j.state !== "ok") return "";
+  if (d.failed) return " Deadlines couldn't be read from the Blackboard calendar.";
+  if (d.would_import !== undefined) return ` ${d.would_import} deadline${d.would_import === 1 ? "" : "s"} on Blackboard.`;
+  const parts = [
+    d.new ? `${d.new} new` : "",
+    d.updated ? `${d.updated} updated` : "",
+    d.removed ? `${d.removed} removed on Blackboard` : "",
+  ].filter(Boolean);
+  return parts.length ? ` Deadlines: ${parts.join(", ")}.` : " Deadlines up to date.";
+}
+
+function outcome(j: SyncJob): string {
+  return fileOutcome(j) + deadlineNote(j);
 }
 
 /** Blackboard sync: run it, watch it, and see when it last ran and runs next. */
