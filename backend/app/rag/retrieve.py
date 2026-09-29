@@ -6,6 +6,7 @@ import unicodedata
 from ..config import get_settings
 from ..db import get_pool
 from ..llm import ollama
+from . import rerank as rr
 
 # The tsv column uses the 'simple' config, which keeps every word, so the query side drops
 # function words and question words itself. Otherwise "qu'est-ce qu'un" matches everything.
@@ -102,17 +103,26 @@ def retrieve(question: str, course: str | None = None, mode: str | None = None) 
 
 
 def retrieve_with_vector(
-    qvec, question: str, course: str | None = None, mode: str | None = None, k: int | None = None
+    qvec, question: str, course: str | None = None, mode: str | None = None, k: int | None = None,
+    rerank: bool | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """retrieve() with the question already embedded, so one vector can serve both modes.
-    k: dense candidate depth (the evaluation uses 20; /ask uses top_k)."""
+    k: dense candidate depth (the evaluation uses 20; /ask uses top_k).
+    rerank: None follows the setting; True forces the reranker (evaluation), False skips it."""
     s = get_settings()
     mode = mode or s.retrieval_mode
+    want = s.rerank == "on" if rerank is None else rerank
     with get_pool().connection() as conn:
         if mode == "dense":
-            hits = _dense(conn, qvec, k or s.top_k, course)
-            return hits, [h for h in hits if h["score"] >= s.min_score]
-        dense_hits = _dense(conn, qvec, s.candidate_k, course)
-        lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course)
-    hits = fuse(dense_hits, lexical_hits, s.rrf_k)
+            depth = k or s.top_k
+            hits = _dense(conn, qvec, max(depth, s.candidate_k) if want else depth, course)
+        else:
+            dense_hits = _dense(conn, qvec, s.candidate_k, course)
+            lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course)
+            hits = fuse(dense_hits, lexical_hits, s.rrf_k)
+    if want and (ranked := rr.reranker.rerank(question, hits[: s.candidate_k], force=bool(rerank))) is not None:
+        return ranked, ranked[: s.top_k] if answerable(ranked, s.min_score) else []
+    if mode == "dense":
+        hits = hits[: k or s.top_k]
+        return hits, [h for h in hits if h["score"] >= s.min_score]
     return hits, hits[: s.top_k] if answerable(hits, s.min_score) else []

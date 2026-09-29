@@ -27,17 +27,21 @@ def _ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]
     s = get_settings()
     t0 = time.perf_counter()
     candidates, sources = retrieve(question, course)
+    reranked = [h["rerank_score"] for h in candidates if "rerank_score" in h]
     entry = {
         "question": question,
         "llm_model": s.llm_model,
         "embed_model": s.embed_model,
         "params": {"top_k": s.top_k, "min_score": s.min_score, "mode": s.retrieval_mode, "course": course,
+                   "rerank": "on" if reranked else "off", "rerank_max_length": s.rerank_max_length,
+                   "top_rerank_score": round(max(reranked), 4) if reranked else None,
                    **({"candidate_k": s.candidate_k, "rrf_k": s.rrf_k} if s.retrieval_mode == "hybrid" else {})},
         "retrieved": [
             {"chunk_id": h["chunk_id"], "doc_id": h["doc_id"], "page": h["page"],
              "score": round(float(h["score"]), 4), "rank": i, "used": h in sources,
              **{key: h[key] for key in ("dense_rank", "lex_rank") if key in h},
-             **({"rrf": round(h["rrf"], 5)} if "rrf" in h else {})}
+             **({"rrf": round(h["rrf"], 5)} if "rrf" in h else {}),
+             **({"rerank_score": round(h["rerank_score"], 4)} if "rerank_score" in h else {})}
             for i, h in enumerate(candidates, start=1)
         ],
         "answer": None,

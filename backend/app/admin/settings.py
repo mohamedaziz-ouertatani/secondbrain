@@ -188,4 +188,8 @@ def update(changes: dict) -> dict:
         raise Invalid(errors)
 
     _write_local(new_local)
+    if "rerank" in changes:
+        from ..rag import rerank
+
+        rerank.reranker.reset()  # a toggle retries a reranker that failed to load
     return view()
