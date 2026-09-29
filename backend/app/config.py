@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     doc_boost: float = 0.0  # adds doc_boost x similarity(question, file summary) to each passage's score
     doc_context: Literal["off", "on"] = "off"  # on: each passage in the prompt gets its file's summary line
 
+    # Planner: extra module aliases for one-line capture, e.g. {"ml": "Optimization for ML"}
+    planner_aliases: dict[str, str] = {}
+
     @classmethod
     def settings_customise_sources(
         cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings

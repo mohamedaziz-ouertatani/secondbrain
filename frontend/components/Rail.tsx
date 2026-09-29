@@ -1,11 +1,12 @@
 "use client";
 
-import { Archive, History, PenLine } from "lucide-react";
+import { Archive, CalendarDays, History, PenLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getJSON, type Health } from "@/lib/api";
 import { isKnownModule, modulesOf, OTHER_UNIT, tintVar, UNITS } from "@/lib/modules";
+import { dayKey, isOverdue, useUpcoming } from "@/lib/planner";
 import { ago, isNew, newestFiled } from "@/lib/seen";
 import { drawerHref, useDrawer, useLibrary } from "@/lib/useLibrary";
 
@@ -16,12 +17,21 @@ export function Rail() {
   const drawer = useDrawer();
   const { docs } = useLibrary();
   const [health, setHealth] = useState<Health | "down" | null>(null);
+  const soon = useUpcoming(drawer, 2);
+  const today = dayKey(new Date());
+  const due = (soon ?? []).filter((i) => isOverdue(i) || dayKey(new Date(i.starts_at!)) === today).length;
 
   useEffect(() => {
     getJSON<Health>("/health").then(setHealth).catch(() => setHealth("down"));
   }, []);
 
-  const base = pathname.startsWith("/documents") ? "/documents" : pathname.startsWith("/history") ? "/history" : "/";
+  const base = pathname.startsWith("/documents")
+    ? "/documents"
+    : pathname.startsWith("/history")
+      ? "/history"
+      : pathname.startsWith("/planner")
+        ? "/planner"
+        : "/";
   const counts = new Map<string, { n: number; fresh: number }>();
   for (const d of docs ?? []) {
     const k = d.course ?? "";
@@ -51,6 +61,14 @@ export function Rail() {
         </Link>
         <Link href={drawerHref("/history", drawer)} aria-current={base === "/history" ? "page" : undefined}>
           <History size={16} aria-hidden /> History
+        </Link>
+        <Link href={drawerHref("/planner", drawer)} aria-current={base === "/planner" ? "page" : undefined}>
+          <CalendarDays size={16} aria-hidden /> Planner
+          {due > 0 && (
+            <span className="rail-badge" aria-label={`${due} due or overdue`}>
+              {due}
+            </span>
+          )}
         </Link>
       </div>
 

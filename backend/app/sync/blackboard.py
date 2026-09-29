@@ -27,6 +27,7 @@ from urllib.parse import urlsplit
 
 from ..config import ROOT, get_settings
 from ..ingest.parse import SUPPORTED
+from ..planner import blackboard as planner_bb
 from . import ultra_pages
 
 log = logging.getLogger("blackboard")
@@ -300,6 +301,13 @@ def print_event(e: dict) -> None:
         if e["mode"] == "sync":
             print(f"\nDone: {e['files']} files, {e['bytes'] / 1_048_576:.1f} MB. "
                   "The backend indexes them automatically if it's running.")
+    elif t == "deadlines":
+        if "failed" in e:
+            print(f"Deadlines: couldn't read the Blackboard calendar ({e['failed']})")
+        elif "would_import" in e:
+            print(f"Deadlines: {e['would_import']} on Blackboard")
+        else:
+            print(f"Deadlines: {e['new']} new, {e['updated']} updated, {e['removed']} removed on Blackboard")
     elif t == "login_waiting":
         print("Log in to Blackboard in the browser window that just opened. Waiting…", flush=True)
     elif t == "logged_in":
@@ -323,6 +331,12 @@ def my_courses(api: BlackboardAPI) -> list[dict]:
         if r.get("course") and (r.get("availability") or {}).get("available") != "No"
         and (r["course"].get("availability") or {}).get("available") != "No"
     ]
+
+
+def selected(course: dict, folder: str | None, only: str | None) -> bool:
+    """Synced this run: mapped to a folder, and matching --course if given."""
+    return folder is not None and (
+        not only or only.casefold() in (folder.casefold(), clean_course_name(course["name"]).casefold()))
 
 
 def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, include_unmapped: bool,
@@ -349,7 +363,7 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
     state = load_state()
     total_new = total_bytes = 0
     for c, folder in mapping:
-        if folder is None or (only and only.casefold() not in (folder.casefold(), clean_course_name(c["name"]).casefold())):
+        if not selected(c, folder, only):
             continue
         skipped: Counter = Counter()
         files = list(walk(api, c["id"], skipped, folder))
@@ -387,6 +401,11 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
             total_bytes += len(data)
             emit({"type": "file", "folder": folder, "path": rel, "kb": max(1, len(data) // 1024),
                   "action": "saved_page" if f.text else "downloaded"})
+    try:  # a calendar problem never fails the file sync
+        emit(planner_bb.import_deadlines(api, {c["id"]: f for c, f in mapping if selected(c, f, only)},
+                                         dry_run=dry_run))
+    except Exception as e:  # noqa: BLE001
+        emit({"type": "deadlines", "failed": str(e)})
     emit({"type": "done", "mode": mode, "files": total_new, "bytes": total_bytes})
     return 0
 

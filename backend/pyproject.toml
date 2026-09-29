@@ -20,6 +20,7 @@ dependencies = [
     "playwright>=1.63.0",
     "markdownify>=1.2.3",
     "beautifulsoup4>=4.15.0",
+    "tzdata>=2026.4",
 ]
 
 [dependency-groups]

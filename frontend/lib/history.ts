@@ -47,7 +47,7 @@ export function dayLabel(ts: string, now = new Date()): string {
  * Delete with undo instead of a confirm dialog: the message hides at once and the DELETE is only
  * sent after UNDO_MS, on pagehide or on unmount. One pending delete at a time; a second one commits the first.
  */
-export function useUndoDelete() {
+export function useUndoDelete(del: (id: number) => Promise<boolean> = deleteHistory) {
   const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set());
   const [pending, setPending] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
@@ -67,13 +67,13 @@ export function useUndoDelete() {
     pendingRef.current = null;
     window.clearTimeout(p.timer);
     setPending(null);
-    deleteHistory(p.id).then((ok) => {
+    del(p.id).then((ok) => {
       if (!ok) {
         unhide(p.id);
         setFailed(true);
       }
     });
-  }, [unhide]);
+  }, [unhide, del]);
 
   const remove = useCallback(
     (id: number) => {
