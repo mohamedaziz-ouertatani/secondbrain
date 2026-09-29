@@ -2384,3 +2384,202 @@ td {
 .relevant-mark.no {
   color: var(--bad);
 }
+
+/* ---- planner: rows and capture ------------------------------------------- */
+
+.plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--rule-blue);
+  border-left: 3px solid var(--tint, var(--tint-other));
+}
+
+.plan-row:last-child {
+  border-bottom: 0;
+}
+
+.plan-check {
+  margin: 0.2rem 0 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+.plan-kind {
+  margin-top: 0.2rem;
+  color: var(--muted);
+}
+
+.plan-open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.plan-open:hover .plan-title {
+  color: var(--primary);
+}
+
+.plan-title {
+  overflow-wrap: anywhere;
+}
+
+.plan-row.done .plan-title,
+.plan-row.removed .plan-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.plan-row.overdue .callno {
+  color: var(--bad);
+}
+
+.plan-flag {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.plan-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.capture-field {
+  position: relative;
+  border-bottom: 2px solid var(--rule-red);
+}
+
+.capture-field input,
+.capture-mirror {
+  font: 500 1.1rem/1.45 var(--sans);
+  padding: 0.35rem 0;
+  white-space: pre;
+}
+
+.capture-field input {
+  position: relative;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--rule-red);
+}
+
+.capture-field input:focus {
+  outline: none;
+}
+
+.capture-field:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.capture-mirror {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.capture-mirror mark {
+  background: none;
+  color: transparent;
+  text-decoration: underline 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--primary);
+}
+
+.capture-mirror mark.cap-course {
+  text-decoration-color: color-mix(in srgb, var(--ink) 45%, var(--tint-modeling));
+}
+
+.capture-mirror mark.cap-kind {
+  text-decoration-style: dotted;
+}
+
+.capture-reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-top: 0.55rem;
+}
+
+.capture-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.capture-controls select,
+.capture-controls input[type="date"],
+.capture-controls input[type="datetime-local"],
+.plan-fields select,
+.plan-fields input[type="date"],
+.plan-fields input[type="datetime-local"] {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  background: var(--card);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--rule-blue);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--card-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.segmented button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.capture-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+}
