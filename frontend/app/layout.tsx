@@ -8,6 +8,7 @@ import "@fontsource/noto-sans-arabic/600.css";
 import "@fontsource/courier-prime/400.css";
 import "@fontsource/courier-prime/700.css";
 import "./globals.css";
+import { CaptureDialog } from "@/components/CaptureDialog";
 import { Rail } from "@/components/Rail";
 
 export const metadata: Metadata = {
@@ -24,6 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Rail />
           </Suspense>
           <main className="main">{children}</main>
+          <Suspense>
+            <CaptureDialog />
+          </Suspense>
         </div>
       </body>
     </html>
