@@ -46,6 +46,11 @@ export function LibraryAdmin() {
       const s = await postJSON<Record<string, number>>("/ingest/rescan", {});
       return `Rescanned: ${counts(s)}.`;
     });
+  const reenrich = (key: string, body: { course: string } | { document_id: number }) =>
+    act(key, async () => {
+      const r = await postJSON<{ queued: number }>("/admin/enrich/rerun", body);
+      return `Queued ${r.queued} file${r.queued === 1 ? "" : "s"} for new summaries.`;
+    });
   const reindex = (key: string, body: { path?: string; course?: string }) =>
     act(key, async () => `Re-indexed: ${counts(await postJSON<Record<string, number>>("/admin/reindex", body))}.`);
   const exclude = (path: string) =>
@@ -112,6 +117,8 @@ export function LibraryAdmin() {
                   <span className="row-actions">
                     {inline(key)}
                     {m.course && btn(key, "Re-index", () => reindex(key, { course: m.course! }))}
+                    {inline(`e:${m.course}`)}
+                    {m.course && btn(`e:${m.course}`, "Re-enrich", () => reenrich(`e:${m.course}`, { course: m.course! }))}
                   </span>
                 </td>
               </tr>
@@ -141,6 +148,27 @@ export function LibraryAdmin() {
                 {inline(`x:${p.path}`)}
                 {btn(`r:${p.path}`, "Re-index", () => reindex(`r:${p.path}`, { path: p.path }))}
                 {btn(`x:${p.path}`, "Exclude", () => exclude(p.path))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h3>Couldn&apos;t summarise</h3>
+      {lib.summary_errors.length === 0 ? (
+        <p className="muted">Every summarised file has a summary.</p>
+      ) : (
+        <ul className="admin-list">
+          {lib.summary_errors.map((p) => (
+            <li key={p.id}>
+              <span className="admin-item">
+                <strong dir="auto">{p.title}</strong>
+                <span className="callno">{p.path}</span>
+                <span className="muted">{p.error ?? "The model's reply wasn't usable"}</span>
+              </span>
+              <span className="row-actions">
+                {inline(`s:${p.id}`)}
+                {btn(`s:${p.id}`, "Re-enrich", () => reenrich(`s:${p.id}`, { document_id: p.id }))}
               </span>
             </li>
           ))}

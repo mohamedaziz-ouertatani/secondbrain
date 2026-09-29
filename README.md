@@ -81,6 +81,17 @@ Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to 
 - **Blackboard sync:** Sync now, Sync one module, Preview and Course mapping, with live progress, Cancel and recent runs. See Syncing from Blackboard below.
 - **Settings:** retrieval mode, passages per answer, refusal threshold, model, temperature, context window and keep-alive. They're saved to `config.local.yaml` and apply from the next question, with no restart. See Configuration below.
 
+## Summaries and concepts
+
+After a file is indexed, a background job has the local model write a short summary and 5–10 key concepts for it:
+- **Library:** the summary shows as one line under each file, and the filter box also searches summaries and concepts.
+- **Reader:** the full summary and concepts sit at the top, marked **generated** because a 4B model can get them wrong.
+- **Timing:** the job pauses while you're asking a question and during rescans, re-indexes and evaluation runs, so answers aren't slowed. Long files are summarised in parts, then combined. The first pass over the whole library takes a while; after that, only new and changed files are summarised.
+- **Admin:**
+  - the Status card shows progress, with **Pause** and **Resume**;
+  - Library has **Re-enrich** per module, and lists the files that couldn't be summarised.
+- **Turning it off:** set `enrich_enabled: false` in `config.yaml`.
+
 ## Syncing from Blackboard
 
 The sync downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Everything goes into the matching `inbox/<module>/` folder.

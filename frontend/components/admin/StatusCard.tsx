@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { type AdminStatus, getJSON, postJSON } from "@/lib/api";
+import { type AdminStatus, type EnrichmentStatus, getJSON, postJSON } from "@/lib/api";
 import { ago } from "@/lib/seen";
 
 const POLL_MS = 10_000;
@@ -27,11 +27,23 @@ function llmLine(l: AdminStatus["llm"]): string {
 }
 
 /** System status, refreshed every 10 s while the tab is visible. */
+function enrichLine(e: EnrichmentStatus): string {
+  const c = e.counts;
+  const parts = [`${c.ok}/${c.ok + c.error + c.pending} summarised`];
+  if (c.error) parts.push(`${c.error} failed`);
+  if (c.pending) parts.push(`${c.pending} to go`);
+  if (e.state === "running" && e.current) parts.push(`summarising ${e.current}`);
+  else if (e.state === "waiting") parts.push("waiting for a question or index job to finish");
+  else if (e.state !== "idle" || c.pending) parts.push(e.state);
+  return parts.join(" · ");
+}
+
 export function StatusCard() {
   const [s, setS] = useState<AdminStatus | null>(null);
   const [down, setDown] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
   const [backupNote, setBackupNote] = useState<{ text: string; bad?: boolean } | null>(null);
+  const [enrichBusy, setEnrichBusy] = useState(false);
 
   const load = useCallback(() => {
     if (document.visibilityState !== "visible") return;
@@ -52,6 +64,16 @@ export function StatusCard() {
       document.removeEventListener("visibilitychange", load);
     };
   }, [load]);
+
+  async function toggleEnrich(pause: boolean) {
+    setEnrichBusy(true);
+    try {
+      const e = await postJSON<EnrichmentStatus>(`/admin/enrich/${pause ? "pause" : "resume"}`, {});
+      setS((prev) => (prev ? { ...prev, enrichment: e } : prev));
+    } finally {
+      setEnrichBusy(false);
+    }
+  }
 
   async function backUpNow() {
     setBackingUp(true);
@@ -113,6 +135,27 @@ export function StatusCard() {
           {s.index
             ? `${s.index.documents} documents · ${s.index.chunks} chunks · ${s.index.excluded} excluded · ${mb(s.index.db_bytes)} on disk · ${s.index.ocr.available ? `OCR on · ${s.index.ocr.pages} passages` : "OCR off: language data missing (python -m app.ingest.ocr --setup)"}`
             : "–"}
+        </dd>
+
+        <dt>Summaries</dt>
+        <dd>
+          {!s.enrichment ? (
+            "–"
+          ) : (
+            <>
+              <span>{enrichLine(s.enrichment)}</span>
+              {s.enrichment.enabled && (
+                <button
+                  type="button"
+                  className="quiet-btn"
+                  onClick={() => toggleEnrich(!s.enrichment!.paused)}
+                  disabled={enrichBusy}
+                >
+                  {s.enrichment.paused ? "Resume" : "Pause"}
+                </button>
+              )}
+            </>
+          )}
         </dd>
 
         <dt>Backup</dt>

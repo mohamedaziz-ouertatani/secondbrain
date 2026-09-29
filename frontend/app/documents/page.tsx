@@ -50,7 +50,9 @@ function DrawerView() {
 
   const q = query.trim().toLowerCase();
   const rows = (docs ?? []).filter(
-    (d) => (drawer === null || d.course === drawer) && (!q || `${d.title} ${d.path}`.toLowerCase().includes(q)),
+    (d) =>
+      (drawer === null || d.course === drawer) &&
+      (!q || `${d.title} ${d.path} ${d.summary ?? ""} ${(d.concepts ?? []).join(" ")}`.toLowerCase().includes(q)),
   );
   const groups = new Map<string, DocumentRow[]>();
   for (const d of rows) {
@@ -79,7 +81,7 @@ function DrawerView() {
               type="search"
               dir="auto"
               value={query}
-              placeholder="Filter by title or folder"
+              placeholder="Filter by title, folder or topic"
               onChange={(e) => setQuery(e.target.value)}
             />
           </label>
@@ -144,6 +146,17 @@ function DrawerView() {
                     {d.status !== "ok" && (
                       <span className="problem-note" title={d.error ?? undefined}>
                         {PROBLEM[d.status]}
+                      </span>
+                    )}
+                    {d.status === "ok" && d.summary && (
+                      <span className="summary-line" dir="auto" title={d.summary}>
+                        {d.summary}
+                      </span>
+                    )}
+                    {d.enrich_status === "pending" && !d.summary && <span className="enrich-note">summarising…</span>}
+                    {d.enrich_status === "error" && (
+                      <span className="enrich-note" title={d.enrich_error ?? undefined}>
+                        no summary
                       </span>
                     )}
                   </span>
