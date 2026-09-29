@@ -115,3 +115,129 @@ def test_bad_output_is_retried_once_then_raises():
 
     with pytest.raises(BadOutput):
         summarise("F", one, recording_chat([], lambda n: {"summary": "no lists"}))
+
+
+def add_doc(db, path, course="Course0", sha="a", status="ok", texts=("Le gradient est un vecteur.",)):
+    with db.get_pool().connection() as conn:
+        doc_id = conn.execute(
+            """INSERT INTO documents (path, sha256, course, title, mime, status)
+               VALUES (%s, %s, %s, %s, 'text/markdown', %s) RETURNING id""",
+            (path, sha, course, path.rsplit("/", 1)[-1], status),
+        ).fetchone()["id"]
+        for i, t in enumerate(texts):
+            conn.execute(
+                "INSERT INTO chunks (document_id, ord, page, text, n_tokens, embedding) VALUES (%s, %s, 1, %s, %s, %s)",
+                (doc_id, i, t, len(t.split()), fake_embed([t])[0]),
+            )
+    return doc_id
+
+
+def doc(db, doc_id):
+    with db.get_pool().connection() as conn:
+        return conn.execute("SELECT * FROM documents WHERE id = %s", (doc_id,)).fetchone()
+
+
+def good_chat(messages, schema, temperature=0.3):
+    return dict(GOOD)
+
+
+def test_step_enriches_pending_documents_oldest_first(env):
+    from app.enrich.worker import Enricher, counts
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    b = add_doc(db, "Course0/b.md")
+    add_doc(db, "Course0/scan.pdf", status="empty_text", texts=())
+    assert counts() == {"ok": 0, "error": 0, "pending": 2, "skipped": 1}
+
+    e = Enricher(chat=good_chat, embed=fake_embed)
+    assert e.step() is True
+    assert doc(db, a)["summary"] == "Un résumé." and doc(db, a)["enrich_status"] == "ok"
+    assert doc(db, a)["concepts"] == ["Gradient descent", "Loss"] and doc(db, a)["raw_tags"] == ["optimization", "stochastic gd"]
+    assert doc(db, b)["summary"] is None
+    assert e.step() is True and e.step() is False
+    assert counts() == {"ok": 2, "error": 0, "pending": 0, "skipped": 1}
+
+
+def test_changed_file_is_requeued_but_a_forced_reindex_of_the_same_file_is_not(env):
+    from app.enrich.worker import Enricher, counts
+    from app.ingest.pipeline import ingest_file
+
+    inbox, db = env
+    f = inbox / "Course0" / "note.md"
+    f.parent.mkdir(parents=True)
+    f.write_text("Le gradient est un vecteur de dérivées partielles.", encoding="utf-8")
+    ingest_file(f, fake_embed, words)
+    Enricher(chat=good_chat, embed=fake_embed).step()
+    assert counts()["pending"] == 0
+
+    ingest_file(f, fake_embed, words, force=True)
+    assert counts()["pending"] == 0
+    f.write_text("La hessienne est la matrice des dérivées secondes.", encoding="utf-8")
+    ingest_file(f, fake_embed, words)
+    assert counts()["pending"] == 1
+
+
+def test_bad_output_is_an_error_and_the_file_stays_searchable(env):
+    from app.enrich.worker import Enricher, counts
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    Enricher(chat=lambda m, s, temperature=0.3: {"summary": ""}, embed=fake_embed).step()
+    d = doc(db, a)
+    assert d["enrich_status"] == "error" and "missing a summary" in d["enrich_error"] and d["enriched_sha"] == "a"
+    assert counts()["error"] == 1  # stored with the hash: not retried in a loop
+    with db.get_pool().connection() as conn:
+        assert conn.execute("SELECT count(*) AS n FROM chunks WHERE document_id = %s", (a,)).fetchone()["n"] == 1
+
+
+def test_a_file_that_changes_mid_summary_is_not_overwritten(env):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+
+    def chat(messages, schema, temperature=0.3):
+        with db.get_pool().connection() as conn:
+            conn.execute("UPDATE documents SET sha256 = 'b' WHERE id = %s", (a,))
+        return dict(GOOD)
+
+    Enricher(chat=chat, embed=fake_embed).step()
+    d = doc(db, a)
+    assert d["summary"] is None and d["enriched_sha"] is None  # still pending, for the new content
+
+
+def test_no_llm_call_while_a_question_streams(env):
+    from app.enrich.worker import Enricher
+    from app.llm import busy
+
+    _, db = env
+    add_doc(db, "Course0/a.md")
+    calls = []
+    e = Enricher(chat=lambda m, s, temperature=0.3: calls.append(1) or dict(GOOD), embed=fake_embed, poll=0.01)
+    with busy.answering():
+        t = threading.Thread(target=e.step)
+        t.start()
+        time.sleep(0.2)
+        assert calls == [] and e.status()["state"] == "waiting"
+    t.join(2)
+    assert calls == [1]
+
+
+def test_pause_resume_and_rerun(env, tmp_path, monkeypatch):
+    from app import config
+    from app.enrich.worker import Enricher, counts
+
+    monkeypatch.setattr(config, "LOCAL_CONFIG", tmp_path / "config.local.yaml")
+    config.get_settings.cache_clear()
+    _, db = env
+    a = add_doc(db, "Course0/a.md")
+    add_doc(db, "Course1/b.md", course="Course1")
+    e = Enricher(chat=good_chat, embed=fake_embed)
+    e.pause()
+    assert e.step() is False and e.status()["paused"] is True
+    e.resume()
+    assert e.step() and e.step()
+    assert e.rerun(course="Course0") == 1 and counts()["pending"] == 1
+    assert e.rerun(document_id=a) == 1
+    config.get_settings.cache_clear()
