@@ -1,4 +1,4 @@
-"""Planner items: notes, to-dos and events. Plain SQL over planner_items (migration 007)."""
+"""Planner items: notes, to-dos and events. Plain SQL over planner_items (migration 008)."""
 
 from datetime import datetime, timedelta, timezone
 
