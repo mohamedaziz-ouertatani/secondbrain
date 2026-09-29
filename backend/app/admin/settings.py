@@ -130,6 +130,20 @@ def _check(f: Field, v) -> str | None:
     return None
 
 
+def _write_local(new_local: dict) -> None:
+    path = config.LOCAL_CONFIG
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, suffix=".tmp") as tmp:
+        tmp.write("# Written by the admin panel. Overrides config.yaml; environment variables override this.\n")
+        yaml.safe_dump(dict(sorted(new_local.items())), tmp, allow_unicode=True)
+    os.replace(tmp.name, path)
+    config.get_settings.cache_clear()
+
+
+def save_local(key: str, value) -> None:
+    """Set one key in config.local.yaml directly: panel controls that aren't form settings (pausing enrichment)."""
+    _write_local({**_yaml(config.LOCAL_CONFIG), key: value})
+
+
 def update(changes: dict) -> dict:
     """Validate every change, then write them all or none. None as a value resets the key."""
     errors: dict[str, str] = {}
@@ -166,10 +180,5 @@ def update(changes: dict) -> dict:
     if errors:
         raise Invalid(errors)
 
-    path = config.LOCAL_CONFIG
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, suffix=".tmp") as tmp:
-        tmp.write("# Written by the admin panel. Overrides config.yaml; environment variables override this.\n")
-        yaml.safe_dump(dict(sorted(new_local.items())), tmp, allow_unicode=True)
-    os.replace(tmp.name, path)
-    config.get_settings.cache_clear()
+    _write_local(new_local)
     return view()

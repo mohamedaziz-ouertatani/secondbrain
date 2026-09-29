@@ -26,3 +26,8 @@ def try_acquire() -> bool:
 
 def release() -> None:
     _job.release()
+
+
+def busy() -> bool:
+    """Is an index job (rescan, re-index, evaluation) running? Background enrichment waits for it."""
+    return _job.locked()
