@@ -350,6 +350,14 @@ export type EvalSummary = {
   by_course: Record<string, Record<EvalMode, EvalMetrics>>;
   by_lang: Record<string, Record<EvalMode, EvalMetrics>>;
   by_source: Record<string, Record<EvalMode, EvalMetrics>>;
+  /** full runs only: answers generated with the current settings */
+  answers?: {
+    n: number;
+    refusal_rate: number | null;
+    citation_valid_rate: number | null;
+    cited_right_rate: number | null;
+    median_ms: number | null;
+  };
 };
 export type EvalRun = {
   id: number;

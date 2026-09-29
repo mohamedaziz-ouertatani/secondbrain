@@ -1,9 +1,12 @@
 """Evaluation runs: every question embedded once, 20 candidates in dense and hybrid mode, ranked by page.
+A full run also answers each question (nothing is written to query_log) and checks the citations.
 
-    uv run python -m app.eval.run
+    uv run python -m app.eval.run [--full]
 """
 
+import statistics
 import sys
+import time
 
 from psycopg.types.json import Jsonb
 
@@ -12,6 +15,8 @@ from ..db import get_pool
 from ..ingest.pipeline import PARSER_VERSION
 from ..llm import ollama
 from ..llm.lang import detect
+from ..llm.prompts import build_messages
+from ..rag.citations import validate
 from ..rag.retrieve import retrieve_with_vector
 
 K = 20
@@ -47,6 +52,31 @@ def summarize(per_question: list[dict]) -> dict:
             "by_course": group("course"), "by_lang": group("lang"), "by_source": group("source")}
 
 
+def answer(vec, q: dict) -> dict:
+    """Answer as /ask would with the current settings (retrieval mode, top_k), without logging."""
+    _, sources = retrieve_with_vector(vec, q["question"], None, None)
+    if not sources:
+        return {"refused": True, "valid": None, "cited_right": None, "ms": None}
+    t0 = time.perf_counter()
+    text = "".join(ollama.chat_stream(build_messages(q["question"], sources)))
+    v = validate(ollama.strip_reasoning(text), len(sources))
+    cited = {(sources[n - 1]["path"], sources[n - 1]["page"]) for n in v.order}
+    return {"refused": False, "valid": v.valid, "cited_right": bool(cited & q["truth"]),
+            "ms": int((time.perf_counter() - t0) * 1000)}
+
+
+def answer_metrics(per_question: list[dict]) -> dict:
+    items = [it["answer"] for it in per_question if "answer" in it]
+    answered = [a for a in items if not a["refused"]]
+
+    def rate(key: str) -> float | None:
+        return sum(bool(a[key]) for a in answered) / len(answered) if answered else None
+
+    return {"n": len(items), "refusal_rate": (len(items) - len(answered)) / len(items) if items else None,
+            "citation_valid_rate": rate("valid"), "cited_right_rate": rate("cited_right"),
+            "median_ms": int(statistics.median(a["ms"] for a in answered)) if answered else None}
+
+
 def questions() -> list[dict]:
     """Generated questions plus your labelled ones, each with its set of right (path, page)."""
     with get_pool().connection() as conn:
@@ -76,6 +106,8 @@ def run(kind: str = "retrieval", progress=None, cancelled=None) -> int:
         for mode in MODES:
             hits, sources = retrieve_with_vector(vec, q["question"], None, mode, k=K)
             item[mode] = {"rank": rank_of(hits, q["truth"]), "refused": not sources}
+        if kind == "full":
+            item["answer"] = answer(vec, q)
         per.append(item)
         if progress:
             progress(i, len(qs))
@@ -86,8 +118,15 @@ def run(kind: str = "retrieval", progress=None, cancelled=None) -> int:
     with get_pool().connection() as conn:
         return conn.execute(
             "INSERT INTO eval_runs (kind, params, metrics, per_question) VALUES (%s, %s, %s, %s) RETURNING id",
-            (kind, Jsonb(params), Jsonb(summarize(per)), Jsonb(per)),
+            (kind, Jsonb(params), Jsonb(_all_metrics(kind, per)), Jsonb(per)),
         ).fetchone()["id"]
+
+
+def _all_metrics(kind: str, per: list[dict]) -> dict:
+    m = summarize(per)
+    if kind == "full":
+        m["answers"] = answer_metrics(per)
+    return m
 
 
 def _fmt(v) -> str:
@@ -96,7 +135,8 @@ def _fmt(v) -> str:
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    run_id = run(progress=lambda i, t: print(f"\r{i}/{t}", end="", flush=True))
+    kind = "full" if "--full" in sys.argv else "retrieval"
+    run_id = run(kind, progress=lambda i, t: print(f"\r{i}/{t}", end="", flush=True))
     with get_pool().connection() as conn:
         m = conn.execute("SELECT metrics FROM eval_runs WHERE id = %s", (run_id,)).fetchone()["metrics"]
     print(f"\nrun {run_id}: {m['overall']['dense'].get('n', 0)} questions\n")
@@ -109,6 +149,11 @@ def main() -> None:
     print("\nby language")
     for lang, v in m["by_lang"].items():
         print(f"  {lang:30}{_fmt(v['dense'].get('recall@5')):>8}{_fmt(v['hybrid'].get('recall@5')):>8}  n={v['dense']['n']}")
+    if "answers" in m:
+        a = m["answers"]
+        print(f"\nanswers ({get_settings().retrieval_mode}, top_k {get_settings().top_k}): refused {_fmt(a['refusal_rate'])}, "
+              f"citations valid {_fmt(a['citation_valid_rate'])}, cited the right page {_fmt(a['cited_right_rate'])}, "
+              f"median {a['median_ms']} ms")
     get_pool().close()
 
 

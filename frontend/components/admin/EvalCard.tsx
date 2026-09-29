@@ -123,6 +123,15 @@ export function EvalCard() {
         >
           Run evaluation
         </button>
+        <button
+          type="button"
+          className="quiet-btn"
+          disabled={running || s.questions.generated + s.questions.labelled === 0}
+          onClick={() => post("/admin/eval/run", { kind: "full" })}
+          title="Also answers every question with your model, to check citations (about 20 minutes)"
+        >
+          Full run (~20 min)
+        </button>
       </div>
       {line && (
         <p className={s.job?.state === "failed" ? "action-note bad" : "action-note"} aria-live="polite">
@@ -166,6 +175,28 @@ export function EvalCard() {
               })}
             </tbody>
           </table>
+
+          {latest.metrics.answers && (
+            <>
+              <h3>
+                Answers ({String(latest.params.retrieval_mode)}, top_k {String(latest.params.top_k)})
+              </h3>
+              <dl className="kv">
+                <dt>Refused</dt>
+                <dd>{show(latest.metrics.answers.refusal_rate ?? undefined, true)}</dd>
+                <dt>Citations valid</dt>
+                <dd>{show(latest.metrics.answers.citation_valid_rate ?? undefined, true)}</dd>
+                <dt>Cited the right page</dt>
+                <dd>{show(latest.metrics.answers.cited_right_rate ?? undefined, true)}</dd>
+                <dt>Median answer time</dt>
+                <dd>
+                  {latest.metrics.answers.median_ms === null
+                    ? "–"
+                    : `${(latest.metrics.answers.median_ms / 1000).toFixed(1)} s`}
+                </dd>
+              </dl>
+            </>
+          )}
 
           <h3>Right page in top 5, by module</h3>
           <table className="admin-table eval-table">

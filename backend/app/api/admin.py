@@ -182,7 +182,7 @@ class GenerateBody(BaseModel):
 
 
 class RunBody(BaseModel):
-    kind: Literal["retrieval"] = "retrieval"
+    kind: Literal["retrieval", "full"] = "retrieval"
 
 
 @router.get("/eval")
