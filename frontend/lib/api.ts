@@ -67,11 +67,14 @@ export type DocumentPages = Omit<DocumentRow, "chunk_count"> & {
   pages: { page: number; label: string | null; text: string }[];
 };
 
+export type RerankerStatus = { state: "ready" | "not loaded" | "off"; reason: string | null };
+
 export type Health = {
   ok: boolean;
   db: { ok: boolean; error?: string };
   ollama: { reachable: boolean; llm_model?: string; llm_pulled?: boolean; embed_pulled?: boolean; error?: string };
   blackboard_login_needed?: boolean;
+  reranker?: RerankerStatus;
 };
 
 type Locatable = { mime: string; page: number; label?: string | null };
@@ -220,6 +223,7 @@ export async function deleteHistory(id: number): Promise<boolean> {
 
 export type AdminStatus = {
   services: { db: { ok: boolean; error?: string }; ollama: Health["ollama"] } | null;
+  reranker: RerankerStatus | null;
   llm:
     | { loaded: false; model: string }
     | { loaded: true; model: string; gpu_share: number; expires_at: string | null }

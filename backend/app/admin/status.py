@@ -7,6 +7,7 @@ import subprocess
 from ..config import get_settings
 from ..db import get_pool
 from ..llm import ollama
+from ..rag import rerank
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +90,10 @@ def _enrichment() -> dict:
     return worker.status()
 
 
+def _reranker() -> dict:
+    return rerank.reranker.status()
+
+
 def _safe(part):
     try:
         return part()
@@ -106,4 +111,5 @@ def status() -> dict:
         "index": _safe(_index_with_ocr),
         "backup": _safe(_backup),
         "enrichment": _safe(_enrichment),
+        "reranker": _safe(_reranker),
     }

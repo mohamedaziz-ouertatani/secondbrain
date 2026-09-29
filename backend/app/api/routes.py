@@ -15,6 +15,7 @@ from ..enrich.worker import ENRICH_STATE
 from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
+from ..rag import rerank
 from ..rag.answer import ask
 from ..rag.history import UNSET, delete_history, get_history, list_history, set_labels
 from .jobs import exclusive
@@ -178,4 +179,5 @@ def health() -> dict:
     oll = ollama.status()
     ok = db["ok"] and oll.get("reachable") and oll.get("llm_pulled") and oll.get("embed_pulled")
     return {"ok": bool(ok), "db": db, "ollama": oll, "inbox": str(get_settings().inbox),
-            "blackboard_login_needed": sync_jobs.runner.login_needed()}
+            "blackboard_login_needed": sync_jobs.runner.login_needed(),
+            "reranker": rerank.reranker.status()}

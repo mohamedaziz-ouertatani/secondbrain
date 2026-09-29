@@ -26,6 +26,13 @@ function llmLine(l: AdminStatus["llm"]): string {
   return `${l.model} · ${Math.round(l.gpu_share * 100)}% on the GPU${until}`;
 }
 
+function rerankerLine(r: AdminStatus["reranker"]): string {
+  if (!r) return "Unknown";
+  if (r.state === "ready") return "Ready on the GPU";
+  if (r.state === "not loaded") return "Loads on the next question (a few seconds)";
+  return `Off: ${r.reason}`;
+}
+
 /** System status, refreshed every 10 s while the tab is visible. */
 function enrichLine(e: EnrichmentStatus): string {
   const c = e.counts;
@@ -104,6 +111,11 @@ export function StatusCard() {
 
         <dt>LLM</dt>
         <dd>{llmLine(s.llm)}</dd>
+
+        <dt>Reranker</dt>
+        <dd className={s.reranker?.state === "off" && s.reranker.reason !== "turned off in Settings" ? "bad" : ""}>
+          {rerankerLine(s.reranker)}
+        </dd>
 
         <dt>GPU</dt>
         <dd>

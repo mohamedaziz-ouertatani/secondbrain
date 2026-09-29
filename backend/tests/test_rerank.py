@@ -266,3 +266,17 @@ def test_toggling_the_setting_resets_a_broken_reranker(on, monkeypatch, tmp_path
     assert r.status()["state"] == "off"
     settings.update({"rerank": "on"})
     assert r.status()["state"] == "not loaded"
+
+
+def test_health_and_admin_status_show_the_reranker(env, on, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    r = swap_in(monkeypatch, broken_loader)
+    r.rerank("q", hits("a"))
+    client = TestClient(create_app())  # no `with`: no watcher
+    h = client.get("/health").json()
+    s = client.get("/admin/status").json()
+    assert h["reranker"] == {"state": "off", "reason": "DirectML not available"}
+    assert s["reranker"] == h["reranker"]
