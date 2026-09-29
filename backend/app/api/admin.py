@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from ..admin import backup as backups
@@ -13,6 +13,7 @@ from ..admin.settings import Invalid, update, view
 from ..admin.status import status
 from ..config import get_settings
 from ..db import get_pool
+from ..enrich import vocab
 from ..enrich.worker import worker as enricher
 from ..eval import jobs as eval_jobs
 from ..ingest.pipeline import exclude, include, is_supported, reindex
@@ -248,3 +249,52 @@ def enrich_rerun(body: RerunBody) -> dict:
     if (body.course is None) == (body.document_id is None):
         raise HTTPException(400, "give exactly one of course or document_id")
     return {"queued": enricher.rerun(course=body.course, document_id=body.document_id)}
+
+
+class TagName(BaseModel):
+    name: str
+
+
+class MergeBody(BaseModel):
+    from_id: int
+    into: int
+
+
+class CourseBody(BaseModel):
+    course: str | None = None
+
+
+@router.patch("/tags/{tag_id}")
+def tag_rename(tag_id: int, body: TagName) -> dict:
+    try:
+        tag = vocab.rename(tag_id, body.name)
+    except vocab.Clash as e:
+        raise HTTPException(409, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+    if tag is None:
+        raise HTTPException(404, "no such tag")
+    return tag
+
+
+@router.post("/tags/merge")
+def tag_merge(body: MergeBody) -> dict:
+    try:
+        tag = vocab.merge(body.from_id, body.into)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    if tag is None:
+        raise HTTPException(404, "no such tags, or the same tag twice")
+    return tag
+
+
+@router.delete("/tags/{tag_id}", status_code=204)
+def tag_delete(tag_id: int) -> Response:
+    if not vocab.delete(tag_id):
+        raise HTTPException(404, "no such tag")
+    return Response(status_code=204)
+
+
+@router.post("/tags/vocab")
+def tag_vocab(body: CourseBody) -> dict:
+    return vocab.run(body.course)

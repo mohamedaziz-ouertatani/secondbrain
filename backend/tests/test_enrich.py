@@ -392,3 +392,29 @@ def test_worker_links_known_tags_at_once_and_runs_the_pass_when_the_module_is_do
     assert names() == {}  # b is still pending: no pass yet
     e.step()
     assert names() == {"optimization": 2, "stochastic gd": 2}
+
+
+def test_tag_routes(env, monkeypatch, tmp_path):
+    from app.enrich import vocab
+
+    _, db = env
+    a = tagged(db, "Course0/a.md", ["kubernetes", "docker"])
+    tagged(db, "Course0/b.md", ["docker"])
+    vocab.run("Course0", embed=EMBED)
+    c = client(monkeypatch, tmp_path)
+
+    tags = c.get("/tags", params={"course": "Course0"}).json()
+    assert [(t["name"], t["count"]) for t in tags] == [("docker", 2), ("kubernetes", 1)]
+    ids = {t["name"]: t["id"] for t in tags}
+    doc_row = next(r for r in c.get("/documents").json() if r["id"] == a)
+    assert [t["name"] for t in doc_row["tags"]] == ["docker", "kubernetes"]
+
+    assert c.patch(f"/admin/tags/{ids['docker']}", json={"name": "Kubernetes"}).status_code == 409
+    assert c.patch(f"/admin/tags/{ids['docker']}", json={"name": ""}).status_code == 422
+    assert c.patch(f"/admin/tags/{ids['docker']}", json={"name": "Containers"}).json()["name"] == "containers"
+    assert c.post("/admin/tags/merge", json={"from_id": ids["kubernetes"], "into": ids["docker"]}).status_code == 200
+    assert [t["name"] for t in c.get("/tags", params={"course": "Course0"}).json()] == ["containers"]
+    assert c.delete(f"/admin/tags/{ids['docker']}").status_code == 204
+    assert c.delete(f"/admin/tags/{ids['docker']}").status_code == 404
+    monkeypatch.setattr(vocab.ollama, "embed", EMBED)
+    assert c.post("/admin/tags/vocab", json={"course": "Course0"}).json()["new_raw"] == 0
