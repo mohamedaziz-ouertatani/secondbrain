@@ -27,11 +27,10 @@ Second Brain answers questions well, but it can't yet say what a file is *about*
 ```sql
 ALTER TABLE documents
     ADD COLUMN concepts           JSONB,                 -- 5-10 short phrases
-    ADD COLUMN enriched_sha       TEXT,                  -- sha256 the enrichment was made from
-    ADD COLUMN enrich_status      TEXT NOT NULL DEFAULT 'pending'
-        CHECK (enrich_status IN ('pending', 'ok', 'error', 'skipped')),
-    ADD COLUMN enrich_error       TEXT,
     ADD COLUMN raw_tags           JSONB,                 -- tags as the model proposed them, input to the vocabulary pass
+    ADD COLUMN enriched_sha       TEXT,                  -- sha256 the enrichment was made from
+    ADD COLUMN enrich_status      TEXT CHECK (enrich_status IN ('ok', 'error')),
+    ADD COLUMN enrich_error       TEXT,
     ADD COLUMN summary_embedding  vector(1024);          -- stage 3
 ALTER TABLE documents DROP COLUMN tags;                  -- unused v2 placeholder, replaced by document_tags
 -- documents.summary (reserved in 001) holds the summary.
@@ -40,11 +39,11 @@ CREATE TABLE tags (
     id          BIGSERIAL PRIMARY KEY,
     course      TEXT,                                    -- NULL for loose notes
     name        TEXT NOT NULL,
-    embedding   vector(1024) NOT NULL,
-    user_named  BOOLEAN NOT NULL DEFAULT false,          -- renamed or kept by you: never auto-deleted or auto-renamed
+    user_named  BOOLEAN NOT NULL DEFAULT false,          -- renamed or merged into by you: never auto-deleted
     UNIQUE NULLS NOT DISTINCT (course, name)
 );
 CREATE TABLE tag_aliases (
+    id          BIGSERIAL PRIMARY KEY,                   -- a single-column key, so the backup can restore it
     course      TEXT,
     raw         TEXT NOT NULL,                           -- lowercased raw tag from the model
     tag_id      BIGINT REFERENCES tags(id) ON DELETE CASCADE,  -- NULL = you deleted it: drop this raw tag
@@ -57,14 +56,22 @@ CREATE TABLE document_tags (
 );
 ```
 
+- **Only `ok` and `error` are stored in `enrich_status`.** A document's shown state is derived:
+  - `skipped` when `status <> 'ok'`;
+  - `pending` when `enriched_sha IS DISTINCT FROM sha256`;
+  - otherwise `enrich_status`.
+
+  An error stores the hash too, so a failing file isn't retried in a loop. Re-enrich clears the hash.
+- **Tags store no embedding.** Each vocabulary pass embeds the module's tag names, a few dozen on the CPU, so there's no vector to back up.
+
 A deleted tag leaves an alias with a NULL `tag_id`, so the next pass doesn't bring that raw tag back.
 
 ## The enrichment worker (`app/enrich/`)
 
 **Queue:**
 - A daemon thread starts with the backend, like the auto-sync.
-- It picks the oldest document with `status = 'ok'` that isn't excluded and has `enriched_sha IS DISTINCT FROM sha256`, and processes one document at a time.
-- Documents with `status ≠ ok` get `enrich_status = skipped`.
+- It picks the oldest document (by `ingested_at`) with `status = 'ok'` and `enriched_sha IS DISTINCT FROM sha256`, and processes one document at a time. Excluded files are deleted from `documents`, so they never appear.
+- A document with no chunks gets an error: "no indexed text".
 
 **Summarising (`summarise.py`):**
 - The document's chunks are read in order from the database, so nothing is re-parsed.
@@ -86,7 +93,7 @@ A deleted tag leaves an alias with a NULL `tag_id`, so the next pass doesn't bri
 
 **Yielding to answers:**
 - `app/rag/answer.py` holds a process-wide "answering" counter while a question streams.
-- The worker checks it before each LLM call and sleeps while it's non-zero.
+- The worker checks it before each LLM call and sleeps while it's non-zero. It also waits while an index job (rescan, re-index or evaluation) holds the shared job slot, so evaluation timings aren't skewed.
 - At most one enrichment call is in flight, so a question waits for one call at worst.
 
 **Ollama unavailable:** the worker backs off (5 s, doubling, capped at 5 min) and reports it in its state.
@@ -101,9 +108,8 @@ A deleted tag leaves an alias with a NULL `tag_id`, so the next pass doesn't bri
 It runs for a module when the module has no pending documents and at least one raw tag without an alias. It can also be triggered from admin.
 
 1. Collect the module's raw tags that have no alias, with their frequency across documents.
-2. Embed each with bge-m3 (on the CPU).
-3. Link each raw tag to an existing tag in the module when their cosine similarity is ≥ `tag_merge_threshold` (default 0.85, tuned on real tags during stage 2), and record the alias.
-4. Cluster the remaining raw tags greedily, most frequent first, at the same threshold. Each cluster becomes a new tag, named after its most frequent raw form. Record the aliases.
+2. Embed the module's existing tag names and the new raw tags with bge-m3 (on the CPU).
+3. Go through the new raw tags, most frequent first. Link each to the closest tag (existing, or created earlier in this pass) when their cosine similarity is ≥ `tag_merge_threshold` (default 0.85, tuned on real tags during stage 2). Otherwise it becomes a new tag under its own name. Either way, record the alias.
 5. Rebuild `document_tags` for the module from `raw_tags` and the aliases.
 6. Delete tags with no documents, unless `user_named`.
 
@@ -148,7 +154,9 @@ The pass is idempotent: running it twice with no new raw tags changes nothing.
 - **Tags section:**
   - a module selector and a table of name, count and merged raw forms;
   - actions: rename (inline), merge (select two, then Merge), delete, and "Run vocabulary pass".
-- **Library section:** a "Re-enrich" button per module and per file.
+- **Library section:**
+  - a "Re-enrich" button per module;
+  - a "Couldn't summarise" list with the reason and a per-file "Re-enrich" button.
 
 **Desk:** unchanged.
 
@@ -160,7 +168,7 @@ Two settings, both editable in admin and both saved in evaluation run params:
   - Each summary is embedded with bge-m3 into `documents.summary_embedding` when it's written. A backfill covers existing summaries.
   - Dense retrieval scores a candidate as `chunk_similarity + doc_boost × cosine(question, summary_embedding)`, then re-sorts. A document without a summary contributes 0.
   - The `min_score` refusal check still uses the raw chunk similarity, so refusals don't change.
-- **`doc_context`** (bool, default false):
+- **`doc_context`** (`off` | `on`, default `off`, a choice like `retrieval_mode`):
   - Each passage in the prompt gets a header line: `<title> — <first sentence of summary>`.
   - Citation numbering and validation are unchanged.
 
@@ -172,7 +180,11 @@ Two settings, both editable in admin and both saved in evaluation run params:
 
 ## Backups
 
-`tags`, `tag_aliases` and `document_tags` join the daily backup and restore, because your renames, merges and deletes can't be rebuilt. Summaries, concepts and embeddings aren't backed up: they're regenerable, like the index.
+`tags` and `tag_aliases` join the daily backup and restore, because your renames, merges and deletes can't be rebuilt. Two things aren't backed up:
+- `document_tags`, which the vocabulary pass rebuilds from `raw_tags` and the aliases;
+- summaries, concepts and embeddings, which are regenerable, like the index.
+
+The restore inserts with `ON CONFLICT DO NOTHING`, and skips an alias whose tag couldn't be restored, instead of failing.
 
 ## Testing
 
