@@ -46,7 +46,7 @@ def status() -> dict:  # {"state": "ready" | "not loaded" | "off", "reason": str
 ```
 
 - **Scoring function.** `score(question, texts) -> list[float]` is injectable: tests pass a fake, and production uses the ONNX session. Raw logits go through a sigmoid, so scores are 0–1.
-- **Loading.** On first use: the session is created with `providers=["DmlExecutionProvider"]`. If DirectML isn't among `onnxruntime.get_available_providers()`, the reranker is off with the reason "DirectML not available"; there's no CPU fallback, which would take 7+ s. The tokenizer is `tokenizer.json` of `BAAI/bge-reranker-v2-m3`, via `hf_hub_download(..., local_files_only=True)` and then a normal download, as in `chunk.py`. Truncation applies to the passage only, so the question is never cut.
+- **Loading.** On first use: the session is created with `providers=["DmlExecutionProvider"]`. If DirectML isn't among `onnxruntime.get_available_providers()`, the reranker is off with the reason "DirectML not available"; there's no CPU fallback, which would take 7+ s. The tokenizer is `tokenizer.json` of `BAAI/bge-reranker-v2-m3`, via `hf_hub_download(..., local_files_only=True)` and then a normal download, as in `chunk.py`. Truncation is `longest_first`, as in the spike. It trims the longer text, which is the passage for any normal question, and unlike `only_second` it never raises an error on a very long question.
 - **Unloading.** A lock guards the session. After `rerank_keep_alive` minutes without a call, a timer drops it, and the next question loads it again (3–9 s once).
 - **Failures.** Every failure returns `None` and is logged once per reason.
   - **Load failures** (missing file, missing provider, a session that won't build) set `status()` to off with the reason. They stick until `rerank` is toggled in Settings or the backend restarts, so a broken setup doesn't retry a 1 GB load on every question.
@@ -56,7 +56,7 @@ def status() -> dict:  # {"state": "ready" | "not loaded" | "off", "reason": str
 
 `retrieve_with_vector` when `rerank` is on:
 - **Dense:** fetch `candidate_k` instead of `top_k`, then `rerank`. `sources` = the first `top_k` of the reranked list, when `answerable(candidates, min_score)`.
-- **Hybrid:** the fused list, reranked the same way.
+- **Hybrid:** the first `candidate_k` of the fused list, reranked the same way. Fusion can return up to twice `candidate_k`, and the cap keeps the latency measured for 20.
 - **Refusal:** `answerable` is unchanged and still looks at cosine `score` and `all_terms` over all candidates. The reranker only changes which passages are sent.
 - **Fallback:** if `rerank` returns `None`, the existing code path runs unchanged.
 - **Evaluation:** `retrieve_with_vector(..., mode, k)` keeps its signature. A new argument, `rerank: bool | None = None` (None = the setting), lets the evaluation ask for each mode explicitly.
