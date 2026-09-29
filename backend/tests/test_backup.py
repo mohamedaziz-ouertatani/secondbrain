@@ -83,7 +83,7 @@ def test_back_up_now_route_and_status(env, tmp_path, monkeypatch):
     monkeypatch.setattr(backup, "backup_dir", lambda: tmp_path)
     client = TestClient(create_app())
     r = client.post("/admin/backup")
-    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1, "eval_questions": 0, "eval_runs": 0, "tags": 0, "tag_aliases": 0}
+    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1, "eval_questions": 0, "eval_runs": 0, "tags": 0, "tag_aliases": 0, "planner_items": 0}
     last = client.get("/admin/status").json()["backup"]
     assert last["kept"] == 1 and last["bytes"] > 0 and last["name"] == r.json()["name"]
 
@@ -108,3 +108,17 @@ def test_tags_and_aliases_round_trip(env, tmp_path):
         conn.execute("INSERT INTO tags (course, name) VALUES ('C', 'kubernetes')")
     r = backup.restore(f)
     assert (r["tags"], r["tag_aliases"]) == (0, 1)
+
+
+def test_planner_items_round_trip(env, tmp_path):
+    from app.admin import backup
+    from app.planner.store import create_item
+
+    _, db = env
+    a = create_item({"kind": "note", "title": "idea", "body": "keep me"})
+    f = backup.backup(tmp_path)
+    with db.get_pool().connection() as conn:
+        conn.execute("DELETE FROM planner_items")
+    assert backup.restore(f)["planner_items"] == 1
+    b = create_item({"kind": "note", "title": "new"})
+    assert b["id"] > a["id"]  # the sequence moved past restored ids

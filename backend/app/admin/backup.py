@@ -1,5 +1,5 @@
 """Backups of what a rescan can't rebuild: query_log (questions, answers, citations, labels), excluded_paths,
-the evaluation set and its runs, and your tag vocabulary.
+the evaluation set and its runs, your tag vocabulary, and your planner notes, to-dos and events.
 
     uv run python -m app.admin.backup                  # back up now
     uv run python -m app.admin.backup --list           # list backups
@@ -36,8 +36,9 @@ TABLES = {
     "eval_runs": ("id", {"params", "metrics", "per_question"}),
     "tags": ("id", set()),         # before tag_aliases, which point to them
     "tag_aliases": ("id", set()),  # document_tags isn't backed up: the vocabulary pass rebuilds it
+    "planner_items": ("id", set()),  # your notes, to-dos and events can't be regenerated
 }
-SEQUENCES = ("query_log", "eval_questions", "eval_runs", "tags", "tag_aliases")
+SEQUENCES = ("query_log", "eval_questions", "eval_runs", "tags", "tag_aliases", "planner_items")
 PREFIX, SUFFIX = "secondbrain-", ".jsonl.gz"
 DAY = 86_400
 _COLUMN = re.compile(r"^[a-z_]+$")
