@@ -78,8 +78,8 @@ def compare(limit: int = 20) -> dict:
     vectors = ollama.embed([r["question"] for r in rows]) if rows else []
     out, changed, flipped = [], 0, 0
     for r, qvec in zip(rows, vectors, strict=True):
-        _, dense = retrieve_with_vector(qvec, r["question"], r["course"], "dense")
-        _, hybrid = retrieve_with_vector(qvec, r["question"], r["course"], "hybrid")
+        _, dense = retrieve_with_vector(qvec, r["question"], r["course"], "dense", rerank=False)
+        _, hybrid = retrieve_with_vector(qvec, r["question"], r["course"], "hybrid", rerank=False)
         diff = {h["chunk_id"] for h in dense} != {h["chunk_id"] for h in hybrid}
         flip = bool(dense) != bool(hybrid)
         changed += diff

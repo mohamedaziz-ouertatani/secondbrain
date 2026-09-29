@@ -358,9 +358,10 @@ export type SyncStatus = {
   modules: string[];
 };
 
-export type EvalMode = "dense" | "hybrid";
+export type EvalMode = "dense" | "hybrid" | "dense+rerank";
 export type EvalMetrics = {
   n: number;
+  unavailable?: boolean;
   "recall@1"?: number;
   "recall@5"?: number;
   "recall@20"?: number;

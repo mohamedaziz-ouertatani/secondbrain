@@ -70,6 +70,7 @@ def test_rank_and_metrics():
     assert m["refusal_rate"] == pytest.approx(1 / 3)
     s = summarize(items)
     assert set(s) == {"overall", "by_course", "by_lang", "by_source"} and s["by_course"]["B"]["hybrid"]["recall@1"] == 1
+    assert s["overall"]["dense+rerank"] == {"n": 0, "unavailable": True}
 
 
 def seeded_embed(db):
@@ -185,3 +186,38 @@ def test_full_run_measures_answers_without_logging(env, monkeypatch):
     assert a == {"n": 4, "refusal_rate": 0.0, "citation_valid_rate": 1.0, "cited_right_rate": 1.0}
     assert all(q["answer"] == {"refused": False, "valid": True, "cited_right": True, "ms": q["answer"]["ms"]}
                for q in r["per_question"])
+
+
+def test_rerank_mode_is_measured_when_available_and_null_when_not(env, monkeypatch):
+    from app.eval import run
+    from app.eval.generate import generate
+    from app.ingest.pipeline import rescan
+    from app.rag import rerank
+
+    inbox, db = env
+    notes(inbox)
+    rescan(fake_embed, words)
+    generate(n=4, chat=fake_chat)
+    monkeypatch.setattr(run.ollama, "embed", seeded_embed(db))
+
+    def keep_order(question, texts):
+        return [float(-i) for i in range(len(texts))]
+
+    monkeypatch.setattr(rerank, "reranker", rerank.Reranker(loader=lambda s: keep_order))
+    run_id = run.run()
+    with db.get_pool().connection() as conn:
+        r = conn.execute("SELECT metrics, params FROM eval_runs WHERE id = %s", (run_id,)).fetchone()
+    assert r["metrics"]["overall"]["dense+rerank"]["recall@1"] == 1.0  # forced on although RERANK=off
+    assert r["params"]["rerank_unavailable"] is None and r["params"]["rerank_max_length"] == 384
+
+    def broken(settings):
+        raise rerank.Unavailable("DirectML not available")
+
+    monkeypatch.setattr(rerank, "reranker", rerank.Reranker(loader=broken))
+    run_id = run.run()
+    with db.get_pool().connection() as conn:
+        r = conn.execute("SELECT metrics, params, per_question FROM eval_runs WHERE id = %s", (run_id,)).fetchone()
+    assert r["metrics"]["overall"]["dense+rerank"] == {"n": 0, "unavailable": True}
+    assert r["params"]["rerank_unavailable"] == "DirectML not available"
+    assert all(q["dense+rerank"] is None for q in r["per_question"])
+    assert r["metrics"]["overall"]["dense"]["recall@1"] == 1.0

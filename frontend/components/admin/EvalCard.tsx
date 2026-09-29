@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { type EvalMetrics, type EvalRun, type EvalStatus, getJSON, postJSON } from "@/lib/api";
+import { type EvalMetrics, type EvalMode, type EvalRun, type EvalStatus, getJSON, postJSON } from "@/lib/api";
 import { moduleCode, tintVar } from "@/lib/modules";
 
 const POLL_MS = 1500;
@@ -16,10 +16,18 @@ const ROWS: { key: keyof EvalMetrics; label: string; lowerIsBetter?: boolean; pc
 const show = (v: number | undefined, pct: boolean) =>
   v === undefined ? "–" : pct ? `${Math.round(v * 100)}%` : v.toFixed(2);
 
-function better(a: number | undefined, b: number | undefined, lowerIsBetter?: boolean): [boolean, boolean] {
-  if (a === undefined || b === undefined || a === b) return [false, false];
-  const aWins = lowerIsBetter ? a < b : a > b;
-  return [aWins, !aWins];
+const MODES: { key: EvalMode; label: string }[] = [
+  { key: "dense", label: "Dense" },
+  { key: "hybrid", label: "Hybrid" },
+  { key: "dense+rerank", label: "Reranked" },
+];
+
+/** Which columns hold the best value; none when fewer than two are known or all tie. */
+function best(values: (number | undefined)[], lowerIsBetter?: boolean): boolean[] {
+  const known = values.filter((v): v is number => v !== undefined);
+  if (known.length < 2 || known.every((v) => v === known[0])) return values.map(() => false);
+  const top = lowerIsBetter ? Math.min(...known) : Math.max(...known);
+  return values.map((v) => v === top);
 }
 
 function jobLine(s: EvalStatus): string | null {
@@ -156,20 +164,25 @@ export function EvalCard() {
             <thead>
               <tr>
                 <th scope="col">Measure</th>
-                <th scope="col">Dense</th>
-                <th scope="col">Hybrid</th>
+                {MODES.map((m) => (
+                  <th key={m.key} scope="col">
+                    {m.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {ROWS.map((r) => {
-                const d = latest.metrics.overall.dense[r.key] as number | undefined;
-                const h = latest.metrics.overall.hybrid[r.key] as number | undefined;
-                const [dw, hw] = better(d, h, r.lowerIsBetter);
+                const vals = MODES.map((m) => latest.metrics.overall[m.key]?.[r.key] as number | undefined);
+                const wins = best(vals, r.lowerIsBetter);
                 return (
                   <tr key={r.key}>
                     <th scope="row">{r.label}</th>
-                    <td className={dw ? "eval-better" : ""}>{show(d, r.pct)}</td>
-                    <td className={hw ? "eval-better" : ""}>{show(h, r.pct)}</td>
+                    {vals.map((v, i) => (
+                      <td key={MODES[i].key} className={wins[i] ? "eval-better" : ""}>
+                        {show(v, r.pct)}
+                      </td>
+                    ))}
                   </tr>
                 );
               })}
@@ -204,14 +217,18 @@ export function EvalCard() {
               <tr>
                 <th scope="col">Module</th>
                 <th scope="col">Questions</th>
-                <th scope="col">Dense</th>
-                <th scope="col">Hybrid</th>
+                {MODES.map((x) => (
+                  <th key={x.key} scope="col">
+                    {x.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {Object.entries(latest.metrics.by_course).map(([course, m]) => {
                 const name = course === "None" ? null : course;
-                const [dw, hw] = better(m.dense["recall@5"], m.hybrid["recall@5"]);
+                const vals = MODES.map((x) => m[x.key]?.["recall@5"]);
+                const wins = best(vals);
                 return (
                   <tr key={course}>
                     <th scope="row">
@@ -221,8 +238,11 @@ export function EvalCard() {
                       {name ?? "No module"}
                     </th>
                     <td>{m.dense.n}</td>
-                    <td className={dw ? "eval-better" : ""}>{show(m.dense["recall@5"], true)}</td>
-                    <td className={hw ? "eval-better" : ""}>{show(m.hybrid["recall@5"], true)}</td>
+                    {vals.map((v, i) => (
+                      <td key={MODES[i].key} className={wins[i] ? "eval-better" : ""}>
+                        {show(v, true)}
+                      </td>
+                    ))}
                   </tr>
                 );
               })}
