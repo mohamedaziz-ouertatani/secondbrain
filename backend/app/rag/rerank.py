@@ -39,7 +39,7 @@ def _tokenizer(max_length: int):
 
     try:
         path = hf_hub_download(MODEL, "tokenizer.json", local_files_only=True)
-    except Exception:
+    except Exception:  # noqa: BLE001 -- not cached yet: download it
         path = hf_hub_download(MODEL, "tokenizer.json")
     tok = Tokenizer.from_file(path)
     tok.enable_truncation(max_length, strategy="longest_first")  # trims the passage for any normal question
@@ -104,12 +104,12 @@ class Reranker:
             if self._score is None:
                 try:
                     self._score = self._loader(s)
-                except Exception as e:  # Unavailable, or a session that won't build
+                except Exception as e:  # noqa: BLE001 -- Unavailable, or a session that won't build
                     self._off(str(e) if isinstance(e, Unavailable) else f"couldn't load: {type(e).__name__}: {e}")
                     return None
             try:
                 logits = self._score(question, [h["text"] for h in hits])
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 -- the question falls back to the plain order
                 self._fails += 1
                 log.warning("reranking failed (%d in a row): %s", self._fails, e)
                 if self._fails >= FAIL_LIMIT:
