@@ -119,8 +119,8 @@ class Enricher:
             chunks = conn.execute(
                 "SELECT text, n_tokens FROM chunks WHERE document_id = %s ORDER BY ord", (doc["id"],)
             ).fetchall() if doc else []
-        if doc is None:  # nothing to summarise: backfill vectors for summaries made before stage 3
-            return self._embed_pending_summaries() > 0
+        if doc is None:  # nothing to summarise: backfill vectors, then any vocabulary pass that never ran
+            return self._embed_pending_summaries() > 0 or self._missed_vocab_pass()
         chat = self.chat or ollama.chat_json
 
         def gated(messages, schema):
@@ -172,6 +172,21 @@ class Enricher:
                 (doc["course"],)).fetchone()
         if pending is None:
             vocab.run(doc["course"], embed=self.embed)
+
+    def _missed_vocab_pass(self) -> bool:
+        """Run the pass for one module with raw tags that have no alias: summarised before the pass existed,
+        or its pass failed after the last write. Called only when nothing is pending."""
+        with get_pool().connection() as conn:
+            row = conn.execute(
+                """SELECT d.course FROM documents d
+                   CROSS JOIN LATERAL jsonb_array_elements_text(d.raw_tags) AS r(raw)
+                   WHERE d.enrich_status = 'ok' AND NOT EXISTS (
+                       SELECT 1 FROM tag_aliases a WHERE a.raw = r.raw AND a.course IS NOT DISTINCT FROM d.course)
+                   LIMIT 1""").fetchone()
+        if row is None:
+            return False
+        vocab.run(row["course"], embed=self.embed)
+        return True
 
     def _embed_pending_summaries(self, limit: int = 16) -> int:
         """bge-m3 vectors (CPU) for current summaries that lack one. Returns how many were embedded."""

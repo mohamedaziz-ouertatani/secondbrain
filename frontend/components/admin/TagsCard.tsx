@@ -99,72 +99,74 @@ export function TagsCard() {
       ) : tags.length === 0 ? (
         <p className="muted">No tags yet. They appear once this module&apos;s files are summarised.</p>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th scope="col">
-                <span className="sr-only">Select</span>
-              </th>
-              <th scope="col">Tag</th>
-              <th scope="col">Files</th>
-              <th scope="col">Merged forms</th>
-              <th scope="col">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tags.map((t) => (
-              <tr key={t.id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${t.name}`}
-                    checked={picked.includes(t.id)}
-                    onChange={(e) =>
-                      setPicked(e.target.checked ? [...picked, t.id].slice(-2) : picked.filter((id) => id !== t.id))
-                    }
-                  />
-                </td>
-                <th scope="row" dir="auto">
-                  {editing?.id === t.id ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        rename(t.id, editing.name);
-                      }}
-                    >
-                      <input
-                        autoFocus
-                        value={editing.name}
-                        onChange={(e) => setEditing({ id: t.id, name: e.target.value })}
-                        onBlur={() => setEditing(null)}
-                        onKeyDown={(e) => e.key === "Escape" && setEditing(null)}
-                        aria-label="New name"
-                      />
-                    </form>
-                  ) : (
-                    t.name
-                  )}
+        <div className="tags-scroll">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  <span className="sr-only">Select</span>
                 </th>
-                <td>{t.count}</td>
-                <td className="muted" dir="auto">
-                  {t.raws.join(", ") || "–"}
-                </td>
-                <td>
-                  <span className="row-actions">
-                    <button type="button" className="quiet-btn" onClick={() => setEditing({ id: t.id, name: t.name })}>
-                      Rename
-                    </button>
-                    <button type="button" className="quiet-btn" onClick={() => remove(t)}>
-                      Delete
-                    </button>
-                  </span>
-                </td>
+                <th scope="col">Tag</th>
+                <th scope="col">Files</th>
+                <th scope="col">Merged forms</th>
+                <th scope="col">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tags.map((t) => (
+                <tr key={t.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${t.name}`}
+                      checked={picked.includes(t.id)}
+                      onChange={(e) =>
+                        setPicked(e.target.checked ? [...picked, t.id].slice(-2) : picked.filter((id) => id !== t.id))
+                      }
+                    />
+                  </td>
+                  <th scope="row" dir="auto">
+                    {editing?.id === t.id ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          rename(t.id, editing.name);
+                        }}
+                      >
+                        <input
+                          autoFocus
+                          value={editing.name}
+                          onChange={(e) => setEditing({ id: t.id, name: e.target.value })}
+                          onBlur={() => setEditing(null)}
+                          onKeyDown={(e) => e.key === "Escape" && setEditing(null)}
+                          aria-label="New name"
+                        />
+                      </form>
+                    ) : (
+                      t.name
+                    )}
+                  </th>
+                  <td>{t.count}</td>
+                  <td className="muted" dir="auto">
+                    {t.raws.join(", ") || "–"}
+                  </td>
+                  <td>
+                    <span className="row-actions">
+                      <button type="button" className="quiet-btn" onClick={() => setEditing({ id: t.id, name: t.name })}>
+                        Rename
+                      </button>
+                      <button type="button" className="quiet-btn" onClick={() => remove(t)}>
+                        Delete
+                      </button>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

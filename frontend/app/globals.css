@@ -1766,6 +1766,19 @@ td {
   color: var(--muted);
 }
 
+/* a module can hold 90 tags: the list scrolls inside the card so the merge button stays in reach */
+.tags-scroll {
+  max-height: 32rem;
+  overflow-y: auto;
+}
+
+.tags-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card);
+}
+
 .admin-table tbody tr:last-child > * {
   border-bottom: 0;
 }

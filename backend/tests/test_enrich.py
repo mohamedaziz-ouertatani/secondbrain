@@ -491,3 +491,16 @@ def test_worker_embeds_summaries_and_backfills_missing_ones(env):
         conn.execute("UPDATE documents SET summary_embedding = NULL")
     assert e.step() is True  # nothing pending: embeds the summary that lacks a vector
     assert doc(db, a)["summary_embedding"] is not None and e.step() is False
+
+
+def test_idle_worker_runs_a_missed_vocabulary_pass(env):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    tagged(db, "Course0/a.md", ["kubernetes", "docker"])  # summarised, but no pass ever ran for the module
+    tagged(db, "Course1/b.md", ["docker"], course="Course1")
+    e = Enricher(chat=good_chat, embed=EMBED)
+    assert e.step() is True
+    assert e.step() is True  # one module per step
+    assert names() == {"kubernetes": 1, "docker": 1} and names("Course1") == {"docker": 1}
+    assert e.step() is False  # every raw tag has an alias now
