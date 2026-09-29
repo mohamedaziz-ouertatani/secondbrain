@@ -349,6 +349,8 @@ export type SyncJob = {
   counts: Record<SyncAction, number>;
   bytes: number;
   error: string | null;
+  /** the Blackboard calendar step; absent on runs from before it existed */
+  deadlines?: { new?: number; updated?: number; removed?: number; would_import?: number; failed?: string } | null;
   events?: SyncEvent[];
   courses?: { name: string; folder: string | null }[] | null;
 };

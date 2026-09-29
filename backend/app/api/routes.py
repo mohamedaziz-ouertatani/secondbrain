@@ -12,8 +12,7 @@ from ..config import get_settings
 from ..db import get_pool
 from ..enrich import vocab
 from ..enrich.worker import ENRICH_STATE
-from ..ingest.parse import parse
-from ..ingest.pipeline import rescan
+from ..ingest.pipeline import cached_pages, rescan
 from ..llm import ollama
 from ..rag import rerank
 from ..rag.answer import ask
@@ -114,24 +113,19 @@ def _document_file(doc_id: int, columns: str = "path, mime") -> tuple[dict, Path
 
 @router.get("/documents/{doc_id}/pages")
 def document_pages(doc_id: int) -> dict:
-    """The document's text per page/slide/section, re-parsed from the file (no chunk overlap)."""
+    """The document's text per page/slide/section (no chunk overlap), as parsed at ingest.
+
+    A file changed since then, or ingested before pages were kept, is parsed here once.
+    """
     row, path = _document_file(
         doc_id, f"id, path, title, course, mime, page_count, status, error, ingested_at, "
                 f"summary, concepts, enrich_error, {ENRICH_STATE} AS enrich_status"
     )
     try:
-        parsed = parse(path)
+        pages = cached_pages(path)
     except Exception as e:
         raise HTTPException(422, f"could not read {path.name}: {e}") from e
-    labels = parsed.labels or [None] * len(parsed.pages)
-    return {
-        **row,
-        "tags": vocab.document_tags(doc_id),
-        "pages": [
-            {"page": i, "label": label, "text": text}
-            for i, (text, label) in enumerate(zip(parsed.pages, labels, strict=True), start=1)
-        ],
-    }
+    return {**row, "tags": vocab.document_tags(doc_id), "pages": pages}
 
 
 # Rendered width in pixels, whatever the page size (slides are small, A4 is not): about twice the

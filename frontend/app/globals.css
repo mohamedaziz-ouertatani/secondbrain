@@ -204,17 +204,18 @@ button {
 /* three views across the cabinet top: icon over label, so they fit the 248px rail on one row */
 .views {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.35rem;
 }
 
 .views a {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.25rem;
   border-radius: 5px;
   color: var(--steel-muted);
   text-decoration: none;
@@ -1436,7 +1437,7 @@ td {
     display: none;
   }
   .views {
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto auto auto;
   }
   .views a {
     flex-direction: row;
@@ -2383,4 +2384,522 @@ td {
 
 .relevant-mark.no {
   color: var(--bad);
+}
+
+/* ---- planner: rows and capture ------------------------------------------- */
+
+.plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--rule-blue);
+  border-left: 3px solid var(--tint, var(--tint-other));
+}
+
+.plan-row:last-child {
+  border-bottom: 0;
+}
+
+.plan-check {
+  margin: 0.2rem 0 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+.plan-kind {
+  margin-top: 0.2rem;
+  color: var(--muted);
+}
+
+.plan-open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.plan-open:hover .plan-title {
+  color: var(--primary);
+}
+
+.plan-title {
+  overflow-wrap: anywhere;
+}
+
+.plan-row.done .plan-title,
+.plan-row.removed .plan-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.plan-row.overdue .callno {
+  color: var(--bad);
+}
+
+.plan-flag {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.plan-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.capture-field {
+  position: relative;
+  border-bottom: 2px solid var(--rule-red);
+}
+
+.capture-field input,
+.capture-mirror {
+  font: 500 1.1rem/1.45 var(--sans);
+  padding: 0.35rem 0;
+  white-space: pre;
+}
+
+.capture-field input {
+  position: relative;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--rule-red);
+}
+
+.capture-field input:focus {
+  outline: none;
+}
+
+.capture-field:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.capture-mirror {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.capture-mirror mark {
+  background: none;
+  color: transparent;
+  text-decoration: underline 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--primary);
+}
+
+.capture-mirror mark.cap-course {
+  text-decoration-color: color-mix(in srgb, var(--ink) 45%, var(--tint-modeling));
+}
+
+.capture-mirror mark.cap-kind {
+  text-decoration-style: dotted;
+}
+
+.capture-reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-top: 0.55rem;
+}
+
+.capture-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.capture-controls select,
+.capture-controls input[type="date"],
+.capture-controls input[type="datetime-local"],
+.plan-fields select,
+.plan-fields input[type="date"],
+.plan-fields input[type="datetime-local"] {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  background: var(--card);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--rule-blue);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--card-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.segmented button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.capture-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+}
+
+/* ---- planner: page, agenda, month ---------------------------------------- */
+
+.plan-card {
+  padding: 0.9rem 1rem 1rem;
+}
+
+.capture-card {
+  margin-bottom: 1rem;
+}
+
+.plan-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.plan-card-head h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.plan-card-head .search {
+  margin-left: auto;
+}
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .planner-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.plan-empty {
+  margin: 0.4rem 0;
+}
+
+.agenda-day + .agenda-day {
+  margin-top: 0.8rem;
+}
+
+.agenda-day.overdue .stack-label {
+  color: var(--bad);
+}
+
+.plan-done summary {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.month-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--rule-blue);
+  border-left: 1px solid var(--rule-blue);
+}
+
+.month-weekday {
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  border-right: 1px solid var(--rule-blue);
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.month-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 5.2rem;
+  padding: 0.2rem;
+  border-right: 1px solid var(--rule-blue);
+  border-bottom: 1px solid var(--rule-blue);
+  min-width: 0;
+}
+
+.month-cell.outside {
+  background: var(--card-2);
+}
+
+.month-cell.outside .month-day {
+  color: var(--muted);
+}
+
+.month-day {
+  align-self: flex-end;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.month-cell.today .month-day {
+  background: var(--rule-red);
+  color: #fff;
+  font-weight: 600;
+}
+
+.month-chip {
+  display: block;
+  width: 100%;
+  padding: 1px 4px;
+  border: 0;
+  border-left: 3px solid var(--tint, var(--tint-other));
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--tint, var(--tint-other)) 35%, var(--card));
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.month-chip.done {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.month-more {
+  align-self: flex-start;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+/* ---- planner: item panel --------------------------------------------------- */
+
+.plan-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--tint, var(--tint-other));
+  border-radius: 0;
+  box-shadow: var(--shadow-pulled);
+  overflow-y: auto;
+  animation: plan-slide 0.22s var(--ease);
+}
+
+@keyframes plan-slide {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-panel {
+    animation: none;
+  }
+}
+
+.plan-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-panel-title {
+  width: 100%;
+  padding: 0.2rem 0;
+  border: 0;
+  border-bottom: 2px solid var(--rule-red);
+  background: transparent;
+  color: var(--ink);
+  font: 600 1.2rem/1.35 var(--sans);
+}
+
+.plan-panel-title:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.plan-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+}
+
+.plan-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plan-body .segmented {
+  align-self: flex-start;
+}
+
+.plan-body textarea {
+  width: 100%;
+  min-height: 12rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font: 400 0.95rem/1.55 var(--sans);
+  resize: vertical;
+}
+
+.plan-preview {
+  min-height: 12rem;
+  padding: 0.2rem 0;
+}
+
+.plan-panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule-blue);
+}
+
+.plan-panel-foot .delete {
+  margin-left: auto;
+  color: var(--bad);
+}
+
+.plan-panel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* ---- planner: quick capture dialog ------------------------------------------ */
+
+.capture-dialog {
+  width: min(40rem, calc(100vw - 2rem));
+  margin: 18vh auto auto;
+  padding: 1rem 1.1rem 0.8rem;
+  border: 0;
+  color: var(--ink);
+  box-shadow: var(--shadow-pulled);
+}
+
+.capture-dialog::backdrop {
+  background: rgb(18 24 27 / 0.35);
+}
+
+/* ---- planner: coming up, rail badge ------------------------------------------ */
+
+.coming-up {
+  margin-top: 0.75rem;
+}
+
+.coming-up .plan-list {
+  padding: 0.1rem 0;
+}
+
+.coming-more {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.rail-badge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.3rem;
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--rule-red);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .rail-badge {
+    position: static;
+  }
 }

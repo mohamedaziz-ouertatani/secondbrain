@@ -232,3 +232,42 @@ def test_headless_expired_session_exits_3(monkeypatch, capsys):
     monkeypatch.setattr(bb, "PlaywrightAPI", ExpiredAPI)
     assert bb.main(["--headless", "--json"]) == 3
     assert capsys.readouterr().out.strip() == '{"type": "login_required"}'
+
+
+def test_deadlines_step_reports_and_never_fails_the_sync(inbox, monkeypatch):
+    from app.planner import blackboard as pb
+
+    seen = {}
+
+    def fake(api, folders, dry_run=False):
+        seen.update(folders=folders, dry_run=dry_run)
+        return {"type": "deadlines", "new": 1, "updated": 0, "removed": 0}
+
+    monkeypatch.setattr(pb, "import_deadlines", fake)
+    ev = []
+    assert sync(FakeAPI(), emit=ev.append) == 0
+    assert seen == {"folders": {C: "Probability 2"}, "dry_run": False}  # unmapped courses left out
+    assert [e for e in ev if e["type"] == "deadlines"] == [{"type": "deadlines", "new": 1, "updated": 0, "removed": 0}]
+    assert ev[-1]["type"] == "done"
+
+    def boom(api, folders, dry_run=False):
+        raise RuntimeError("calendar 500")
+
+    monkeypatch.setattr(pb, "import_deadlines", boom)
+    ev.clear()
+    assert sync(FakeAPI(), emit=ev.append) == 0
+    assert {"type": "deadlines", "failed": "calendar 500"} in ev
+
+    ev.clear()
+    bb.run(FakeAPI(), probe=True, dry_run=False, only=None, include_unmapped=False, emit=ev.append)
+    assert not [e for e in ev if e["type"] == "deadlines"]
+
+
+def test_deadlines_follow_the_course_filter(inbox, monkeypatch):
+    from app.planner import blackboard as pb
+
+    seen = {}
+    monkeypatch.setattr(pb, "import_deadlines",
+                        lambda api, folders, dry_run=False: seen.update(folders=folders) or {"type": "deadlines"})
+    bb.run(FakeAPI(), probe=False, dry_run=True, only="devops", include_unmapped=False, emit=lambda e: None)
+    assert seen["folders"] == {}

@@ -29,4 +29,5 @@ out({"type": "file", "folder": "Probability 2", "path": "Probability 2/b.pdf", "
 if behaviour == "crash":
     out({"type": "error", "message": "boom"})
     sys.exit(1)
+out({"type": "deadlines", "would_import": 2} if dry else {"type": "deadlines", "new": 2, "updated": 0, "removed": 0})
 out({"type": "done", "mode": "preview" if dry else "sync", "files": 0 if dry else 1, "bytes": 0 if dry else 12288})

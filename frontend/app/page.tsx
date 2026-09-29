@@ -4,6 +4,7 @@ import { ArrowUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AnswerCard, type Entry, PastCard } from "@/components/AnswerCard";
+import { ComingUp } from "@/components/ComingUp";
 import { DrawerDigest } from "@/components/DrawerDigest";
 import { Fiche } from "@/components/Fiche";
 import { UndoNote } from "@/components/UndoNote";
@@ -193,6 +194,8 @@ function AskDesk() {
         ) : (
           <DrawerDigest docs={docs} drawer={drawer} />
         )}
+
+        <ComingUp drawer={drawer} />
 
         {past.length > 0 && (
           <section className="past-stack" aria-label="Earlier questions">

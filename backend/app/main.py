@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .admin.backup import BackupScheduler
 from .admin.sync import AutoSync, runner
 from .api.admin import router as admin_router
+from .api.planner import router as planner_router
 from .api.routes import router
 from .config import get_settings
 from .db import close_pool, get_pool, migrate
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(router)
     app.include_router(admin_router)
+    app.include_router(planner_router)
     return app
 
 

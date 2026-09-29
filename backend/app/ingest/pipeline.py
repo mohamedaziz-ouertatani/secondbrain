@@ -13,7 +13,7 @@ from ..config import get_settings
 from ..db import get_pool
 from ..llm import ollama
 from .chunk import TokenCounter, bge_m3_counter, chunk_pages
-from .parse import SUPPORTED, parse
+from .parse import SUPPORTED, Parsed, parse
 
 log = logging.getLogger(__name__)
 _lock = threading.Lock()
@@ -71,10 +71,11 @@ def ingest_file(
         doc = {"path": rel, "sha256": digest, "course": course_of(rel), "mtime": mtime,
                "title": path.stem, "mime": SUPPORTED[path.suffix.lower()], "page_count": 0,
                "status": "ok", "error": None, "parser_version": PARSER_VERSION}
-        chunks, vectors, labels = [], [], None
+        chunks, vectors, labels, pages = [], [], None, None
         ocr_pages: set[int] = set()
         try:
             parsed = parse(path)
+            pages = page_rows(parsed)
             doc.update(title=parsed.title, mime=parsed.mime, page_count=len(parsed.pages))
             labels = parsed.labels
             ocr_pages = parsed.ocr_pages
@@ -108,6 +109,9 @@ def ingest_file(
                         [(doc_id, i, c.page, c.text, c.n_tokens, v, Jsonb(_chunk_meta(meta, labels, ocr_pages, c.page)))
                          for i, (c, v) in enumerate(zip(chunks, vectors, strict=True))],
                     )
+            if pages is not None:
+                _store_pages(conn, digest, pages, replace=True)
+            _prune_pages(conn)
         log.info("ingested %s: %s, %d chunks", rel, doc["status"], len(chunks))
         return doc["status"]
 
@@ -121,10 +125,55 @@ def _chunk_meta(meta: dict, labels, ocr_pages: set[int], page: int) -> dict:
     return m
 
 
+def page_rows(parsed: Parsed) -> list[dict]:
+    """The reader's pages: text per page/slide/section, without the chunks' overlap."""
+    labels = parsed.labels or [None] * len(parsed.pages)
+    return [{"page": i, "label": label, "text": text}
+            for i, (text, label) in enumerate(zip(parsed.pages, labels, strict=True), start=1)]
+
+
+def cached_pages(path: Path) -> list[dict]:
+    """page_rows of the file as it is on disk, parsed at most once per content and parser version.
+
+    Ingest stores them; a miss (file edited since, or ingested before the cache) parses and stores.
+    """
+    digest = sha256_of(path)
+    with get_pool().connection() as conn:
+        row = conn.execute(
+            "SELECT pages FROM page_texts WHERE sha256 = %s AND parser_version = %s", (digest, PARSER_VERSION)
+        ).fetchone()
+    if row:
+        return row["pages"]
+    pages = page_rows(parse(path))
+    with get_pool().connection() as conn:
+        _store_pages(conn, digest, pages)
+    return pages
+
+
+def _store_pages(conn, digest: str, pages: list[dict], replace: bool = False) -> None:
+    # replace: a forced re-index may parse differently (OCR settings), and the reader should follow it
+    conflict = "UPDATE SET pages = EXCLUDED.pages" if replace else "NOTHING"
+    conn.execute(
+        f"INSERT INTO page_texts (sha256, parser_version, pages) VALUES (%s, %s, %s) "
+        f"ON CONFLICT (sha256, parser_version) DO {conflict}",
+        (digest, PARSER_VERSION, Jsonb(pages)),
+    )
+
+
+def _prune_pages(conn) -> None:
+    """Drop pages of older parsers and of file versions no document points to any more."""
+    conn.execute(
+        """DELETE FROM page_texts p WHERE p.parser_version <> %s
+             OR NOT EXISTS (SELECT 1 FROM documents d WHERE d.sha256 = p.sha256)""",
+        (PARSER_VERSION,),
+    )
+
+
 def remove_file(path: Path) -> bool:
     rel = rel_path(path)
     with _lock, get_pool().connection() as conn:
         n = conn.execute("DELETE FROM documents WHERE path = %s", (rel,)).rowcount
+        _prune_pages(conn)
     if n:
         log.info("removed %s", rel)
     return bool(n)
