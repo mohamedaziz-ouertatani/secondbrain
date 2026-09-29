@@ -4,6 +4,7 @@ import { ExternalLink, RefreshCw, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { ComingUp } from "@/components/ComingUp";
 import { API_URL, callNumber, type DocumentRow, type Tag, fileUrl, kindOf, partsCount, readerUrl } from "@/lib/api";
 import { folderOf, tintVar, unitOf } from "@/lib/modules";
 import { ago, isNew, markSeen, newestFiled } from "@/lib/seen";
@@ -130,6 +131,8 @@ function DrawerView() {
           </button>
         </div>
       </header>
+
+      {drawer && <ComingUp drawer={drawer} />}
 
       {allTagList.length > 0 && (
         <nav className="tag-bar" aria-label="Filter by topic">

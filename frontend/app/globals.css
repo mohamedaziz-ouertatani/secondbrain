@@ -204,17 +204,18 @@ button {
 /* three views across the cabinet top: icon over label, so they fit the 248px rail on one row */
 .views {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.35rem;
 }
 
 .views a {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.25rem;
   border-radius: 5px;
   color: var(--steel-muted);
   text-decoration: none;
@@ -1436,7 +1437,7 @@ td {
     display: none;
   }
   .views {
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto auto auto;
   }
   .views a {
     flex-direction: row;
@@ -2864,4 +2865,41 @@ td {
 
 .capture-dialog::backdrop {
   background: rgb(18 24 27 / 0.35);
+}
+
+/* ---- planner: coming up, rail badge ------------------------------------------ */
+
+.coming-up {
+  margin-top: 0.75rem;
+}
+
+.coming-up .plan-list {
+  padding: 0.1rem 0;
+}
+
+.coming-more {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.rail-badge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.3rem;
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--rule-red);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .rail-badge {
+    position: static;
+  }
 }
