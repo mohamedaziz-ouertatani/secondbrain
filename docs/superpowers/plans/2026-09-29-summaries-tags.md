@@ -2191,7 +2191,7 @@ Expected: no errors.
 3. To try another value, remove the module's tags:
 
    ```bash
-   docker compose exec db psql -U secondbrain -c "DELETE FROM tags WHERE course='DEVOPS'; DELETE FROM tag_aliases WHERE course='DEVOPS'"
+   docker compose exec postgres psql -U secondbrain -c "DELETE FROM tags WHERE course='DEVOPS'; DELETE FROM tag_aliases WHERE course='DEVOPS'"
    ```
 
    Then set `tag_merge_threshold` in `config.yaml` to 0.80 or 0.90, restart the backend and rerun the pass. Keep the value that reads best, and record it in `config.yaml` with a one-line comment.
@@ -2472,7 +2472,7 @@ git commit -m "Retrieval experiment: summary boost in dense ranking and file con
 Every `ok` document must have a summary embedding:
 
 ```bash
-docker compose exec db psql -U secondbrain -c "SELECT count(*) FILTER (WHERE summary_embedding IS NULL) AS missing, count(*) FROM documents WHERE status = 'ok'"
+docker compose exec postgres psql -U secondbrain -c "SELECT count(*) FILTER (WHERE summary_embedding IS NULL) AS missing, count(*) FROM documents WHERE status = 'ok'"
 ```
 
 Expected: `missing` = 0. If not, leave the backend running until the worker's backfill finishes.

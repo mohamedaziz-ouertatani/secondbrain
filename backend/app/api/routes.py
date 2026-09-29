@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 from ..admin import sync as sync_jobs
 from ..config import get_settings
 from ..db import get_pool
+from ..enrich import vocab
+from ..enrich.worker import ENRICH_STATE
 from ..ingest.parse import parse
 from ..ingest.pipeline import rescan
 from ..llm import ollama
@@ -38,11 +40,20 @@ def ask_endpoint(req: AskRequest) -> StreamingResponse:
 def documents() -> list[dict]:
     with get_pool().connection() as conn:
         return conn.execute(
-            """SELECT d.id, d.path, d.title, d.course, d.mime, d.page_count, d.status, d.error,
-                      d.mtime, d.ingested_at, d.first_seen, count(c.id) AS chunk_count
+            f"""SELECT d.id, d.path, d.title, d.course, d.mime, d.page_count, d.status, d.error,
+                      d.mtime, d.ingested_at, d.first_seen, count(c.id) AS chunk_count,
+                      d.summary, d.concepts, d.enrich_error, {ENRICH_STATE} AS enrich_status,
+                      COALESCE((SELECT jsonb_agg(jsonb_build_object('id', t.id, 'name', t.name) ORDER BY t.name)
+                                FROM document_tags dt JOIN tags t ON t.id = dt.tag_id
+                                WHERE dt.document_id = d.id), '[]') AS tags
                FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
                GROUP BY d.id ORDER BY d.course NULLS LAST, d.title"""
         ).fetchall()
+
+
+@router.get("/tags")
+def tags(course: str | None = None) -> list[dict]:
+    return vocab.list_tags(course, all_courses=course is None)
 
 
 @router.get("/courses")
@@ -104,7 +115,8 @@ def _document_file(doc_id: int, columns: str = "path, mime") -> tuple[dict, Path
 def document_pages(doc_id: int) -> dict:
     """The document's text per page/slide/section, re-parsed from the file (no chunk overlap)."""
     row, path = _document_file(
-        doc_id, "id, path, title, course, mime, page_count, status, error, ingested_at"
+        doc_id, f"id, path, title, course, mime, page_count, status, error, ingested_at, "
+                f"summary, concepts, enrich_error, {ENRICH_STATE} AS enrich_status"
     )
     try:
         parsed = parse(path)
@@ -113,6 +125,7 @@ def document_pages(doc_id: int) -> dict:
     labels = parsed.labels or [None] * len(parsed.pages)
     return {
         **row,
+        "tags": vocab.document_tags(doc_id),
         "pages": [
             {"page": i, "label": label, "text": text}
             for i, (text, label) in enumerate(zip(parsed.pages, labels, strict=True), start=1)

@@ -8,7 +8,7 @@ from psycopg.types.json import Jsonb
 
 from ..config import get_settings
 from ..db import get_pool
-from ..llm import ollama
+from ..llm import busy, ollama
 from ..llm.prompts import NOT_FOUND, build_messages
 from .citations import validate
 from .retrieve import retrieve
@@ -19,6 +19,11 @@ SNIPPET_CHARS = 240
 
 
 def ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
+    with busy.answering():  # background enrichment keeps off the GPU until the stream ends or is closed
+        yield from _ask(question, course)
+
+
+def _ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
     s = get_settings()
     t0 = time.perf_counter()
     candidates, sources = retrieve(question, course)

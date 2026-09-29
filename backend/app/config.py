@@ -57,6 +57,15 @@ class Settings(BaseSettings):
     blackboard_delay: float = 0.5  # seconds between API requests
     sync_auto_days: int = 7  # days between automatic syncs from the backend; 0 turns them off
 
+    # Summaries, concepts and tags per document (app.enrich), made in the background after ingest
+    enrich_enabled: bool = True
+    enrich_paused: bool = False  # Pause/Resume in the admin panel writes this to config.local.yaml
+    tag_merge_threshold: float = 0.85  # cosine at which a raw tag joins an existing tag
+
+    # Retrieval experiments with summaries (off unless the evaluation shows a gain)
+    doc_boost: float = 0.0  # adds doc_boost x similarity(question, file summary) to each passage's score
+    doc_context: Literal["off", "on"] = "off"  # on: each passage in the prompt gets its file's summary line
+
     @classmethod
     def settings_customise_sources(
         cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings

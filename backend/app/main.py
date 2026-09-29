@@ -10,6 +10,7 @@ from .api.admin import router as admin_router
 from .api.routes import router
 from .config import get_settings
 from .db import close_pool, get_pool, migrate
+from .enrich.worker import worker as enricher
 from .ingest.watcher import InboxWatcher
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -27,7 +28,10 @@ async def lifespan(app: FastAPI):
     autosync.start()
     backups = BackupScheduler()
     backups.start()
+    if get_settings().enrich_enabled:
+        enricher.start()
     yield
+    enricher.stop()
     backups.stop()
     autosync.stop()
     runner.cancel()  # a running sync must not outlive the backend
@@ -40,7 +44,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=get_settings().cors_origins,
-        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["*"],
     )
     app.include_router(router)

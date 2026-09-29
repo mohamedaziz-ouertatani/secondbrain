@@ -1,5 +1,8 @@
 """Short prompts: small local models follow short, concrete instructions best."""
 
+import re
+
+from ..config import get_settings
 from .lang import NAMES, detect
 
 SYSTEM = """You answer questions using ONLY the numbered sources below.
@@ -23,10 +26,19 @@ def where(source: dict) -> str:
     return source.get("label") or "note"
 
 
+def first_sentence(text: str) -> str:
+    return re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0][:200]
+
+
 def format_context(sources: list[dict]) -> str:
-    """sources: dicts with title, page, mime, label, text — numbered from 1 in list order."""
+    """sources: dicts with title, page, mime, label, text (and summary) — numbered from 1 in list order."""
+    context = get_settings().doc_context == "on"
+
+    def about(s: dict) -> str:
+        return f"About this file: {first_sentence(s['summary'])}\n" if context and s.get("summary") else ""
+
     return "\n\n".join(
-        f"[{i}] ({s['title']}, {where(s)})\n{s['text']}" for i, s in enumerate(sources, start=1)
+        f"[{i}] ({s['title']}, {where(s)})\n{about(s)}{s['text']}" for i, s in enumerate(sources, start=1)
     )
 
 

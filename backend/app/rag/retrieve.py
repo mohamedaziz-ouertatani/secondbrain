@@ -34,7 +34,7 @@ def keywords(question: str) -> list[str]:
 
 _COLUMNS = """c.id AS chunk_id, c.document_id AS doc_id, c.page, c.text, c.meta->>'label' AS label,
               (c.meta->>'ocr')::boolean IS TRUE AS ocr,
-              d.title, d.course, d.mime, d.path, 1 - (c.embedding <=> %(q)s) AS score"""
+              d.title, d.course, d.mime, d.path, d.summary, 1 - (c.embedding <=> %(q)s) AS score"""
 _COURSE = "(%(course)s::text IS NULL OR d.course = %(course)s)"
 
 
@@ -45,15 +45,23 @@ def dense(question: str, k: int, course: str | None = None) -> list[dict]:
 
 
 def _dense(conn, qvec, k: int, course: str | None) -> list[dict]:
+    """Nearest chunks. With doc_boost > 0, candidate_k are fetched and re-sorted by
+    score + doc_boost x similarity(question, file summary); `score` itself stays the chunk's cosine."""
+    s = get_settings()
+    boost = s.doc_boost
     conn.execute("SET hnsw.ef_search = 100")
-    return conn.execute(
-        f"""SELECT {_COLUMNS}
+    hits = conn.execute(
+        f"""SELECT {_COLUMNS}, COALESCE(1 - (d.summary_embedding <=> %(q)s), 0) AS doc_score
             FROM chunks c JOIN documents d ON d.id = c.document_id
             WHERE {_COURSE}
             ORDER BY c.embedding <=> %(q)s
             LIMIT %(k)s""",
-        {"q": qvec, "k": k, "course": course},
+        {"q": qvec, "k": max(k, s.candidate_k) if boost else k, "course": course},
     ).fetchall()
+    if boost:
+        hits.sort(key=lambda h: -(h["score"] + boost * h["doc_score"]))
+        hits = hits[:k]
+    return hits
 
 
 def _lexical(conn, qvec, terms: list[str], k: int, course: str | None) -> list[dict]:

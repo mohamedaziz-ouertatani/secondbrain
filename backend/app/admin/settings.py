@@ -34,8 +34,12 @@ EDITABLE = (
           "Hybrid only: passages taken from each list before fusion", 5, 100),
     Field("rrf_k", "Retrieval", "Fusion constant", "int", "Hybrid only: higher flattens the rank bonus", 1, 200),
     Field("min_score", "Retrieval", "Refusal threshold", "float", "Refuse unless a passage is at least this close", 0, 1),
+    Field("doc_boost", "Retrieval", "Summary boost", "float",
+          "Ranks passages higher when their file's summary matches the question; 0 is off", 0, 1),
     Field("llm_model", "Answers", "Model", "choice", "The model that writes answers; the next question loads it"),
     Field("temperature", "Answers", "Temperature", "float", "Lower is more literal", 0, 1.5),
+    Field("doc_context", "Answers", "File context", "choice",
+          "on: each passage the model reads starts with its file's summary", options=("off", "on")),
     Field("num_ctx", "Answers", "Context window", "int", "Tokens the model sees; larger uses more VRAM", 1024, 32768),
     Field("llm_keep_alive", "Answers", "Keep loaded for", "text",
           "After a question: 30m, 2h, 0 (unload at once) or -1 (never)", pattern=r"^(-1|0|\d+[smh])$"),
@@ -130,6 +134,20 @@ def _check(f: Field, v) -> str | None:
     return None
 
 
+def _write_local(new_local: dict) -> None:
+    path = config.LOCAL_CONFIG
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, suffix=".tmp") as tmp:
+        tmp.write("# Written by the admin panel. Overrides config.yaml; environment variables override this.\n")
+        yaml.safe_dump(dict(sorted(new_local.items())), tmp, allow_unicode=True)
+    os.replace(tmp.name, path)
+    config.get_settings.cache_clear()
+
+
+def save_local(key: str, value) -> None:
+    """Set one key in config.local.yaml directly: panel controls that aren't form settings (pausing enrichment)."""
+    _write_local({**_yaml(config.LOCAL_CONFIG), key: value})
+
+
 def update(changes: dict) -> dict:
     """Validate every change, then write them all or none. None as a value resets the key."""
     errors: dict[str, str] = {}
@@ -166,10 +184,5 @@ def update(changes: dict) -> dict:
     if errors:
         raise Invalid(errors)
 
-    path = config.LOCAL_CONFIG
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, suffix=".tmp") as tmp:
-        tmp.write("# Written by the admin panel. Overrides config.yaml; environment variables override this.\n")
-        yaml.safe_dump(dict(sorted(new_local.items())), tmp, allow_unicode=True)
-    os.replace(tmp.name, path)
-    config.get_settings.cache_clear()
+    _write_local(new_local)
     return view()

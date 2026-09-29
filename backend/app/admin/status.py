@@ -83,6 +83,12 @@ def _backup() -> dict | None:
     return backup.last_backup()
 
 
+def _enrichment() -> dict:
+    from ..enrich.worker import worker
+
+    return worker.status()
+
+
 def _safe(part):
     try:
         return part()
@@ -99,4 +105,5 @@ def status() -> dict:
         "answers": _safe(_answers),
         "index": _safe(_index_with_ocr),
         "backup": _safe(_backup),
+        "enrichment": _safe(_enrichment),
     }

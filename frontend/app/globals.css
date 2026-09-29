@@ -2207,6 +2207,123 @@ td {
   opacity: 0.75;
 }
 
+/* ---- generated summaries -------------------------------------------------------------- */
+.summary-line {
+  flex-basis: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.enrich-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.doc-summary {
+  margin-top: 0.8rem;
+  max-width: var(--measure);
+}
+
+.doc-summary p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.gen-tag {
+  margin-inline-start: 0.4rem;
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-family: var(--type);
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.6;
+  vertical-align: 0.1em;
+}
+
+.concepts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.concepts li::before {
+  content: "· ";
+}
+
+.doc-summary-note {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* ---- tags ----------------------------------------------------------------------------- */
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex-basis: 100%;
+}
+
+.tag-group-name {
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 9rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tag-chip:hover {
+  border-color: var(--primary);
+}
+
+.tag-chip.on {
+  background: var(--sel);
+  border-color: var(--primary);
+}
+
+.tag-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+}
+
 /* ---- admin evaluation ------------------------------------------------------------------ */
 .eval-table caption {
   caption-side: bottom;

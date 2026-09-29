@@ -83,6 +83,28 @@ def test_back_up_now_route_and_status(env, tmp_path, monkeypatch):
     monkeypatch.setattr(backup, "backup_dir", lambda: tmp_path)
     client = TestClient(create_app())
     r = client.post("/admin/backup")
-    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1, "eval_questions": 0, "eval_runs": 0}
+    assert r.status_code == 200 and r.json()["rows"] == {"query_log": 3, "excluded_paths": 1, "eval_questions": 0, "eval_runs": 0, "tags": 0, "tag_aliases": 0}
     last = client.get("/admin/status").json()["backup"]
     assert last["kept"] == 1 and last["bytes"] > 0 and last["name"] == r.json()["name"]
+
+
+def test_tags_and_aliases_round_trip(env, tmp_path):
+    from app.admin import backup
+
+    _, db = env
+    with db.get_pool().connection() as conn:
+        t = conn.execute("INSERT INTO tags (course, name, user_named) VALUES ('C', 'kubernetes', true) RETURNING id").fetchone()["id"]
+        conn.execute("INSERT INTO tag_aliases (course, raw, tag_id) VALUES ('C', 'k8s', %s), ('C', 'junk', NULL)", (t,))
+    f = backup.backup(tmp_path)
+    with db.get_pool().connection() as conn:
+        conn.execute("DELETE FROM tags")
+        conn.execute("DELETE FROM tag_aliases")
+    r = backup.restore(f)
+    assert (r["tags"], r["tag_aliases"]) == (1, 2)
+
+    with db.get_pool().connection() as conn:  # a tag recreated under another id: its alias is skipped, not fatal
+        conn.execute("DELETE FROM tag_aliases")
+        conn.execute("DELETE FROM tags")
+        conn.execute("INSERT INTO tags (course, name) VALUES ('C', 'kubernetes')")
+    r = backup.restore(f)
+    assert (r["tags"], r["tag_aliases"]) == (0, 1)

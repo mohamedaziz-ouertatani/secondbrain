@@ -4,6 +4,7 @@ import { ExternalLink, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DocSummary } from "@/components/DocSummary";
 import { NoteProse } from "@/components/Prose";
 import {
   callNumber,
@@ -63,6 +64,7 @@ export default function ReaderPage() {
           {doc.course ? `${doc.course} · ${unitOf(doc.course).name}` : "Loose note"} · {kindOf(doc.mime)}
           {parts ? ` · ${parts}` : ""}
         </p>
+        <DocSummary doc={doc} />
         <div className="reader-actions">
           <Link className="quiet-btn" href={drawerHref("/", doc.course)}>
             <PenLine size={15} aria-hidden />
