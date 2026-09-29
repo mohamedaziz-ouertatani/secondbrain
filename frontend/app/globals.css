@@ -2743,3 +2743,110 @@ td {
   font-size: 0.72rem;
   cursor: pointer;
 }
+
+/* ---- planner: item panel --------------------------------------------------- */
+
+.plan-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  width: min(34rem, 100vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--tint, var(--tint-other));
+  border-radius: 0;
+  box-shadow: var(--shadow-pulled);
+  overflow-y: auto;
+  animation: plan-slide 0.22s var(--ease);
+}
+
+@keyframes plan-slide {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-panel {
+    animation: none;
+  }
+}
+
+.plan-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-panel-title {
+  width: 100%;
+  padding: 0.2rem 0;
+  border: 0;
+  border-bottom: 2px solid var(--rule-red);
+  background: transparent;
+  color: var(--ink);
+  font: 600 1.2rem/1.35 var(--sans);
+}
+
+.plan-panel-title:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.plan-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+}
+
+.plan-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.plan-body .segmented {
+  align-self: flex-start;
+}
+
+.plan-body textarea {
+  width: 100%;
+  min-height: 12rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font: 400 0.95rem/1.55 var(--sans);
+  resize: vertical;
+}
+
+.plan-preview {
+  min-height: 12rem;
+  padding: 0.2rem 0;
+}
+
+.plan-panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule-blue);
+}
+
+.plan-panel-foot .delete {
+  margin-left: auto;
+  color: var(--bad);
+}
+
+.plan-panel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}

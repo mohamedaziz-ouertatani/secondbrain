@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import { UndoNote } from "@/components/UndoNote";
 import { Agenda } from "@/components/planner/Agenda";
 import { CaptureLine } from "@/components/planner/CaptureLine";
+import { ItemPanel } from "@/components/planner/ItemPanel";
 import { ItemRow } from "@/components/planner/ItemRow";
 import { MonthGrid } from "@/components/planner/MonthGrid";
 import { useUndoDelete } from "@/lib/history";
@@ -169,7 +170,18 @@ function PlannerView() {
         </div>
       )}
 
-      {/* Task 8: the item panel for `open` goes here */}
+      {open && (
+        <ItemPanel
+          key={open.id}
+          item={open}
+          modules={modules}
+          onClose={close}
+          onDelete={(id) => {
+            close();
+            remove(id);
+          }}
+        />
+      )}
 
       <UndoNote pending={pending} failed={failed} onUndo={undo} what="item" />
     </div>
