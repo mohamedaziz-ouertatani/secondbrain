@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     rrf_k: int = 60
     min_score: float = 0.35
 
+    # Reranker (app.rag.rerank): bge-reranker-v2-m3, fp16 ONNX on DirectML, reorders the candidate_k candidates
+    rerank: Literal["off", "on"] = "on"
+    rerank_max_length: int = 384  # tokens per question+passage pair; 512 doesn't fit beside the LLM in 4 GB
+    rerank_keep_alive: float = 30  # minutes idle before the model is unloaded; 0 unloads after every question
+    rerank_model_path: Path = Path("data/models/bge-reranker-v2-m3.fp16.onnx")  # relative to backend/
+
     backup_keep: int = 30  # daily backups of query_log and excluded_paths kept in backend/data/backups
 
     cors_origins: list[str] = ["http://localhost:3000"]

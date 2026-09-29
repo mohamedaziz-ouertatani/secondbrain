@@ -1,7 +1,7 @@
 import pytest
 
 KEYS = ("top_k", "candidate_k", "rrf_k", "min_score", "retrieval_mode", "llm_model",
-        "temperature", "num_ctx", "llm_keep_alive", "embed_model", "sync_auto_days")
+        "temperature", "num_ctx", "llm_keep_alive", "embed_model", "sync_auto_days", "rerank")
 
 
 @pytest.fixture
@@ -112,3 +112,19 @@ def test_routes(cfg):
     pre = client.options("/admin/settings", headers={
         "Origin": "http://localhost:3000", "Access-Control-Request-Method": "PUT"})
     assert pre.status_code == 200
+
+
+def test_reranker_is_an_on_off_retrieval_setting(cfg):
+    from app.admin.settings import Invalid, update, view
+    from app.config import get_settings
+
+    s = get_settings()
+    assert s.rerank == "on" and s.rerank_max_length == 384 and s.rerank_keep_alive == 30
+    assert str(s.rerank_model_path).replace("\\", "/") == "data/models/bge-reranker-v2-m3.fp16.onnx"
+    rows = next(g["rows"] for g in view()["groups"] if g["name"] == "Retrieval")
+    field = next(f for f in rows if f["key"] == "rerank")
+    assert field["options"] == ["off", "on"] and field["editable"]
+    update({"rerank": "off"})
+    assert local(cfg) == {"rerank": "off"} and get_settings().rerank == "off"
+    with pytest.raises(Invalid):
+        update({"rerank": "maybe"})

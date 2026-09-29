@@ -21,9 +21,12 @@ embed_batch: 16
 # Retrieval: dense (pgvector) + keyword (Postgres full-text), fused with RRF
 retrieval_mode: dense    # or hybrid; plain RRF ranked French exercise sheets above English course pages (see app.rag.compare)
 top_k: 5                 # passages sent to the LLM
-candidate_k: 20          # candidates per list before fusion
+candidate_k: 20          # candidates reranked, or taken per list before hybrid fusion
 rrf_k: 60
 min_score: 0.35          # refuse unless a passage is this close, or one passage has every keyword
+rerank: "on"             # a cross-encoder reorders the candidates before the top_k go to the model ("off": plain order)
+rerank_max_length: 384   # tokens per question+passage; 512 spills out of 4 GB of VRAM beside the LLM
+rerank_keep_alive: 30    # minutes idle before the reranker leaves the GPU
 
 # Backups: the question log and excluded files, daily, in backend/data/backups (python -m app.admin.backup)
 backup_keep: 30

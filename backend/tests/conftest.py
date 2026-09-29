@@ -9,6 +9,17 @@ BASE_URL = os.environ.get("TEST_DATABASE_URL_ADMIN", "postgresql://secondbrain:s
 TEST_DB = "secondbrain_test"
 
 
+@pytest.fixture(autouse=True)
+def no_reranker(monkeypatch):
+    """Tests run without the GPU reranker; a test that wants it sets RERANK=on and swaps in a fake scorer."""
+    from app.config import get_settings
+
+    monkeypatch.setenv("RERANK", "off")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     try:
