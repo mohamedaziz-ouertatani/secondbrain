@@ -25,7 +25,8 @@ MODES = {
 COUNTED = ("downloaded", "saved_page", "already_had", "would_download", "would_save_page", "failed")
 KEEP_EVENTS = 200
 KEEP_RUNS = 20
-SUMMARY = ("id", "mode", "course", "started_at", "finished_at", "state", "exit_code", "counts", "bytes", "error")
+SUMMARY = ("id", "mode", "course", "started_at", "finished_at", "state", "exit_code", "counts", "bytes", "error",
+           "deadlines")
 
 
 class Busy(RuntimeError):
@@ -93,7 +94,7 @@ class SyncRunner:
             )
             self.job = {"id": int(self.clock() * 1000), "mode": mode, "course": course,
                         "started_at": self.clock(), "finished_at": None, "state": "running", "exit_code": None,
-                        "counts": dict.fromkeys(COUNTED, 0), "bytes": 0, "error": None, "events": [],
+                        "counts": dict.fromkeys(COUNTED, 0), "bytes": 0, "error": None, "deadlines": None, "events": [],
                         "courses": None, "cancelled": False}
             self._reader = threading.Thread(target=self._read, args=(self._proc, self.job), daemon=True)
             self._reader.start()
@@ -119,6 +120,8 @@ class SyncRunner:
                     job["courses"] = ev.get("courses")
                 elif kind == "done":
                     job["bytes"] = ev.get("bytes", 0)
+                elif kind == "deadlines":
+                    job["deadlines"] = ev
                 elif kind == "error":
                     job["error"] = ev.get("message")
         code = proc.wait()

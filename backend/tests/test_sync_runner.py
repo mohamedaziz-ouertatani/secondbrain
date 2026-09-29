@@ -40,6 +40,8 @@ def test_run_collects_events_counts_and_history(runner):
     j = s["job"]
     assert j["state"] == "ok" and j["exit_code"] == 0
     assert j["counts"]["downloaded"] == 1 and j["counts"]["failed"] == 1 and j["bytes"] == 12288
+    assert j["deadlines"] == {"type": "deadlines", "new": 2, "updated": 0, "removed": 0}
+    assert s["runs"][0]["deadlines"] == j["deadlines"]
     assert j["courses"][1] == {"name": "Engineering Internship", "folder": None}
     assert "--json --headless" in logs(j) and "--dry-run" not in logs(j)
     assert s["runs"][0]["state"] == "ok" and "events" not in s["runs"][0]
