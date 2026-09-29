@@ -71,6 +71,29 @@ Every question you ask is kept on the server, so it survives browser clears and 
 - **Delete:** the bin button on a History row, a past card or the open answer. You get 5 seconds to undo, then the question is deleted from the database. The daily backup keeps a copy (see Backups below).
 - **Rate and label:** 👍/👎 on an answer, and **Relevant?** on each fiche (unmarked → Relevant → Not relevant). Marks save immediately. A question with at least one fiche marked relevant joins the evaluation set (see Evaluation below).
 
+## Planner
+
+Notes, to-dos and events, in **Planner** on the rail.
+- **Capture:**
+  - **Where:** the line at the top of the Planner, or press **N** on any page (**Alt+N** while typing) for a popup that starts in the open drawer.
+  - **What it understands:** one line, such as `DEVOPS TP due fri 23:59`, `exam Probability 2 12/01 9h` or `cours optim demain 9h-11h`. The reading shows under the line (kind, drawer, date) with the matched words underlined, and you can change any part before pressing Enter.
+  - **How it reads:** by rules in code, not the model. French and English dates work, days come before months (`12/01` is 12 January), and a to-do without a time is due at 23:59.
+  - **Words it knows:** a line starting with `note:` or `idea:` is always a note. Extra module nicknames go in `planner_aliases` in `config.yaml`.
+- **Kinds:**
+  - **Notes** have no date.
+  - **To-dos** have a checkbox and an optional due date.
+  - **Events** have a start, and an end or all-day.
+- **Blackboard deadlines:**
+  - Every sync imports the due dates from Blackboard's calendar as to-dos. That's all Blackboard's calendar holds: exams and class times aren't there, so type those yourself.
+  - Title and date follow Blackboard, while your ticks and notes stay yours.
+  - A deadline Blackboard drops is kept and struck through, not deleted.
+- **File into drawer:** a note stays out of your answers until you file it. Filing saves it as Markdown in `inbox/<drawer>/`, where it's indexed and cited like any other note. After that, editing it in the Planner rewrites the file.
+- **Coming up:**
+  - The desk and each drawer show overdue to-dos and the next 7 days.
+  - The rail badge counts what's overdue or due today.
+  - There are no notifications outside the app.
+- **Backups:** planner items are in the daily backup.
+
 ## Admin panel
 
 Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to open `/admin`:
