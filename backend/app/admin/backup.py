@@ -1,5 +1,5 @@
 """Backups of what a rescan can't rebuild: query_log (questions, answers, citations, labels), excluded_paths,
-and the evaluation set and its runs.
+the evaluation set and its runs, and your tag vocabulary.
 
     uv run python -m app.admin.backup                  # back up now
     uv run python -m app.admin.backup --list           # list backups
@@ -20,6 +20,7 @@ import threading
 import time
 from pathlib import Path
 
+import psycopg
 from psycopg.types.json import Jsonb
 
 from ..config import ROOT, get_settings
@@ -33,8 +34,10 @@ TABLES = {
     "excluded_paths": ("path", set()),
     "eval_questions": ("id", set()),
     "eval_runs": ("id", {"params", "metrics", "per_question"}),
+    "tags": ("id", set()),         # before tag_aliases, which point to them
+    "tag_aliases": ("id", set()),  # document_tags isn't backed up: the vocabulary pass rebuilds it
 }
-SEQUENCES = ("query_log", "eval_questions", "eval_runs")
+SEQUENCES = ("query_log", "eval_questions", "eval_runs", "tags", "tag_aliases")
 PREFIX, SUFFIX = "secondbrain-", ".jsonl.gz"
 DAY = 86_400
 _COLUMN = re.compile(r"^[a-z_]+$")
@@ -97,16 +100,20 @@ def restore(path: Path) -> dict[str, int]:
         for line in f:
             rec = json.loads(line)
             table = rec["table"]
-            key, json_cols = TABLES[table]  # KeyError on a table we don't back up: refuse the file
+            _, json_cols = TABLES[table]  # KeyError on a table we don't back up: refuse the file
             row = rec["row"]
             if not all(_COLUMN.match(c) for c in row):
                 raise ValueError(f"unexpected column name in {path.name}")
             values = {c: Jsonb(v) if c in json_cols and v is not None else v for c, v in row.items()}
             cols = ", ".join(values)
             params = ", ".join(f"%({c})s" for c in values)
-            inserted[table] += conn.execute(
-                f"INSERT INTO {table} ({cols}) VALUES ({params}) ON CONFLICT ({key}) DO NOTHING", values
-            ).rowcount
+            try:
+                with conn.transaction():  # a savepoint: one row that can't go back doesn't sink the restore
+                    inserted[table] += conn.execute(
+                        f"INSERT INTO {table} ({cols}) VALUES ({params}) ON CONFLICT DO NOTHING", values
+                    ).rowcount
+            except psycopg.errors.ForeignKeyViolation:
+                log.warning("restore: skipped a %s row whose parent isn't there", table)
         for t in SEQUENCES:  # restored ids must not be handed out again
             conn.execute(f"SELECT setval(pg_get_serial_sequence('{t}', 'id'), GREATEST((SELECT max(id) FROM {t}), 1))")
     log.info("restored from %s: %s", path.name, inserted)

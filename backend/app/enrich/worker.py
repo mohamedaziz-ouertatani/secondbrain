@@ -15,6 +15,7 @@ from ..api import jobs
 from ..config import get_settings
 from ..db import get_pool
 from ..llm import busy, ollama
+from . import vocab
 from .summarise import BadOutput, summarise
 
 log = logging.getLogger(__name__)
@@ -160,7 +161,14 @@ class Enricher:
         self._after_write(doc, ok=out is not None)
 
     def _after_write(self, doc: dict, ok: bool) -> None:
-        """Tags (stage 2) and the summary embedding (stage 3) hook in here."""
+        """Link raw tags that already have an alias; run the vocabulary pass once the module has no pending files."""
+        with get_pool().connection() as conn, conn.transaction():
+            vocab.relink(conn, doc["course"])
+            pending = conn.execute(
+                f"SELECT 1 FROM documents WHERE {PENDING} AND course IS NOT DISTINCT FROM %s::text LIMIT 1",
+                (doc["course"],)).fetchone()
+        if pending is None:
+            vocab.run(doc["course"], embed=self.embed)
 
     def _loop(self) -> None:
         while not self._stop.is_set():

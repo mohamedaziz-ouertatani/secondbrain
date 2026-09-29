@@ -286,3 +286,109 @@ def test_library_lists_files_that_could_not_be_summarised(env, monkeypatch, tmp_
     Enricher(chat=lambda m, s, temperature=0.3: {"summary": ""}, embed=fake_embed).step()
     errors = client(monkeypatch, tmp_path).get("/admin/library").json()["summary_errors"]
     assert [e["id"] for e in errors] == [a] and "missing a summary" in errors[0]["error"]
+
+
+def axis_embed(groups):
+    """Embedder where every string in the same group gets the same unit vector (cosine 1), others are orthogonal."""
+    index = {s: i for i, g in enumerate(groups) for s in g}
+
+    def embed(texts):
+        out = []
+        for t in texts:
+            v = np.zeros(1024, dtype=np.float32)
+            v[index.setdefault(t, len(index))] = 1.0  # an unknown string gets its own axis, stable within the test
+            out.append(v)
+        return out
+    return embed
+
+
+def tagged(db, path, raw_tags, course="Course0"):
+    doc_id = add_doc(db, path, course=course)
+    with db.get_pool().connection() as conn:
+        conn.execute("UPDATE documents SET raw_tags = %s, enriched_sha = sha256, enrich_status = 'ok' WHERE id = %s",
+                     (Jsonb(raw_tags), doc_id))
+    return doc_id
+
+
+def names(course="Course0"):
+    from app.enrich.vocab import list_tags
+
+    return {t["name"]: t["count"] for t in list_tags(course, all_courses=False)}
+
+
+EMBED = axis_embed([["kubernetes", "k8s", "container orchestration"], ["docker"], ["ci/cd", "continuous integration"]])
+
+
+def test_vocabulary_merges_near_duplicates_under_the_most_frequent_form(env):
+    from app.enrich import vocab
+
+    _, db = env
+    a = tagged(db, "Course0/a.md", ["kubernetes", "docker"])
+    tagged(db, "Course0/b.md", ["kubernetes", "ci/cd"])
+    tagged(db, "Course0/c.md", ["k8s", "continuous integration"])
+    r = vocab.run("Course0", embed=EMBED)
+    assert r["new_raw"] == 5 and r["new_tags"] == 3
+    assert names() == {"kubernetes": 3, "docker": 1, "ci/cd": 2}
+    assert sorted(t["name"] for t in vocab.document_tags(a)) == ["docker", "kubernetes"]
+    assert vocab.run("Course0", embed=EMBED) == {"new_raw": 0, "new_tags": 0, "removed": 0}  # idempotent
+
+
+def test_new_raw_tags_join_existing_tags_and_modules_stay_separate(env):
+    from app.enrich import vocab
+
+    _, db = env
+    tagged(db, "Course0/a.md", ["kubernetes"])
+    vocab.run("Course0", embed=EMBED)
+    tagged(db, "Course0/b.md", ["container orchestration"])
+    tagged(db, "Course1/c.md", ["kubernetes"], course="Course1")
+    vocab.run("Course0", embed=EMBED)
+    vocab.run("Course1", embed=EMBED)
+    assert names() == {"kubernetes": 2}
+    assert names("Course1") == {"kubernetes": 1}
+
+
+def test_rename_merge_delete_survive_later_passes(env):
+    from app.enrich import vocab
+
+    _, db = env
+    tagged(db, "Course0/a.md", ["kubernetes", "docker"])
+    tagged(db, "Course0/b.md", ["ci/cd"])
+    vocab.run("Course0", embed=EMBED)
+    ids = {t["name"]: t["id"] for t in vocab.list_tags("Course0", all_courses=False)}
+
+    assert vocab.rename(ids["kubernetes"], "  Kubernetes (K8s) ")["name"] == "kubernetes (k8s)"
+    with pytest.raises(vocab.Clash):
+        vocab.rename(ids["docker"], "kubernetes (k8s)")
+    vocab.merge(ids["docker"], ids["kubernetes"])
+    assert vocab.delete(ids["ci/cd"]) is True
+
+    tagged(db, "Course0/c.md", ["docker", "ci/cd"])  # raw forms you merged away and deleted
+    vocab.run("Course0", embed=EMBED)
+    assert names() == {"kubernetes (k8s)": 2}
+
+
+def test_unused_tags_are_removed_unless_you_named_them(env):
+    from app.enrich import vocab
+
+    _, db = env
+    a = tagged(db, "Course0/a.md", ["docker"])
+    b = tagged(db, "Course0/b.md", ["ci/cd"])
+    vocab.run("Course0", embed=EMBED)
+    vocab.rename(next(t["id"] for t in vocab.list_tags("Course0", all_courses=False) if t["name"] == "ci/cd"), "ci")
+    with db.get_pool().connection() as conn:
+        conn.execute("DELETE FROM documents WHERE id = ANY(%s)", ([a, b],))
+    assert vocab.run("Course0", embed=EMBED)["removed"] == 1
+    assert names() == {"ci": 0}
+
+
+def test_worker_links_known_tags_at_once_and_runs_the_pass_when_the_module_is_done(env):
+    from app.enrich.worker import Enricher
+
+    _, db = env
+    add_doc(db, "Course0/a.md")
+    add_doc(db, "Course0/b.md")
+    e = Enricher(chat=good_chat, embed=EMBED)
+    e.step()
+    assert names() == {}  # b is still pending: no pass yet
+    e.step()
+    assert names() == {"optimization": 2, "stochastic gd": 2}
