@@ -2583,3 +2583,163 @@ td {
   margin: 0.4rem 0 0;
   font-size: 0.78rem;
 }
+
+/* ---- planner: page, agenda, month ---------------------------------------- */
+
+.plan-card {
+  padding: 0.9rem 1rem 1rem;
+}
+
+.capture-card {
+  margin-bottom: 1rem;
+}
+
+.plan-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.plan-card-head h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.plan-card-head .search {
+  margin-left: auto;
+}
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .planner-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.plan-empty {
+  margin: 0.4rem 0;
+}
+
+.agenda-day + .agenda-day {
+  margin-top: 0.8rem;
+}
+
+.agenda-day.overdue .stack-label {
+  color: var(--bad);
+}
+
+.plan-done summary {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.month-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--rule-blue);
+  border-left: 1px solid var(--rule-blue);
+}
+
+.month-weekday {
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  border-right: 1px solid var(--rule-blue);
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.month-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 5.2rem;
+  padding: 0.2rem;
+  border-right: 1px solid var(--rule-blue);
+  border-bottom: 1px solid var(--rule-blue);
+  min-width: 0;
+}
+
+.month-cell.outside {
+  background: var(--card-2);
+}
+
+.month-cell.outside .month-day {
+  color: var(--muted);
+}
+
+.month-day {
+  align-self: flex-end;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.month-cell.today .month-day {
+  background: var(--rule-red);
+  color: #fff;
+  font-weight: 600;
+}
+
+.month-chip {
+  display: block;
+  width: 100%;
+  padding: 1px 4px;
+  border: 0;
+  border-left: 3px solid var(--tint, var(--tint-other));
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--tint, var(--tint-other)) 35%, var(--card));
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.month-chip.done {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.month-more {
+  align-self: flex-start;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
