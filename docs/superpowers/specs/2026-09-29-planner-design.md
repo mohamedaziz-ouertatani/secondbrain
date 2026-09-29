@@ -18,7 +18,7 @@ Second Brain holds the semester's material but not the semester's time. Quick th
 - **Capture:**
   - a capture box on the Planner page;
   - a global popup (`N` outside text fields, `Alt+N` anywhere);
-  - one-line parsing, done in code with `dateparser`, never by the LLM. You always see the reading and confirm it before saving.
+  - one-line parsing, done by explicit rules in code, never by the LLM. You always see the reading and confirm it before saving.
 - **Reminders are in the app only:** a Coming-up strip on the desk and in each drawer, the Planner calendar, and a rail badge. No notifications and no feeds.
 - **Storage is Postgres,** in the existing backend. This was chosen over Markdown files with front-matter (date queries and the Blackboard upsert become file bookkeeping) and over a CalDAV server (a new service, and notes don't fit CalDAV).
 - **The calendar is hand-built** (agenda plus month grid) in the DESIGN.md language, rather than FullCalendar.
@@ -102,23 +102,35 @@ The frontend's module list comes from the existing `/courses`. The parser reads 
 
 ### Parsing (`parse.py`)
 
-`dateparser` is added to the backend dependencies. It works offline.
+The parser uses explicit rules and has no new dependency. `dateparser` was tried on 2026-09-29 and rejected:
+- it read module numbers as dates ("Probability 2 12/01 9h" became 22:00 today, and "proba 2 lundi" became 2 September);
+- it got French times wrong ("demain 9h-11h" became 02:00).
 
-1. **Module:** the longest case- and accent-insensitive match of a known module name, or of an alias from a small built-in map ("devops", "proba", "proba 2", "optim", "deep learning", "big data", "aws", "blockchain", "csr", "sdg"). The aliases can be extended with `planner_aliases` in `config.yaml`. With no match, the `course` passed in (the open drawer) is used.
-2. **Kind:**
-   - Event words → event: `exam`, `examen`, `DS`, `test`, `cours`, `class`, `lecture`, `réunion`, `meeting`, `soutenance`.
-   - Due words → to-do: `due`, `deadline`, `rendre`, `rendu`, `pour le`, `avant`, `before`, `by`, `TP`, `todo`, `à faire`.
-   - A date with no kind word → to-do. No date → note. A leading `note:` or `idea:` forces a note.
-3. **Date and time:** `dateparser.search.search_dates`, with `languages=['fr','en']`, `PREFER_DATES_FROM='future'`, `RELATIVE_BASE=now` and the request's `tz`.
-   - A lone time (`9h`, `14:30`, `23h59`) sets the time on the found date.
-   - A range (`9h-11h`, `9h à 11h`) sets `ends_at` on events.
-   - A to-do with a date but no time is due at 23:59 local.
-   - An event with a date but no time is all-day.
-   - Numeric dates are day-first (`12/01` = 12 January).
-4. **Title:** the text with the module, date and time spans removed, and whitespace collapsed. Kind words stay, because "DEVOPS TP" reads better than "DEVOPS". If nothing is left, the original text is used.
-5. **`matched`:** the character spans and their roles (`course`, `date`, `time`, `kind`), so the UI can underline them.
+Every rule below works on a case- and accent-folded copy of the text with the same length, so matched spans map back to the original.
 
-Arabic is out of scope unless adding `'ar'` passes the test table without breaking any French or English case.
+1. **Module:** the longest word-bounded match of a known module name (an inbox folder) or of an alias. The built-in aliases are "proba", "proba 2", "probability", "optim", "optimisation", "optimization", "deep learning", "big data", "aws", "blockchain", "ds project" and "projet ds", and can be extended with `planner_aliases` in `config.yaml`. An alias only counts if its module exists. With no match, the `course` passed in (the open drawer) is used.
+2. **Date:** the first match among:
+   - `dd/mm` or `dd/mm/yy(yy)`, day first;
+   - `18 oct`, `le 1er janvier`, `3 october 2026` (French and English month names and abbreviations);
+   - `october 3`;
+   - a weekday name (`lundi`…`dimanche`, `mon`/`monday`…), optionally with `next`/`this`/`ce` before it or `prochain`/`next` after it;
+   - `aujourd'hui`/`today`, `demain`/`tomorrow`, `après-demain`.
+
+   A date without a year is the next one on or after today. A weekday is the next one on or after today. An impossible date (`31/02`) counts as no date.
+3. **Time:** `9h`, `14h30`, `23:59`, `9am`, `2:30 pm`. Two times joined by `-`, `–`, `à`, `au` or `to` make a range. A time with no date is today, or tomorrow if that time has passed.
+4. **Kind:**
+   - A leading `note:`, `idea:` or `idée:` → note, and dates are ignored.
+   - Otherwise, a date or time plus an event word → event. The event words are `exam`, `examen`, `DS`, `test`, `cours`, `class`, `lecture`, `réunion`, `meeting`, `soutenance` and `séance`.
+   - Any other date or time → to-do.
+   - No date and no time → to-do (undated) if a to-do word is present, otherwise a note. The to-do words are `due`, `deadline`, `rendre`, `rendu`, `avant`, `before`, `by`, `TP`, `todo`, `to-do` and `à faire`.
+5. **When:**
+   - A to-do is due at its time, or at 23:59 local.
+   - An event with a time starts then, and a range sets `ends_at`.
+   - An event with only a date is all-day, stored at local midnight.
+6. **Title:** the text with the date and time spans removed. Connector words left dangling at the end (`le`, `on`, `at`, `à`, `au`, `by`, `pour`, `avant`, `before`, `due`, `for`) are trimmed. The module name stays: "exam Probability 2" reads better than "exam". If nothing is left, the original text is used.
+7. **`matched`:** the character spans and their roles (`course`, `kind`, `date`, `time`), so the UI can underline them.
+
+Arabic is out of scope.
 
 ## Blackboard import
 
@@ -177,7 +189,7 @@ Arabic is out of scope unless adding `'ar'` passes the test table without breaki
 ## Testing
 
 Backend, with pytest and the existing `env` fixture:
-- `test_planner_parse.py`: a table of about 30 French and English one-liners with a fixed `now` and `tz = Africa/Tunis`. It asserts kind, course, `starts_at`, `ends_at` and `all_day`. No database.
+- `test_planner_parse.py`: a table of about 25 French and English one-liners with a fixed `now` and `tz = Africa/Tunis`. It asserts kind, course, `starts_at`, `ends_at` and `all_day`. No database.
 - `test_planner_store.py`: CHECK rules, the range query, `upcoming` (overdue, window, done and removed excluded) and search.
 - `test_planner_api.py`: routes, the 409 on Blackboard fields, the 422 messages, File into drawer (writes the file, a name clash gets ` (2)`, an edit rewrites the file, a missing file clears `filed_path`).
 - `test_planner_blackboard.py`: with `fake_sync`. It covers first import, a re-sync that updates title and date but keeps `done_at` and `body`, `removed_at` set and then cleared on return, unmapped courses skipped, a failure that leaves the sync's exit code unchanged, and dry-run writing nothing.
@@ -206,5 +218,5 @@ Built on the `planner` branch. Each stage ends with its tests passing and a comm
 - Notifications of any kind (browser, Windows toast).
 - An `.ics` feed or import.
 - LLM-based parsing.
-- Arabic parsing, unless it passes the tests (see Parsing).
+- Arabic parsing.
 - Two-way sync to Blackboard. Ticking an imported to-do never touches Blackboard.
