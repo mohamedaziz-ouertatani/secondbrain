@@ -2,8 +2,9 @@
 
 import { ExternalLink, RefreshCw, Search } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { API_URL, callNumber, type DocumentRow, fileUrl, kindOf, partsCount, readerUrl } from "@/lib/api";
+import { API_URL, callNumber, type DocumentRow, type Tag, fileUrl, kindOf, partsCount, readerUrl } from "@/lib/api";
 import { folderOf, tintVar, unitOf } from "@/lib/modules";
 import { ago, isNew, markSeen, newestFiled } from "@/lib/seen";
 import { useDrawer, useLibrary } from "@/lib/useLibrary";
@@ -28,6 +29,17 @@ function DrawerView() {
   const [query, setQuery] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanNote, setScanNote] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState(false);
+  const params = useSearchParams();
+  const router = useRouter();
+  const picked = params.getAll("tag").map(Number).filter(Number.isFinite);
+  const setPicked = (ids: number[]) => {
+    const next = new URLSearchParams(params);
+    next.delete("tag");
+    ids.forEach((id) => next.append("tag", String(id)));
+    const qs = next.toString();
+    router.replace(`/documents${qs ? `?${qs}` : ""}`, { scroll: false });
+  };
 
   async function rescan() {
     setScanning(true);
@@ -52,7 +64,8 @@ function DrawerView() {
   const rows = (docs ?? []).filter(
     (d) =>
       (drawer === null || d.course === drawer) &&
-      (!q || `${d.title} ${d.path} ${d.summary ?? ""} ${(d.concepts ?? []).join(" ")}`.toLowerCase().includes(q)),
+      (!q || `${d.title} ${d.path} ${d.summary ?? ""} ${(d.concepts ?? []).join(" ")}`.toLowerCase().includes(q)) &&
+      picked.every((id) => d.tags.some((t) => t.id === id)),
   );
   const groups = new Map<string, DocumentRow[]>();
   for (const d of rows) {
@@ -61,6 +74,32 @@ function DrawerView() {
     groups.set(key, [...(groups.get(key) ?? []), d]);
   }
   const total = (docs ?? []).filter((d) => drawer === null || d.course === drawer);
+  const tagCounts = new Map<number, { tag: Tag; course: string | null; n: number }>();
+  for (const d of total)
+    for (const t of d.tags) {
+      const e = tagCounts.get(t.id) ?? { tag: t, course: d.course, n: 0 };
+      e.n += 1;
+      tagCounts.set(t.id, e);
+    }
+  // most tags belong to a single file; only shared ones (and any picked) filter usefully, the rest wait behind "more"
+  const allTagList = [...tagCounts.values()].sort((a, b) => b.n - a.n || a.tag.name.localeCompare(b.tag.name));
+  const tagList = allTags ? allTagList : allTagList.filter((t) => t.n >= 2 || picked.includes(t.tag.id));
+  const hiddenTags = allTagList.length - tagList.length;
+  const chip = ({ tag, n }: { tag: Tag; n: number }) => {
+    const on = picked.includes(tag.id);
+    return (
+      <button
+        key={tag.id}
+        type="button"
+        className={`tag-chip${on ? " on" : ""}`}
+        aria-pressed={on}
+        onClick={() => setPicked(on ? picked.filter((id) => id !== tag.id) : [...picked, tag.id])}
+        dir="auto"
+      >
+        {tag.name} <span className="tag-count">{n}</span>
+      </button>
+    );
+  };
 
   return (
     <div className="drawer-view" style={{ "--tint": tintVar(drawer) } as React.CSSProperties}>
@@ -92,6 +131,29 @@ function DrawerView() {
         </div>
       </header>
 
+      {allTagList.length > 0 && (
+        <nav className="tag-bar" aria-label="Filter by topic">
+          {drawer === null
+            ? [...new Set(tagList.map((t) => t.course ?? "Loose notes"))].map((course) => (
+                <div key={course} className="tag-group">
+                  <span className="tag-group-name">{course}</span>
+                  {tagList.filter((t) => (t.course ?? "Loose notes") === course).map(chip)}
+                </div>
+              ))
+            : tagList.map(chip)}
+          {(hiddenTags > 0 || allTags) && (
+            <button type="button" className="quiet-btn" aria-expanded={allTags} onClick={() => setAllTags(!allTags)}>
+              {allTags ? "Fewer topics" : `+${hiddenTags} more`}
+            </button>
+          )}
+          {picked.length > 0 && (
+            <button type="button" className="quiet-btn" onClick={() => setPicked([])}>
+              Clear topics
+            </button>
+          )}
+        </nav>
+      )}
+
       {scanNote && <p className="notice">{scanNote}</p>}
       {error && <p className="notice bad">{error} Start it with uvicorn, then reload.</p>}
 
@@ -104,7 +166,7 @@ function DrawerView() {
           </p>
         </section>
       )}
-      {docs && total.length > 0 && rows.length === 0 && <p className="notice">No fiche matches “{query}”.</p>}
+      {docs && total.length > 0 && rows.length === 0 && <p className="notice">No fiche matches {query ? `“${query}”` : "these topics"}.</p>}
 
       {rows.length > 0 && (
         <div className="drawer-table" role="table" aria-label={`Fiches in ${drawer ?? "all drawers"}`}>

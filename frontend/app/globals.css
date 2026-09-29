@@ -2265,6 +2265,65 @@ td {
   font-size: 0.85rem;
 }
 
+/* ---- tags ----------------------------------------------------------------------------- */
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex-basis: 100%;
+}
+
+.tag-group-name {
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 9rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tag-chip:hover {
+  border-color: var(--primary);
+}
+
+.tag-chip.on {
+  background: var(--sel);
+  border-color: var(--primary);
+}
+
+.tag-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+}
+
 /* ---- admin evaluation ------------------------------------------------------------------ */
 .eval-table caption {
   caption-side: bottom;

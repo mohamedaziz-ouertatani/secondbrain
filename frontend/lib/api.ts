@@ -46,7 +46,11 @@ export type DocumentRow = {
   concepts: string[] | null;
   enrich_status: EnrichStatus;
   enrich_error: string | null;
+  tags: Tag[];
 };
+
+export type Tag = { id: number; name: string };
+export type TagRow = Tag & { course: string | null; count: number; raws: string[]; user_named: boolean };
 
 export type EnrichStatus = "pending" | "ok" | "error" | "skipped";
 

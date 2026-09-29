@@ -1,6 +1,8 @@
+import Link from "next/link";
 import type { DocumentRow } from "@/lib/api";
+import { drawerHref } from "@/lib/useLibrary";
 
-type Summarised = Pick<DocumentRow, "summary" | "concepts" | "enrich_status" | "enrich_error">;
+type Summarised = Pick<DocumentRow, "summary" | "concepts" | "enrich_status" | "enrich_error" | "tags" | "course">;
 
 /** The reader's "what this file covers": generated summary and key concepts, labelled as generated. */
 export function DocSummary({ doc }: { doc: Summarised }) {
@@ -24,6 +26,20 @@ export function DocSummary({ doc }: { doc: Summarised }) {
             </li>
           ))}
         </ul>
+      )}
+      {doc.tags.length > 0 && (
+        <p className="doc-tags">
+          {doc.tags.map((t) => (
+            <Link
+              key={t.id}
+              className="tag-chip"
+              href={`${drawerHref("/documents", doc.course)}${doc.course ? "&" : "?"}tag=${t.id}`}
+              dir="auto"
+            >
+              {t.name}
+            </Link>
+          ))}
+        </p>
       )}
       {doc.enrich_status === "pending" && <p className="muted">The file changed; a new summary is on its way.</p>}
     </section>

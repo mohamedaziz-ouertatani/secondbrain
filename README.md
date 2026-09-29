@@ -81,15 +81,24 @@ Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to 
 - **Blackboard sync:** Sync now, Sync one module, Preview and Course mapping, with live progress, Cancel and recent runs. See Syncing from Blackboard below.
 - **Settings:** retrieval mode, passages per answer, refusal threshold, model, temperature, context window and keep-alive. They're saved to `config.local.yaml` and apply from the next question, with no restart. See Configuration below.
 
-## Summaries and concepts
+## Summaries, concepts and tags
 
-After a file is indexed, a background job has the local model write a short summary and 5–10 key concepts for it:
+After a file is indexed, a background job has the local model write a short summary, 5–10 key concepts and 3–8 topic tags for it:
 - **Library:** the summary shows as one line under each file, and the filter box also searches summaries and concepts.
 - **Reader:** the full summary and concepts sit at the top, marked **generated** because a 4B model can get them wrong.
 - **Timing:** the job pauses while you're asking a question and during rescans, re-indexes and evaluation runs, so answers aren't slowed. Long files are summarised in parts, then combined. The first pass over the whole library takes a while; after that, only new and changed files are summarised.
 - **Admin:**
   - the Status card shows progress, with **Pause** and **Resume**;
   - Library has **Re-enrich** per module, and lists the files that couldn't be summarised.
+- **Tags:**
+  - Similar tags in a module are merged into one (e.g. "ci-cd" into "ci/cd"), by bge-m3 similarity at `tag_merge_threshold` (0.85; at 0.80 unrelated tags such as "configuration" and "setup" merged).
+  - A module's tags are merged once all its files are summarised.
+  - The library's tag bar filters by topic. Picking more than one narrows the list further. Tags used by a single file sit behind "+N more", since about two-thirds of tags belong to one file.
+  - Tags in the reader link to that filter.
+- **Admin Tags:**
+  - rename, merge two, or delete a tag, per module;
+  - your edits are remembered, so a deleted tag doesn't come back and merged forms stay merged;
+  - tags and your edits are in the daily backup; summaries aren't, because they can be regenerated.
 - **Turning it off:** set `enrich_enabled: false` in `config.yaml`.
 
 ## Syncing from Blackboard

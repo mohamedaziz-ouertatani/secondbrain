@@ -36,3 +36,7 @@ blackboard_browser: msedge
 #   "Big Data Analytics - 5DS2": "Big Data Analytics"
 blackboard_course_map: {}
 sync_auto_days: 7        # the backend syncs on its own this often (days); 0 = never. Also editable in /admin
+
+# Summaries and tags (app.enrich)
+# 0.80 merged unrelated tags (configuration/setup, software development/architecture); 0.90 merged almost nothing
+tag_merge_threshold: 0.85
