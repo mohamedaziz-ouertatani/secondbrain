@@ -149,6 +149,10 @@ Retrieval has two modes, set with `retrieval_mode`:
 - `dense` (default): vector search only.
 - `hybrid`: vector search plus Postgres full-text search, fused with RRF. It's off by default because on French questions about English course pages it ranked the French exercise sheets above the course notes. It's meant to feed a reranker later.
 
+Two experiments with summaries are off by default, and editable in the admin panel. Neither helped in the evaluation (see Evaluation):
+- `doc_boost` (0): ranks passages higher when their file's summary matches the question.
+- `doc_context` (off): starts each passage the model reads with its file's summary.
+
 To see what a change does to real questions, press **Compare** under Insights in the admin panel, or replay the query log from the command line:
 
 ```bash
@@ -217,6 +221,24 @@ Every run is saved with the settings it used, so you can compare runs before and
 
 The full run (dense): citations valid 94%, cited the right page 68%, median answer 6.7 s.
 
+**Summary experiments** (2026-09-29, the same 137 generated questions, dense retrieval). The summary boost adds `doc_boost` × the question's similarity to the file summary to each passage's score:
+
+| doc_boost | recall@1 | recall@5 | MRR | EN recall@5 (119) | FR recall@5 (18) |
+|---|---|---|---|---|---|
+| 0 | 44.5% | 83.9% | 0.617 | 83.2% | 88.9% |
+| 0.1 | 43.8% | 84.7% | 0.610 | 84.0% | 88.9% |
+| 0.2 | 44.5% | 85.4% | 0.619 | 84.9% | 88.9% |
+| 0.3 | 45.3% | 83.9% | 0.625 | 84.0% | 83.3% |
+
+The best value, 0.2, puts the right page in the top 5 for 2 more questions out of 137, which is within noise.
+
+File context in prompts (`doc_context`), in two full runs off vs on:
+- citations valid: 95% vs 94%;
+- cited the right page: 69% vs 70%;
+- median answer: 7.0 s vs 8.9 s.
+
+**Decision:** both stay off. Neither changes answers beyond noise, and file context makes answers 28% slower. Summaries earn their place in browsing and filtering, not in ranking. The right page is already in the top 20 for 96% of questions, so a reranker remains the better lead.
+
 ## Tests
 
 ```bash
@@ -228,6 +250,6 @@ Database tests use a separate `secondbrain_test` database on the compose Postgre
 ## Roadmap
 
 - **v1 (done):** watch-folder ingestion and cited Q&A, Blackboard sync, OCR of images in PDFs, slides and Word files.
-- **v2:** hybrid search (built, off by default; dense wins in the evaluation) and the bge-reranker-v2-m3 reranker. The reranker is parked: it takes 12–23 s per question on the CPU, but the evaluation shows room for it (the right page is in the top 20 for 96% of questions, first for 45%), so GPU and ONNX options are next. Also document tags/summaries.
+- **v2:** hybrid search (built, off by default; dense wins in the evaluation) and the bge-reranker-v2-m3 reranker. The reranker is parked: it takes 12–23 s per question on the CPU, but the evaluation shows room for it (the right page is in the top 20 for 96% of questions, first for 45%), so GPU and ONNX options are next. Document summaries, concepts and tags (done; they don't help ranking, see Evaluation).
 - **v3:** chat history (done), the admin panel (done: status, library, settings, insights, Blackboard sync, evaluation), daily backups (done), related notes and flashcards.
 - **v4:** the evaluation set (done: generated and labelled questions, retrieval and full runs), and a Chrome extension to save from Blackboard.
