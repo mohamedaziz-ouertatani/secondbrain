@@ -17,6 +17,7 @@ from ..llm import ollama
 from ..rag import rerank
 from ..rag.answer import ask
 from ..rag.history import UNSET, delete_history, get_history, list_history, set_labels
+from ..sync.ultra_pages import IMAGE_TYPES
 from .jobs import exclusive
 
 router = APIRouter()
@@ -146,6 +147,17 @@ def document_page_image(doc_id: int, page: int) -> Response:
         zoom = PAGE_WIDTH_PX / pg.rect.width
         png = pg.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False).tobytes("png")
     return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=3600"})
+
+
+@router.get("/documents/{doc_id}/assets/{rel:path}")
+def document_asset(doc_id: int, rel: str) -> FileResponse:
+    """An image a Markdown note links to, found relative to the note; never outside the inbox."""
+    _, path = _document_file(doc_id)
+    target = (path.parent / rel).resolve()
+    mime = IMAGE_TYPES.get(target.suffix.lower())
+    if not mime or not target.is_relative_to(get_settings().inbox) or not target.is_file():
+        raise HTTPException(404, "image not found")
+    return FileResponse(target, media_type=mime, headers={"Cache-Control": "private, max-age=3600"})
 
 
 @router.get("/files/{doc_id}")

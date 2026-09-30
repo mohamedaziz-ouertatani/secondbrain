@@ -147,7 +147,9 @@ def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, cou
         # Teachers reuse titles like "Summary..." per section, so name notes with their section too.
         clean = title.strip().rstrip(".…").strip() or title
         heading = f"{clean} — {parent[-1]}" if parent else clean
-        note, embedded = ultra_pages.convert(item["body"], heading, breadcrumb=[p for p in (course_name, *parent) if p])
+        assets = safe_segment(title)  # where plan_course saves the embedded files
+        note, embedded = ultra_pages.convert(item["body"], heading, breadcrumb=[p for p in (course_name, *parent) if p],
+                                             image_path=lambda name: f"{assets}/{safe_segment(name, 120)}")
         modified = item.get("modified", "")
         if note:
             yield RemoteFile(course_id, item["id"], "page", parent, f"{safe_segment(clean)}.md", modified, text=note)
@@ -155,7 +157,7 @@ def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, cou
         for e in embedded:
             if urlsplit(e.url).netloc != host:  # only files hosted on Blackboard itself
                 continue
-            if readable(e.name):
+            if readable(e.name) or ultra_pages.is_image(e.name):  # images: shown in the note
                 yield RemoteFile(course_id, item["id"], e.key, parent + [title], e.name, modified, url=e.url)
             else:
                 skip(e.name)
@@ -212,11 +214,13 @@ def plan_course(files: list[RemoteFile], module_dir: Path, state: dict, inbox: P
         if prev:
             target = inbox / prev["path"]
             if prev.get("modified") == f.modified:
-                if target.exists():
-                    plan.unchanged += 1
-                else:
+                if not target.exists():
                     plan.deleted_locally += 1  # you removed it; respect that
-                continue
+                    continue
+                # A page note is rebuilt every run: keep it unless the conversion itself changed.
+                if f.text is None or target.read_bytes() == f.text.encode("utf-8"):
+                    plan.unchanged += 1
+                    continue
             plan.download.append((f, target, False))  # changed on Blackboard: overwrite in place
             continue
         target = module_dir.joinpath(*(safe_segment(s) for s in f.folders), safe_segment(f.file_name, 120))

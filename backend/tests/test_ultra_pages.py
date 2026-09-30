@@ -53,3 +53,12 @@ def test_embedded_files_keyed_stably():
 def test_link_only_page_gives_no_note():
     note, files = convert(f'<p><a href="https://esprit.blackboard.com/bbcswebdav/xid-5_1" data-bbfile="{PDF_META}">x</a></p>', "Série 1")
     assert note is None and len(files) == 1
+
+
+def test_embedded_image_links_to_its_local_copy():
+    note, files = convert(BODY, "t", image_path=lambda n: f"Loi exponentielle/{n}")
+    assert "![fig1.png](<Loi exponentielle/fig1.png>)" in note
+    assert "[corr s1.pdf]" in note  # other files stay references
+    assert files[1].name == "fig1.png"
+    note, _ = convert(BODY, "t")  # nowhere to put it: a plain reference, as before
+    assert "[fig1.png]" in note and "![" not in note

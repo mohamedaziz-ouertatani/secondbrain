@@ -1546,6 +1546,21 @@ td {
   color: var(--muted);
 }
 
+/* A picture from a note: never wider than the column, framed like a rendered page. */
+.note-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.5rem 0 0.9rem;
+  border: 1px solid var(--rule-blue);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.img-missing {
+  color: var(--muted);
+}
+
 .reader-skeleton {
   max-width: 60ch;
 }

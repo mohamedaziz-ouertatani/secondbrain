@@ -126,7 +126,7 @@ After a file is indexed, a background job has the local model write a short summ
 
 ## Syncing from Blackboard
 
-The sync downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Everything goes into the matching `inbox/<module>/` folder.
+The sync downloads your course files and saves the text of Ultra pages as Markdown notes, with formulas kept as LaTeX. Pictures in a page (PNG, JPEG, GIF, WebP) are saved in a folder beside its note and shown in the reader; any Markdown note in the inbox can show pictures it links by a relative path the same way. Everything goes into the matching `inbox/<module>/` folder.
 
 ### From the admin panel
 

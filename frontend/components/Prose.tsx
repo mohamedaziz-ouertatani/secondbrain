@@ -6,8 +6,9 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { noteAssetUrl } from "@/lib/api";
 import { rehypeClaims } from "@/lib/claims";
-import { normaliseMath, prepareAnswer } from "@/lib/markdown";
+import { normaliseMath, prepareAnswer, relativeImagePath } from "@/lib/markdown";
 
 type CiteProps = {
   /** Citation numbers that resolve to a fiche; others render as plain numerals. */
@@ -100,8 +101,11 @@ export function AnswerProse({ text, cite }: { text: string; cite: CiteProps }) {
   );
 }
 
-/** Synced notes and passages: Markdown with LaTeX, links open outside. */
-export function NoteProse({ text }: { text: string }) {
+/**
+ * Synced notes and passages: Markdown with LaTeX, links open outside. With `docId`, pictures the
+ * note links by a relative path (saved beside it) are shown.
+ */
+export function NoteProse({ text, docId }: { text: string; docId?: number }) {
   return (
     <ReactMarkdown
       remarkPlugins={REMARK}
@@ -119,6 +123,18 @@ export function NoteProse({ text }: { text: string }) {
             <table>{children}</table>
           </div>
         ),
+        img: ({ src, alt }) => {
+          const rel = typeof src === "string" ? relativeImagePath(src) : null;
+          const url =
+            typeof src === "string" && /^https?:/i.test(src)
+              ? src
+              : rel !== null && docId !== undefined
+                ? noteAssetUrl(docId, rel)
+                : null;
+          if (!url) return alt ? <span className="img-missing">[{alt}]</span> : null;
+          // eslint-disable-next-line @next/next/no-img-element -- served by the API, not Next's image pipeline
+          return <img className="note-image" src={url} alt={alt ?? ""} loading="lazy" />;
+        },
       }}
     >
       {normaliseMath(text)}
