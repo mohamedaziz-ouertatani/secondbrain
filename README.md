@@ -59,7 +59,7 @@ The backend watches the folder:
   - PDF pages with fewer than 25 words and an image (diagram-heavy slides exported to PDF);
   - pictures of at least 300×150 px in slide decks and Word files, such as screenshots of terminals and tools. Pictures repeated in a file, like template logos, are skipped.
 
-  The OCR text joins its own page, slide or section, so citations still point to the right place. Lines that don't read like words are dropped. Fiches from OCR text carry an **OCR** tag, because recognition can make mistakes. Without the language data, OCR is off, and the admin Status card says so.
+  The OCR text joins its own page, slide or section, so citations still point to the right place. Lines that don't read like words are dropped. Fiches from OCR text carry an **OCR** tag, because recognition can make mistakes. Without the language data, OCR is off, and the admin System details say so.
 - OCR makes indexing slower: re-reading the whole library took about 12 minutes, most of it on slide screenshots. A screenshot-heavy deck takes a while to appear after a sync.
 - Arabic OCR is off by default, because mixing it in makes French and English worse. For Arabic slides, set `ocr_languages: eng+fra+ara` in `config.yaml`.
 
@@ -96,13 +96,13 @@ Notes, to-dos and events, in **Planner** on the rail.
 
 ## Admin panel
 
-Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to open `/admin`:
-- **Status:** database, Ollama and models, how much of the LLM is on the GPU and when it unloads, VRAM used, recent answer times, index size, OCR, and the last backup (with **Back up now**).
-- **Evaluation:** generate a question set, run an evaluation, and compare runs. See Evaluation below.
-- **Insights:** over 7 days, 30 days or all time, the number of questions, refusals, invalid citations and answer times. Also a daily trend, counts per module, the refused, invalid and slowest questions (each opens on the desk), and a dense vs hybrid comparison of your recent questions.
-- **Library:** counts per module, files that couldn't be read, **Rescan inbox**, and **Re-index** a module or file even if unchanged. **Exclude** keeps a file on disk but out of your answers, and **Include** brings it back.
-- **Blackboard sync:** Sync now, Sync one module, Preview and Course mapping, with live progress, Cancel and recent runs. See Syncing from Blackboard below.
-- **Settings:** retrieval mode, passages per answer, refusal threshold, model, temperature, context window and keep-alive. They're saved to `config.local.yaml` and apply from the next question, with no restart. See Configuration below.
+Click the status line at the foot of the rail ("Ready · qwen3:4b-instruct") to open `/admin`. It has four tabs; a yellow number on a tab counts the problems waiting there.
+- **Overview:** what needs attention (services down, a Blackboard login or failed sync, a sync or backup that's overdue, files that couldn't be read, and too many invalid citations or refusals in the last 7 days), each linked to where it's fixed. Then the everyday actions (**Sync now**, **Back up now**, **Rescan inbox**, **Pause summaries**), five at-a-glance readings, and the system details: model and GPU share, reranker, VRAM, answer times, index, OCR and summaries.
+- **Library:** counts per module, files that couldn't be read, **Re-index**, **Re-enrich**, **Exclude** and **Include**; tags and the vocabulary pass; and the Blackboard sync. See Syncing from Blackboard below.
+- **Quality:** insights over 7 days, 30 days or all time (questions, refusals, invalid citations, answer times, the trend, per module, the problem questions, dense vs hybrid), and the evaluation. See Evaluation below.
+- **Settings:** retrieval and answer settings, saved to `config.local.yaml`, applied from the next question with no restart. See Configuration below.
+
+Every setting, measure and action says what it does, with a "How it works" note for the details.
 
 ## Summaries, concepts and tags
 
@@ -111,7 +111,7 @@ After a file is indexed, a background job has the local model write a short summ
 - **Reader:** the full summary and concepts sit at the top, marked **generated** because a 4B model can get them wrong.
 - **Timing:** the job pauses while you're asking a question and during rescans, re-indexes and evaluation runs, so answers aren't slowed. Long files are summarised in parts, then combined. The first pass over the whole library takes a while; after that, only new and changed files are summarised.
 - **Admin:**
-  - the Status card shows progress, with **Pause** and **Resume**;
+  - the admin Overview shows progress under System details, with **Pause summaries** and **Resume summaries** among the everyday actions;
   - Library has **Re-enrich** per module, and lists the files that couldn't be summarised.
 - **Tags:**
   - Similar tags in a module are merged into one (e.g. "ci-cd" into "ci/cd"), by bge-m3 similarity at `tag_merge_threshold` (0.85; at 0.80 unrelated tags such as "configuration" and "setup" merged).
@@ -273,7 +273,7 @@ File context in prompts (`doc_context`), in two full runs off vs on:
 `bge-reranker-v2-m3`, exported to fp16 ONNX and run with ONNX Runtime on DirectML, reorders the 20 best dense candidates before the top 5 go to the model. It loads on the first question (a few seconds) and leaves the GPU after 30 idle minutes.
 
 - **Refusals are unchanged:** the cosine `min_score` gate decides whether to answer. Each question's best reranker score is logged (`params.top_rerank_score` in the query log) so that a refusal gate can be tuned on real questions later.
-- **It never breaks a question:** if the model file is missing, DirectML isn't available (it's Windows-only), or scoring fails, retrieval uses the plain order. The admin Status card and `/health` say why.
+- **It never breaks a question:** if the model file is missing, DirectML isn't available (it's Windows-only), or scoring fails, retrieval uses the plain order. The admin System details and `/health` say why.
 - **The model file** is `backend/data/models/bge-reranker-v2-m3.fp16.onnx` (1.1 GB, not in Git). To build it, which needs about 200 MB of CPU PyTorch in a separate dependency group and the 2.2 GB model from Hugging Face:
 
 ```bash
