@@ -49,7 +49,7 @@ export function GlanceTiles() {
   return (
     <section className="glance" aria-label="At a glance">
       {tiles.map((t) => (
-        <div key={t.label} className={`glance-tile${t.bad ? " bad" : ""}`}>
+        <div key={t.label} className={`glance-cell${t.bad ? " bad" : ""}`}>
           <span className="glance-label">{t.label}</span>
           <span className="glance-value">{t.value}</span>
           {t.reading && <span className="glance-reading">{t.reading}</span>}

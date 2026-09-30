@@ -14,19 +14,19 @@ export function NeedsAttention() {
   return (
     <section className="admin-card attention" aria-labelledby="attention-h">
       <h2 id="attention-h">Needs attention</h2>
-      {items.length === 0 ? (
-        <p className="muted">
-          {loading ? "Checking the cabinet…" : "Nothing needs you. Everything is running and up to date."}
-        </p>
-      ) : (
+      {items.length > 0 ? (
         <ul className="attention-list">
           {items.map((it) => (
-            <li key={it.id} className={`attention-item ${it.severity}`}>
-              <span className="sr-only">{SEVERITY[it.severity]}: </span>
+            <li key={it.id} className="attention-item">
+              <span className={`stamp ${it.severity}`}>{SEVERITY[it.severity]}</span>
               <Link href={it.href}>{it.text}</Link>
             </li>
           ))}
         </ul>
+      ) : loading ? (
+        <p className="muted">Checking the cabinet…</p>
+      ) : (
+        <p className="all-clear">Nothing needs you. Everything is running and up to date.</p>
       )}
     </section>
   );

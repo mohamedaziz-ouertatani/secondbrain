@@ -2042,119 +2042,226 @@ td {
   white-space: nowrap;
 }
 
-/* ---- admin: the tab bar ---------------------------------------------------------------------- */
+/* ---- admin: the tab bar, cut like the drawer's guide tabs ------------------------------- */
 .admin-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.2rem;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--rule-blue);
+  margin-bottom: -0.5rem; /* the view's 1.5rem gap reads too loose under a tab strip */
 }
 
 .admin-tabs a {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px 4px 0 0;
+  gap: 0.45rem;
+  padding: 0.3rem 0.85rem 0.25rem;
+  border-radius: 6px 6px 0 0;
   color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 500;
   text-decoration: none;
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease);
 }
 
 .admin-tabs a:hover {
+  background: var(--card-2);
   color: var(--ink);
 }
 
 .admin-tabs a[aria-current="page"] {
   background: var(--card);
   color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--primary);
+  font-weight: 600;
+  box-shadow: 0 -1px 2px rgb(29 37 41 / 0.06);
 }
 
+/* problems waiting on a tab: the same yellow caution mark as "N new" */
 .admin-badge {
-  min-width: 1.25rem;
-  padding: 0 0.35rem;
-  border-radius: 999px;
-  background: var(--bad);
-  color: var(--card);
+  min-width: 1.15rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+  background: var(--tint-random);
+  color: var(--ink);
   font-size: 0.72rem;
-  line-height: 1.25rem;
+  font-weight: 600;
+  line-height: 1;
   text-align: center;
 }
 
-/* ---- admin overview: attention, actions, tiles ------------------------------------------ */
+/* ---- admin overview: attention, actions, the glance strip ------------------------------- */
 .attention-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
 }
 
 .attention-item {
-  border-left: 3px solid var(--rule-blue);
-  padding: 0.3rem 0 0.3rem 0.7rem;
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule-blue);
 }
 
-.attention-item.bad {
-  border-left-color: var(--bad);
+.attention-item:last-child {
+  border-bottom: 0;
 }
 
-.attention-item.warn {
-  border-left-color: var(--rule-red);
+/* the stamp says how urgent; red stays for rules, so problems are `bad` and checks are the caution yellow */
+.stamp {
+  justify-self: start;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stamp.bad {
+  color: var(--bad);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent);
+}
+
+.stamp.warn {
+  background: var(--tint-random);
+  color: var(--ink);
+}
+
+.stamp.info {
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--rule-blue);
 }
 
 .attention-item a {
   color: var(--ink);
+  text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.attention-item a:hover {
+  color: var(--primary);
+  text-decoration-color: currentColor;
+}
+
+.all-clear {
+  margin: 0;
+  color: var(--good);
+}
+
+.all-clear::before {
+  content: "";
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: 0.1em;
+  background: currentColor;
 }
 
 .action-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem 1.5rem;
 }
 
 .action {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
+.action .action-note {
+  margin: 0;
+}
+
+/* one card, five ruled cells: read across like a catalogue row, not five floating tiles */
 .glance {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 0.75rem;
-}
-
-.glance-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--card);
   border-radius: 4px;
   box-shadow: var(--shadow);
-  padding: 0.7rem 0.9rem;
+}
+
+.glance-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.8rem 1rem 0.9rem;
+  border-left: 1px solid var(--rule-blue);
+}
+
+.glance-cell:first-child {
+  border-left: 0;
 }
 
 .glance-label {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .glance-value {
+  font-size: 1.02rem;
   font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .glance-reading {
   font-size: 0.8rem;
+  line-height: 1.45;
   color: var(--muted);
 }
 
-.glance-tile.bad .glance-reading {
+.glance-cell.bad .glance-value,
+.glance-cell.bad .glance-reading {
   color: var(--bad);
+}
+
+@media (max-width: 1040px) {
+  .glance {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .glance-cell:nth-child(3n + 1) {
+    border-left: 0;
+  }
+
+  .glance-cell:nth-child(n + 4) {
+    border-top: 1px solid var(--rule-blue);
+  }
+}
+
+@media (max-width: 560px) {
+  .glance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .glance-cell:nth-child(3n + 1) {
+    border-left: 1px solid var(--rule-blue);
+  }
+
+  .glance-cell:nth-child(2n + 1) {
+    border-left: 0;
+  }
+
+  .glance-cell:nth-child(n + 3) {
+    border-top: 1px solid var(--rule-blue);
+  }
+
+  .attention-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
 }
 
 /* ---- admin settings: one ruled row per setting ------------------------------------------ */
@@ -2225,26 +2332,45 @@ td {
   flex-direction: column;
   gap: 0.15rem;
   font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.5;
   color: var(--muted);
 }
 
 .explain p {
   margin: 0;
+  max-width: var(--measure);
 }
 
 .explain-more summary {
   cursor: pointer;
   width: fit-content;
   color: var(--primary);
+  text-underline-offset: 0.2em;
+}
+
+.explain-more summary:hover {
+  text-decoration: underline;
+}
+
+.explain-more[open] summary {
+  color: var(--muted);
 }
 
 .explain-more[open] p {
-  max-width: var(--measure);
   margin-top: 0.2rem;
+  padding-left: 0.9rem;
+  color: var(--ink);
 }
 
-.setting .explain {
+/* under the value, never beside it: a reading on one row and not the next reads as noise */
+.setting .explain,
+.kv dd > .explain {
   flex-basis: 100%;
+}
+
+.admin-table th .explain {
+  margin-top: 0.15rem;
 }
 
 .source {
