@@ -3,13 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { type AdminLibrary, API_URL, getJSON, postJSON } from "@/lib/api";
 import { moduleCode, tintVar } from "@/lib/modules";
+import { countsLine } from "@/lib/readings";
 
 type Note = { key: string; text: string; bad?: boolean } | null;
-
-const counts = (r: Record<string, number>) =>
-  Object.entries(r)
-    .map(([k, n]) => `${n} ${k.replace("_", " ")}`)
-    .join(", ") || "nothing to do";
 
 /** Per-module counts, problem files, excluded files; rescan, re-index, exclude, include. */
 export function LibraryAdmin() {
@@ -44,7 +40,7 @@ export function LibraryAdmin() {
   const rescan = () =>
     act("rescan", async () => {
       const s = await postJSON<Record<string, number>>("/ingest/rescan", {});
-      return `Rescanned: ${counts(s)}.`;
+      return `Rescanned: ${countsLine(s)}.`;
     });
   const reenrich = (key: string, body: { course: string } | { document_id: number }) =>
     act(key, async () => {
@@ -52,7 +48,7 @@ export function LibraryAdmin() {
       return `Queued ${r.queued} file${r.queued === 1 ? "" : "s"} for new summaries.`;
     });
   const reindex = (key: string, body: { path?: string; course?: string }) =>
-    act(key, async () => `Re-indexed: ${counts(await postJSON<Record<string, number>>("/admin/reindex", body))}.`);
+    act(key, async () => `Re-indexed: ${countsLine(await postJSON<Record<string, number>>("/admin/reindex", body))}.`);
   const exclude = (path: string) =>
     act(`x:${path}`, async () => {
       const r = await postJSON<{ removed: boolean }>("/admin/exclude", { path });

@@ -2081,6 +2081,82 @@ td {
   text-align: center;
 }
 
+/* ---- admin overview: attention, actions, tiles ------------------------------------------ */
+.attention-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.attention-item {
+  border-left: 3px solid var(--rule-blue);
+  padding: 0.3rem 0 0.3rem 0.7rem;
+}
+
+.attention-item.bad {
+  border-left-color: var(--bad);
+}
+
+.attention-item.warn {
+  border-left-color: var(--rule-red);
+}
+
+.attention-item a {
+  color: var(--ink);
+}
+
+.action-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.glance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.glance-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: var(--card);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 0.7rem 0.9rem;
+}
+
+.glance-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.glance-value {
+  font-weight: 600;
+}
+
+.glance-reading {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.glance-tile.bad .glance-reading {
+  color: var(--bad);
+}
+
 /* ---- admin settings: one ruled row per setting ------------------------------------------ */
 .kv.settings {
   display: block;
