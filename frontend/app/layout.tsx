@@ -12,7 +12,7 @@ import { CaptureDialog } from "@/components/CaptureDialog";
 import { Rail } from "@/components/Rail";
 
 export const metadata: Metadata = {
-  title: "Second Brain",
+  title: "Sikimi",
   description: "Ask your course material; every answer cites its page",
 };
 

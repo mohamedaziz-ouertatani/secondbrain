@@ -1,5 +1,5 @@
 ---
-name: Second Brain
+name: Sikimi
 description: A card catalogue for course material; every answer is a working card with its cited fiches pulled beside it.
 colors:
   ground: "#dde3e6"
@@ -219,13 +219,13 @@ components:
     padding: "0.6rem 0.85rem"
 ---
 
-# Design System: Second Brain
+# Design System: Sikimi
 
 ## Overview
 
 **Creative North Star: "The Card Catalogue"**
 
-Second Brain is a library card catalogue built for one student. Every source is a bristol fiche with a typewritten call number; every question is written on the header line of a working card; every answer carries its citations in a ruled margin column, with the cited fiches pulled half out of the drawer beside it. Navigation is a dark steel cabinet whose drawer fronts carry slotted label cards. The world is physical and specific: pale steel ground, off-white card stock, a red header rule and a red margin line, small paper radii, a punched rod hole at the foot of each fiche.
+Sikimi is a library card catalogue built for one student. Every source is a bristol fiche with a typewritten call number; every question is written on the header line of a working card; every answer carries its citations in a ruled margin column, with the cited fiches pulled half out of the drawer beside it. Navigation is a dark steel cabinet whose drawer fronts carry slotted label cards. The world is physical and specific: pale steel ground, off-white card stock, a red header rule and a red margin line, small paper radii, a punched rod hole at the foot of each fiche.
 
 Density is working-desk, not dashboard: one measure-wide card column (72ch), one 320px column of pulled fiches, one 248px cabinet rail. Colour is carried almost entirely by the six teaching-unit bristol tints, and a tint always marks where something is filed, never decoration. Depth comes from tone and soft paper shadows; motion is small physical displacement (a drawer slides out 8px, a fiche is pulled 10px, a margin tab nudges 4px). Dark mode is the same cabinet at night: dimmed card stock, deep steel, darkened tints, lighter rules.
 

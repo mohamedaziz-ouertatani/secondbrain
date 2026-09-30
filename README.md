@@ -1,4 +1,4 @@
-# Second Brain
+# Sikimi
 
 A local, offline knowledge base for your course materials and notes. You ask a question and get an answer written only from your files. Every claim links to the exact page it came from. It handles French, English and Arabic.
 
