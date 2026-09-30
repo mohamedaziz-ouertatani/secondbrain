@@ -7,11 +7,15 @@ import { AnswerCard, type Entry, PastCard } from "@/components/AnswerCard";
 import { ComingUp } from "@/components/ComingUp";
 import { DrawerDigest } from "@/components/DrawerDigest";
 import { Fiche } from "@/components/Fiche";
+import { Scratchpad } from "@/components/Scratchpad";
 import { UndoNote } from "@/components/UndoNote";
-import { askStream, fetchHistory, fetchHistoryItem, putLabels } from "@/lib/api";
+import { askStream, callNumber, fetchHistory, fetchHistoryItem, putLabels } from "@/lib/api";
 import { toEntry, useUndoDelete } from "@/lib/history";
+import { withoutLeadingTitle } from "@/lib/markdown";
 import { tintVar } from "@/lib/modules";
+import { clipBlock } from "@/lib/scratchpad.ts";
 import { useDrawer, useLibrary } from "@/lib/useLibrary";
+import { useScratchpad } from "@/lib/useScratchpad";
 
 const LEGACY_HISTORY_KEY = "sb.history.v1"; // browser-only history from before the server kept it
 const DESK_HISTORY = 40;
@@ -29,6 +33,7 @@ function AskDesk() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const { hidden, remove, undo, pending, failed } = useUndoDelete();
+  const pad = useScratchpad(drawer);
 
   useEffect(() => {
     try {
@@ -129,6 +134,12 @@ function AskDesk() {
     });
   }
 
+  // a clip credits the fiches its claims cite, or the question when it cites none
+  function clipAnswer(entry: Entry, text: string, cites: number[]) {
+    const sources = cites.flatMap((n) => entry.citations.filter((c) => c.n === n).map(callNumber));
+    pad.append(clipBlock(text, sources.length ? sources : [`asked: ${entry.question}`]));
+  }
+
   const pull = useCallback((n: number) => {
     const el = document.getElementById(`fiche-${n}`);
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -189,6 +200,7 @@ function AskDesk() {
             onPull={pull}
             onDelete={active.logId ? () => remove(active.logId!) : undefined}
             onRate={active.logId ? (v) => rate(active, v) : undefined}
+            onClip={(text, cites) => clipAnswer(active, text, cites)}
             labelError={labelError}
           />
         ) : (
@@ -218,26 +230,31 @@ function AskDesk() {
         {loadError && <p className="notice bad">Couldn&apos;t load your earlier questions. Is the backend running?</p>}
       </div>
 
-      <aside className="fiches" aria-label="Cited fiches">
-        {active && active.citations.length > 0 ? (
-          active.citations.map((c) => (
-            <Fiche
-              key={c.n}
-              c={c}
-              active={activeCite === c.n}
-              onActive={setActiveCite}
-              relevant={active.relevant?.[String(c.n)]}
-              onRelevant={active.logId && active.status === "done" ? (v) => markRelevant(active, c.n, v) : undefined}
-            />
-          ))
-        ) : (
-          <p className="fiches-empty">
-            {active?.status === "searching" || active?.status === "writing"
-              ? "The fiches this answer cites will be pulled here."
-              : "Cited fiches are pulled here, each with its call number and page."}
-          </p>
-        )}
-      </aside>
+      <div className="side">
+        <aside className="fiches" aria-label="Cited fiches">
+          {active && active.citations.length > 0 ? (
+            active.citations.map((c) => (
+              <Fiche
+                key={c.n}
+                c={c}
+                active={activeCite === c.n}
+                onActive={setActiveCite}
+                relevant={active.relevant?.[String(c.n)]}
+                onRelevant={active.logId && active.status === "done" ? (v) => markRelevant(active, c.n, v) : undefined}
+                onClip={() => pad.append(clipBlock(withoutLeadingTitle(c.text || c.snippet), [callNumber(c)]))}
+              />
+            ))
+          ) : (
+            <p className="fiches-empty">
+              {active?.status === "searching" || active?.status === "writing"
+                ? "The fiches this answer cites will be pulled here."
+                : "Cited fiches are pulled here, each with its call number and page."}
+            </p>
+          )}
+        </aside>
+
+        <Scratchpad drawer={drawer} pad={pad} />
+      </div>
 
       <UndoNote pending={pending} failed={failed} onUndo={undo} />
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Check, ExternalLink, RotateCcw, X } from "lucide-react";
+import { BookOpen, Check, ExternalLink, RotateCcw, Scissors, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { NoteProse } from "@/components/Prose";
@@ -17,6 +17,7 @@ export function Fiche({
   onActive,
   relevant,
   onRelevant,
+  onClip,
 }: {
   c: Citation;
   active: boolean;
@@ -25,6 +26,8 @@ export function Fiche({
   relevant?: boolean;
   /** cycles unmarked → relevant → not relevant → unmarked */
   onRelevant?: (v: boolean | null) => void;
+  /** add this passage to the drawer's scratchpad */
+  onClip?: () => void;
 }) {
   const [flipped, setFlipped] = useState(false);
 
@@ -78,6 +81,12 @@ export function Fiche({
           <ExternalLink size={15} aria-hidden />
           Original
         </a>
+        {onClip && (
+          <button type="button" className="icon-btn" onClick={onClip} title="Add this passage to the scratchpad">
+            <Scissors size={15} aria-hidden />
+            Clip
+          </button>
+        )}
         {onRelevant && (
           <button
             type="button"

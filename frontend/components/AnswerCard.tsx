@@ -1,7 +1,8 @@
 "use client";
 
 import { ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ClipSelection } from "@/components/ClipSelection";
 import { AnswerProse } from "@/components/Prose";
 import type { Citation } from "@/lib/api";
 import { tintVar } from "@/lib/modules";
@@ -62,6 +63,7 @@ export function AnswerCard({
   onPull,
   onDelete,
   onRate,
+  onClip,
   labelError,
 }: {
   entry: Entry;
@@ -71,9 +73,12 @@ export function AnswerCard({
   onDelete?: () => void;
   /** rate the answer: 1 good, -1 wrong, null to clear (pressing the active one again) */
   onRate?: (v: -1 | 1 | null) => void;
+  /** selected answer text, with the citation numbers it leans on, for the scratchpad */
+  onClip?: (text: string, cites: number[]) => void;
   labelError?: string | null;
 }) {
   const known = new Set(entry.citations.map((c) => c.n));
+  const body = useRef<HTMLDivElement>(null);
   return (
     <article
       className="card answer"
@@ -119,7 +124,7 @@ export function AnswerCard({
         </p>
       </header>
 
-      <div className="card-body" dir="auto">
+      <div className="card-body" dir="auto" ref={body}>
         {entry.status === "searching" && !entry.text ? (
           <div className="skeleton" aria-hidden>
             <span />
@@ -134,6 +139,7 @@ export function AnswerCard({
         )}
         {entry.status === "writing" && <span className="caret" aria-hidden />}
       </div>
+      {onClip && entry.status === "done" && <ClipSelection root={body} onClip={onClip} />}
 
       {entry.status === "error" && <p className="notice bad">{entry.error}</p>}
       {labelError && <p className="notice bad">{labelError}</p>}
