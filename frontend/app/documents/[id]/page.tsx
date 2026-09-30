@@ -118,7 +118,7 @@ export default function ReaderPage() {
           ) : p.text.trim() ? (
             markdown ? (
               <div className="prose" dir="auto">
-                <NoteProse text={p.page === 1 ? withoutLeadingTitle(p.text) : p.text} />
+                <NoteProse text={p.page === 1 ? withoutLeadingTitle(p.text) : p.text} docId={doc.id} />
               </div>
             ) : (
               <div className="plain" dir="auto">

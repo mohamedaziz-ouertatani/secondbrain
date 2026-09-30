@@ -55,7 +55,7 @@ export function Fiche({
 
       {flipped ? (
         <div className="fiche-back" dir="auto">
-          <NoteProse text={withoutLeadingTitle(c.text)} />
+          <NoteProse text={withoutLeadingTitle(c.text)} docId={c.doc_id} />
         </div>
       ) : (
         <div className="fiche-front">

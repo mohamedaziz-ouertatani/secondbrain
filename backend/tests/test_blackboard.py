@@ -271,3 +271,22 @@ def test_deadlines_follow_the_course_filter(inbox, monkeypatch):
                         lambda api, folders, dry_run=False: seen.update(folders=folders) or {"type": "deadlines"})
     bb.run(FakeAPI(), probe=False, dry_run=True, only="devops", include_unmapped=False, emit=lambda e: None)
     assert seen["folders"] == {}
+
+
+def test_ultra_page_images_are_saved_beside_the_note(inbox, monkeypatch):
+    api = FakeAPI()
+    meta = '{&quot;fileName&quot;: &quot;fig 1.png&quot;}'
+    body = ("<p>" + "Exercices sur les vecteurs gaussiens et le mouvement brownien. " * 2 + "</p>"
+            f'<a href="https://esprit.blackboard.com/bbcswebdav/xid-78_1?s=1" data-bbfile="{meta}"><img src="x"></a>')
+    api.routes[f"{API}/courses/{C}/contents?{FIELDS}"]["results"].append(folder("DOC", "Serie 1", "resource/x-bb-document"))
+    api.routes[f"{API}/courses/{C}/contents/DOC/children?{FIELDS}"] = {"results": [
+        {"id": "B", "title": "ultraDocumentBody", "modified": "m", "body": body,
+         "contentHandler": {"id": "resource/x-bb-document"}}]}
+    api.download = lambda url: b"png"
+    note = inbox / "Probability 2" / "Serie 1.md"
+    note.write_text("# Serie 1\n\nold conversion, images dropped\n", encoding="utf-8")
+    bb.save_state({f"{C}/B/page": {"path": "Probability 2/Serie 1.md", "modified": "m"}})
+
+    sync(api)
+    assert "![fig 1.png](<Serie 1/fig 1.png>)" in note.read_text(encoding="utf-8")  # rewritten though unmodified
+    assert (inbox / "Probability 2" / "Serie 1" / "fig 1.png").read_bytes() == b"png"

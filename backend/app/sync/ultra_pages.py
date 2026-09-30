@@ -3,7 +3,9 @@
 import hashlib
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import PurePath
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup, Tag
@@ -11,6 +13,13 @@ from markdownify import markdownify
 
 # Below this much prose (after dropping file names), a page is just links/images: no note.
 MIN_NOTE_CHARS = 60
+
+# Pictures the note shows inline, from a copy saved beside it (SVG left out: it can carry scripts).
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}
+
+
+def is_image(name: str) -> bool:
+    return PurePath(name).suffix.lower() in IMAGE_TYPES
 
 
 @dataclass
@@ -39,10 +48,16 @@ def _latex(math: Tag) -> str:
     return f"$${tex}$$" if math.get("display") == "block" else f"${tex}$"
 
 
-def convert(body: str, title: str, breadcrumb: list[str] | None = None) -> tuple[str | None, list[Embedded]]:
-    """Returns (markdown note or None if the page has no real text, embedded files)."""
+def convert(body: str, title: str, breadcrumb: list[str] | None = None,
+            image_path: Callable[[str], str] | None = None) -> tuple[str | None, list[Embedded]]:
+    """Returns (markdown note or None if the page has no real text, embedded files).
+
+    With `image_path` (an embedded file's name -> where it is saved, relative to the note), embedded
+    images become Markdown images pointing at their local copy.
+    """
     soup = BeautifulSoup(body, "html.parser")
     files: list[Embedded] = []
+    images: list[str] = []
 
     for a in soup.find_all(attrs={"data-bbfile": True}):
         try:
@@ -53,7 +68,11 @@ def convert(body: str, title: str, breadcrumb: list[str] | None = None) -> tuple
         url = a.get("href") or meta.get("resourceUrl") or meta.get("viewerUrl")
         if name and url and url.startswith("http"):
             files.append(Embedded(_embedded_key(url), name, url))
-        a.replace_with(f"[{name}]" if name else "")  # keep the reference, drop the expiring URL
+        if name and image_path and is_image(name):
+            images.append(f"![{name}](<{image_path(name)}>)")
+            a.replace_with(f"IMAGEPLACEHOLDER{len(images) - 1}X")
+        else:
+            a.replace_with(f"[{name}]" if name else "")  # keep the reference, drop the expiring URL
 
     for img in soup.find_all("img"):
         img.decompose()
@@ -67,11 +86,12 @@ def convert(body: str, title: str, breadcrumb: list[str] | None = None) -> tuple
     # No escaping: the note is read by the retriever and the LLM, not rendered.
     md = markdownify(str(soup), heading_style="ATX", bullets="-", escape_underscores=False, escape_asterisks=False)
     md = re.sub(r"MATHPLACEHOLDER(\d+)X", lambda m: formulas[int(m.group(1))], md)
+    md = re.sub(r"IMAGEPLACEHOLDER(\d+)X", lambda m: images[int(m.group(1))], md)
     md = md.replace(" ", " ")
     md = re.sub(r"[ \t]+\n", "\n", md)
     md = re.sub(r"\n{3,}", "\n\n", md).strip()
 
-    prose = re.sub(r"\[[^\]]*\]", "", md)
+    prose = re.sub(r"!?\[[^\]]*\](\(<[^>]*>\))?", "", md)
     if len(re.sub(r"\s", "", prose)) < MIN_NOTE_CHARS:
         return None, files
     trail = f"*{' › '.join(breadcrumb)}*\n\n" if breadcrumb else ""

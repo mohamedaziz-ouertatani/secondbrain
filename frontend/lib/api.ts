@@ -116,6 +116,11 @@ export function pageImageUrl(docId: number, page: number): string {
   return `${API_URL}/documents/${docId}/pages/${page}.png`;
 }
 
+/** A picture saved beside a Markdown note; `path` is relative to the note and already URL-encoded. */
+export function noteAssetUrl(docId: number, path: string): string {
+  return `${API_URL}/documents/${docId}/assets/${path}`;
+}
+
 export function readerUrl(docId: number, page?: number): string {
   return `/documents/${docId}${page ? `#p-${page}` : ""}`;
 }
