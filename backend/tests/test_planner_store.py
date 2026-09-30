@@ -70,9 +70,15 @@ def test_done_and_what_blackboard_owns(env):
     t = mk(kind="todo", title="t")
     assert update_item(t["id"], {"done": True})["done_at"] is not None
     assert update_item(t["id"], {"done": False})["done_at"] is None
+    n = mk(kind="note", title="n")
+    assert update_item(n["id"], {"done": True})["done_at"] is not None
+    assert update_item(n["id"], {"done": False})["done_at"] is None
     e = mk(kind="event", title="e", starts_at=NOW)
-    with pytest.raises(PlannerError, match="only to-dos can be done"):
+    with pytest.raises(PlannerError, match="events can't be done"):
         update_item(e["id"], {"done": True})
+    update_item(n["id"], {"done": True})  # a done note turned into an event is no longer done
+    r = update_item(n["id"], {"kind": "event", "starts_at": NOW, "done": False})
+    assert r["kind"] == "event" and r["done_at"] is None
     assert update_item(999_999, {"title": "x"}) is None
 
     with db.get_pool().connection() as conn:
