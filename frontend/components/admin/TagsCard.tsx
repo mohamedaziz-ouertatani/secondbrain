@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
 import { ApiError, getJSON, postJSON, sendJSON, type TagRow } from "@/lib/api";
+import { actionHelp } from "@/lib/adminHelp";
 
 type Note = { text: string; bad?: boolean } | null;
 
@@ -93,6 +95,7 @@ export function TagsCard() {
           </button>
         </span>
       </header>
+      <Explain line={actionHelp.vocab.line} more={actionHelp.vocab.more} />
       {note && <p className={`action-note${note.bad ? " bad" : ""}`}>{note.text}</p>}
       {!tags ? (
         <p className="muted">Loading tags…</p>

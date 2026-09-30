@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
 import { TrendChart } from "@/components/admin/TrendChart";
+import { metricHelp } from "@/lib/adminHelp";
 import { type CompareResult, getJSON, type InsightsSummary, postJSON, type ProblemRow } from "@/lib/api";
 import { openHref } from "@/lib/history";
 import { moduleCode, tintVar } from "@/lib/modules";
@@ -84,10 +86,12 @@ export function InsightsCard() {
             <dt>Refused</dt>
             <dd>
               {s.refused} ({pct(s.refused, s.questions)}): not in your fiches
+              <Explain more={metricHelp.refused} />
             </dd>
             <dt>Invalid citations</dt>
             <dd>
               {s.invalid} ({pct(s.invalid, s.questions)}){s.failed ? ` · ${s.failed} failed before answering` : ""}
+              <Explain more={metricHelp.invalid} />
             </dd>
             <dt>Answer time</dt>
             <dd>

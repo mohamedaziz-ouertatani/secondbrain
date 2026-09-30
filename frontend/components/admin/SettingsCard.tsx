@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
 import { ApiError, getJSON, type SettingRow, type SettingsView, sendJSON } from "@/lib/api";
+import { settingMore } from "@/lib/adminHelp";
 
 const SOURCE: Record<SettingRow["source"], string> = {
   default: "default",
@@ -127,6 +129,7 @@ export function SettingsCard() {
                       </button>
                     )}
                     <span className="help">{r.locked_by ? `Set by ${r.locked_by}; change it there.` : r.help}</span>
+                    <Explain more={settingMore[r.key]} />
                     {errors[r.key] && <span className="field-error">{errors[r.key]}</span>}
                   </dd>
                 </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
 import { type AdminLibrary, API_URL, getJSON, postJSON } from "@/lib/api";
+import { actionHelp } from "@/lib/adminHelp";
 import { moduleCode, tintVar } from "@/lib/modules";
 import { countsLine } from "@/lib/readings";
 
@@ -82,6 +84,7 @@ export function LibraryAdmin() {
           {btn("rescan", "Rescan inbox", rescan)}
         </span>
       </header>
+      <Explain line={actionHelp.rescan.line} more={actionHelp.rescan.more} />
 
       <table className="admin-table library-table">
         <thead>
@@ -122,6 +125,8 @@ export function LibraryAdmin() {
           })}
         </tbody>
       </table>
+      <Explain line={actionHelp.reindex.line} more={actionHelp.reindex.more} />
+      <Explain line={actionHelp.reenrich.line} more={actionHelp.reenrich.more} />
 
       <h3>Problem files</h3>
       {lib.problems.length === 0 ? (
@@ -172,6 +177,7 @@ export function LibraryAdmin() {
       )}
 
       <h3>Excluded</h3>
+      <Explain line={actionHelp.exclude.line} more={actionHelp.exclude.more} />
       {lib.excluded.length === 0 ? (
         <p className="muted">Nothing excluded. Exclude a file to keep it on disk but out of your answers.</p>
       ) : (

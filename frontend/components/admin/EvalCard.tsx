@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
+import { metricHelp } from "@/lib/adminHelp";
 import { type EvalMetrics, type EvalMode, type EvalRun, type EvalStatus, getJSON, postJSON } from "@/lib/api";
 import { moduleCode, tintVar } from "@/lib/modules";
+import { recallReading } from "@/lib/readings";
 
 const POLL_MS = 1500;
 const ROWS: { key: keyof EvalMetrics; label: string; lowerIsBetter?: boolean; pct: boolean }[] = [
@@ -177,7 +180,10 @@ export function EvalCard() {
                 const wins = best(vals, r.lowerIsBetter);
                 return (
                   <tr key={r.key}>
-                    <th scope="row">{r.label}</th>
+                    <th scope="row">
+                      {r.label}
+                      <Explain more={metricHelp[r.key]} />
+                    </th>
                     {vals.map((v, i) => (
                       <td key={MODES[i].key} className={wins[i] ? "eval-better" : ""}>
                         {show(v, r.pct)}
@@ -188,6 +194,11 @@ export function EvalCard() {
               })}
             </tbody>
           </table>
+          {(() => {
+            const m = latest.metrics.overall["dense+rerank"]?.["recall@5"] !== undefined ? MODES[2] : MODES[0];
+            const r = recallReading(5, latest.metrics.overall[m.key]?.["recall@5"]);
+            return r && <Explain line={`${m.label}: ${r}.`} />;
+          })()}
 
           {latest.metrics.answers && (
             <>
@@ -198,9 +209,15 @@ export function EvalCard() {
                 <dt>Refused</dt>
                 <dd>{show(latest.metrics.answers.refusal_rate ?? undefined, true)}</dd>
                 <dt>Citations valid</dt>
-                <dd>{show(latest.metrics.answers.citation_valid_rate ?? undefined, true)}</dd>
+                <dd>
+                  {show(latest.metrics.answers.citation_valid_rate ?? undefined, true)}
+                  <Explain more={metricHelp.citation_valid_rate} />
+                </dd>
                 <dt>Cited the right page</dt>
-                <dd>{show(latest.metrics.answers.cited_right_rate ?? undefined, true)}</dd>
+                <dd>
+                  {show(latest.metrics.answers.cited_right_rate ?? undefined, true)}
+                  <Explain more={metricHelp.cited_right_rate} />
+                </dd>
                 <dt>Median answer time</dt>
                 <dd>
                   {latest.metrics.answers.median_ms === null

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Explain } from "@/components/admin/Explain";
 import { getJSON, postJSON, type SyncAction, type SyncJob, type SyncStatus } from "@/lib/api";
+import { actionHelp } from "@/lib/adminHelp";
 import { ago } from "@/lib/seen";
 
 const POLL_MS = 1500;
@@ -122,6 +124,7 @@ export function SyncCard() {
             ? `Next automatic sync ${until(s.next_auto)}`
             : "Automatic sync paused"}
       </p>
+      <Explain line={actionHelp.sync.line} more={actionHelp.sync.more} />
 
       {s.login_needed && (
         <p className="notice sync-login">
