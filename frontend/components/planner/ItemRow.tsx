@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, StickyNote } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { moduleCode, tintVar } from "@/lib/modules";
 import { announce, isOverdue, type PlannerItem, patchItem, whenLabel } from "@/lib/planner";
 
@@ -8,7 +8,7 @@ function label(i: PlannerItem): string {
   return i.title || i.body.split("\n").find((l) => l.trim())?.trim() || "Untitled note";
 }
 
-/** One planner line: a checkbox for to-dos, the title, and a call number with module and time. */
+/** One planner line: a checkbox for to-dos and notes, the title, and a call number with module and time. */
 export function ItemRow({ item, onOpen }: { item: PlannerItem; onOpen: (i: PlannerItem) => void }) {
   const done = !!item.done_at;
   const cls = ["plan-row", done && "done", item.removed_at && "removed", isOverdue(item) && "overdue"]
@@ -19,7 +19,7 @@ export function ItemRow({ item, onOpen }: { item: PlannerItem; onOpen: (i: Plann
     .join(" · ");
   return (
     <li className={cls} style={{ "--tint": tintVar(item.course) } as React.CSSProperties}>
-      {item.kind === "todo" ? (
+      {item.kind !== "event" ? (
         <input
           type="checkbox"
           className="plan-check"
@@ -27,10 +27,8 @@ export function ItemRow({ item, onOpen }: { item: PlannerItem; onOpen: (i: Plann
           aria-label={done ? `Reopen “${label(item)}”` : `Mark “${label(item)}” done`}
           onChange={() => patchItem(item.id, { done: !done }).catch(announce)}
         />
-      ) : item.kind === "event" ? (
-        <CalendarClock size={15} className="plan-kind" aria-label="Event" />
       ) : (
-        <StickyNote size={15} className="plan-kind" aria-label="Note" />
+        <CalendarClock size={15} className="plan-kind" aria-label="Event" />
       )}
       <button type="button" className="plan-open" onClick={() => onOpen(item)}>
         <span className="plan-title" dir="auto">

@@ -33,7 +33,7 @@ function tomorrowNine(): string {
 function kindChange(item: PlannerItem, kind: Kind): ItemFields {
   if (kind === "note") return { kind, starts_at: null, ends_at: null, all_day: false };
   if (kind === "todo") return { kind, ends_at: null, all_day: false };
-  return { kind, starts_at: item.starts_at ?? tomorrowNine() };
+  return { kind, starts_at: item.starts_at ?? tomorrowNine(), done: false }; // events can't be done
 }
 
 /** Everything about one item. Each field saves when you leave it; Blackboard's fields are read-only. */
@@ -174,7 +174,7 @@ export function ItemPanel({
             day
           </label>
         )}
-        {item.kind === "todo" && (
+        {item.kind !== "event" && (
           <label className="plan-inline">
             <input type="checkbox" checked={!!item.done_at} onChange={() => save({ done: !item.done_at })} /> Done
           </label>

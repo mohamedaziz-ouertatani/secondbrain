@@ -14,7 +14,7 @@ END = "COALESCE(ends_at, starts_at + CASE WHEN all_day THEN interval '1 day' ELS
 MESSAGES = {
     "planner_title_needed": "a to-do or event needs a title",
     "planner_note_undated": "a note has no date",
-    "planner_done_on_todos": "only to-dos can be done",
+    "planner_no_done_events": "events can't be done",
     "planner_end_on_events": "only events have an end",
     "planner_event_start": "an event needs a start",
     "planner_end_after_start": "the end is before the start",

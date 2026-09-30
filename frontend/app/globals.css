@@ -3078,6 +3078,10 @@ td {
   cursor: pointer;
 }
 
+section.plan-done > .stack-label {
+  margin-top: 0.8rem;
+}
+
 .month-head {
   display: flex;
   align-items: center;

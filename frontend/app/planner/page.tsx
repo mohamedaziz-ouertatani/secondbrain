@@ -67,6 +67,8 @@ function PlannerView() {
   const notes = live
     .filter((i) => i.kind === "note" && matches(i, q))
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const openNotes = notes.filter((i) => !i.done_at);
+  const doneNotes = notes.filter((i) => i.done_at);
 
   return (
     <div className="drawer-view planner-view">
@@ -124,7 +126,7 @@ function PlannerView() {
                   To-dos {openTodos.length > 0 && `(${openTodos.length})`}
                 </button>
                 <button type="button" aria-pressed={tab === "note"} onClick={() => setTab("note")}>
-                  Notes {notes.length > 0 && `(${notes.length})`}
+                  Notes {openNotes.length > 0 && `(${openNotes.length})`}
                 </button>
               </div>
               <label className="search">
@@ -154,16 +156,30 @@ function PlannerView() {
               </>
             ) : (
               <>
-                {notes.length === 0 && (
+                {openNotes.length === 0 && (
                   <p className="muted plan-empty">
-                    {q ? `No notes match “${q}”.` : "No notes yet. Anything you type without a date becomes one."}
+                    {q
+                      ? `No notes match “${q}”.`
+                      : doneNotes.length
+                        ? "No open notes."
+                        : "No notes yet. Anything you type without a date becomes one."}
                   </p>
                 )}
                 <ul className="plan-list">
-                  {notes.map((i) => (
+                  {openNotes.map((i) => (
                     <ItemRow key={i.id} item={i} onOpen={openItem} />
                   ))}
                 </ul>
+                {doneNotes.length > 0 && (
+                  <section className="plan-done" aria-label={`Done notes (${doneNotes.length})`}>
+                    <h3 className="stack-label">Done ({doneNotes.length})</h3>
+                    <ul className="plan-list">
+                      {doneNotes.map((i) => (
+                        <ItemRow key={i.id} item={i} onOpen={openItem} />
+                      ))}
+                    </ul>
+                  </section>
+                )}
               </>
             )}
           </section>

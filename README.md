@@ -80,7 +80,7 @@ Notes, to-dos and events, in **Planner** on the rail.
   - **How it reads:** by rules in code, not the model. French and English dates work, days come before months (`12/01` is 12 January), and a to-do without a time is due at 23:59.
   - **Words it knows:** a line starting with `note:` or `idea:` is always a note. Extra module nicknames go in `planner_aliases` in `config.yaml`.
 - **Kinds:**
-  - **Notes** have no date.
+  - **Notes** have no date. Tick one when you're done with it: it moves to the Done group under your notes, still there to read.
   - **To-dos** have a checkbox and an optional due date.
   - **Events** have a start, and an end or all-day.
 - **Blackboard deadlines:**
