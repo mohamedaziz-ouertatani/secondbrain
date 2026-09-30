@@ -2104,6 +2104,34 @@ td {
   color: var(--muted);
 }
 
+/* ---- admin: explanations (an inline reading, then "How it works") ---------------------- */
+.explain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.explain p {
+  margin: 0;
+}
+
+.explain-more summary {
+  cursor: pointer;
+  width: fit-content;
+  color: var(--primary);
+}
+
+.explain-more[open] p {
+  max-width: var(--measure);
+  margin-top: 0.2rem;
+}
+
+.setting .explain {
+  flex-basis: 100%;
+}
+
 .source {
   font-family: var(--type);
   font-size: 0.75rem;
