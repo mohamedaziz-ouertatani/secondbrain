@@ -8,7 +8,7 @@ web
 
 ## Users
 
-One user: a 5th-year data-science engineering student (class 5DS1) at Esprit. They use Second Brain in three situations:
+One user: a 5th-year data-science engineering student (class 5DS1) at Esprit. They use Sikimi in three situations:
 
 - **Exam revision sessions:** long, focused sessions at a desk, asking many questions in a row about one module.
 - **Quick lookups:** one question while working on a TD, a project or in class; get the answer and the page, then leave.
@@ -18,7 +18,7 @@ Phone use is not a confirmed need. The laptop is the primary device.
 
 ## Product Purpose
 
-Second Brain is a private, local knowledge base over the student's own course material. It holds Blackboard files, Blackboard Ultra pages and personal notes. The student asks questions in French, English or Arabic and gets answers written only from that material, with every claim cited to the exact page, slide or section it came from.
+Sikimi is a private, local knowledge base over the student's own course material. It holds Blackboard files, Blackboard Ultra pages and personal notes. The student asks questions in French, English or Arabic and gets answers written only from that material, with every claim cited to the exact page, slide or section it came from.
 
 Success means the student trusts an answer within seconds because the source is one click away, and stops hunting through Blackboard for "where was that".
 
@@ -84,7 +84,7 @@ The UI must not paint these into a corner, especially revision features.
 
 ## Brand Commitments
 
-The name is **Second Brain**. There is no logo or other brand assets.
+The name is **Sikimi**. There is no logo or other brand assets.
 
 ## Evidence on Hand
 

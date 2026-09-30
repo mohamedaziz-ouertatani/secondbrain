@@ -1,5 +1,5 @@
 [project]
-name = "second-brain"
+name = "sikimi"
 version = "0.1.0"
 description = "Local RAG over course materials and notes"
 requires-python = ">=3.11"

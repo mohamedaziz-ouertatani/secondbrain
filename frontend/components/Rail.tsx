@@ -49,7 +49,7 @@ export function Rail() {
   return (
     <nav className="rail" aria-label="Drawers">
       <Link href={drawerHref("/", drawer)} className="brand">
-        Second Brain
+        Sikimi
       </Link>
 
       <div className="views">
