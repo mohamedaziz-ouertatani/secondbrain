@@ -78,7 +78,7 @@ export function LibraryAdmin() {
   if (!lib) return <p className="muted">Counting the drawers…</p>;
 
   return (
-    <section className="admin-card" aria-labelledby="library-h">
+    <section className="admin-card" id="library" aria-labelledby="library-h">
       <header className="admin-card-head">
         <h2 id="library-h">Library</h2>
         <span className="admin-actions">

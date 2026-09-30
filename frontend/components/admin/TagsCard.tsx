@@ -76,7 +76,7 @@ export function TagsCard() {
   }
 
   return (
-    <section className="admin-card" aria-labelledby="tags-h">
+    <section className="admin-card" id="tags" aria-labelledby="tags-h">
       <header className="admin-card-head">
         <h2 id="tags-h">Tags</h2>
         <span className="admin-actions">

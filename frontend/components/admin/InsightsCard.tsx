@@ -61,7 +61,7 @@ export function InsightsCard() {
   const problems = rows?.key === `${days}:${kind}` ? rows.r : null;
 
   return (
-    <section className="admin-card" aria-labelledby="insights-h">
+    <section className="admin-card" id="insights" aria-labelledby="insights-h">
       <header className="admin-card-head">
         <h2 id="insights-h">Insights</h2>
         <span className="tabs" role="tablist" aria-label="Period">

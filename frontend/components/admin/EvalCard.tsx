@@ -88,7 +88,7 @@ export function EvalCard() {
   const line = jobLine(s);
 
   return (
-    <section className="admin-card" aria-labelledby="eval-h">
+    <section className="admin-card" id="eval" aria-labelledby="eval-h">
       <header className="admin-card-head">
         <h2 id="eval-h">Evaluation</h2>
         {running && (

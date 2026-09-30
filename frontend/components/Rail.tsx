@@ -121,7 +121,7 @@ export function Rail() {
           <HealthLine health={health} />
         </Link>
         {health && health !== "down" && health.blackboard_login_needed && (
-          <Link href="/admin#sync" className="bb-login">
+          <Link href="/admin/library#sync" className="bb-login">
             Blackboard: log in needed
           </Link>
         )}
