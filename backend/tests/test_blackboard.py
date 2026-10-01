@@ -88,7 +88,7 @@ def inbox(tmp_path, monkeypatch):
     monkeypatch.setenv("WATCH_DIR", str(tmp_path / "inbox"))
     monkeypatch.setattr(bb, "STATE_FILE", tmp_path / "state.json")
     monkeypatch.setattr(bb, "DATA_DIR", tmp_path)
-    monkeypatch.setattr(bb, "my_courses", lambda api: [{"id": C, "name": "Probability 2__5DS1"},
+    monkeypatch.setattr(bb, "my_courses", lambda api: [{"id": C, "courseId": "PROBA2__5DS1", "name": "Probability 2__5DS1"},
                                                         {"id": "_2", "name": "Engineering Internship__5DS1"}])
     from app.config import get_settings
 
@@ -290,3 +290,55 @@ def test_ultra_page_images_are_saved_beside_the_note(inbox, monkeypatch):
     sync(api)
     assert "![fig 1.png](<Serie 1/fig 1.png>)" in note.read_text(encoding="utf-8")  # rewritten though unmodified
     assert (inbox / "Probability 2" / "Serie 1" / "fig 1.png").read_bytes() == b"png"
+
+
+SCORM_MANIFEST = b"""<?xml version="1.0"?>
+<manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2">
+  <organizations default="ORG"><organization identifier="ORG"><title>Chap 1</title>
+    <item identifier="I1" identifierref="RES"><title>Chap 1</title></item></organization></organizations>
+  <resources><resource identifier="RES" type="webcontent" href="index.html"/></resources>
+</manifest>"""
+
+SCORM_PAGE = ("<html><body><header class='topbar'>ESPRIT menu</header><div class='layout'>"
+              "<nav class='sidebar'><button>I. Origins</button></nav><main>"
+              "<section class='screen' id='screen-sec-I'><h1>I. Origins</h1>"
+              "<p>" + "Sustainable development grew out of the Brundtland report and the limits to growth. " * 2 + "</p>"
+              "<img src='images/img_1.png' alt='Three pillars'></section>"
+              "<section class='screen' id='screen-quiz'><h1>Quiz</h1><form><p>Question 1: what is Jevons?</p>"
+              "<label><input type='radio'> A. A paradox</label><label><input type='radio'> B. A curve</label>"
+              "<div class='quiz-feedback'>Réponse enregistrée.</div><button>Submit</button></form></section>"
+              "</main></div><script>initScorm()</script></body></html>")
+
+
+def test_scorm_package_becomes_note_with_its_images(inbox):
+    api = FakeAPI()
+    api.routes[f"{API}/courses/{C}/contents?{FIELDS}"]["results"].append(
+        {"id": "S1", "title": "Chapitre I — Origins", "modified": "m", "availability": {"available": "Yes"},
+         "contentHandler": {"id": "resource/x-plugin-scormengine"}})
+    base = "/courses/1/PROBA2__5DS1/content/S1/"
+    pages = {base + "imsmanifest.xml": SCORM_MANIFEST, base + "index.html": SCORM_PAGE.encode()}
+    downloaded = []
+    api.download = lambda url: downloaded.append(url) or pages.get(url.split("esprit.blackboard.com")[-1], b"png")
+    sync(api)
+
+    note = (inbox / "Probability 2" / "Chapitre I — Origins.md").read_text(encoding="utf-8")
+    assert note.startswith("# Chapitre I — Origins\n\n*Probability 2*\n")
+    assert "Brundtland" in note and "![img_1.png](<Chapitre I — Origins/img_1.png>)" in note
+    assert "- A. A paradox" in note and "- B. A curve" in note  # options on their own lines
+    assert "ESPRIT menu" not in note and "initScorm" not in note and "enregistr" not in note and "Submit" not in note
+    assert (inbox / "Probability 2" / "Chapitre I — Origins" / "img_1.png").read_bytes() == b"png"
+    assert f"{API}/courses/{C}/contents/S1/attachments" not in api.calls
+
+
+def test_unreachable_scorm_package_is_skipped(inbox):
+    api = FakeAPI()
+    api.routes[f"{API}/courses/{C}/contents?{FIELDS}"]["results"].append(
+        {"id": "S1", "title": "Chap", "modified": "m", "contentHandler": {"id": "resource/x-plugin-scormengine"}})
+
+    def download(url):
+        if "/content/S1/" in url:
+            raise RuntimeError("download -> 404")
+        return b"x"
+    api.download = download
+    sync(api)  # the rest of the course still syncs
+    assert (inbox / "Probability 2" / "Chapter 1 - Gaussian vectors" / "td1.docx").exists()
