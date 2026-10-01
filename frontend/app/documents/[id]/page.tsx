@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocSummary } from "@/components/DocSummary";
 import { NoteProse } from "@/components/Prose";
+import { ReaderAsk } from "@/components/ReaderAsk";
 import {
   callNumber,
   type DocumentPages,
@@ -35,12 +36,18 @@ export default function ReaderPage() {
         setDoc(d);
         markSeen(docId);
       })
-      .catch(() => setError("This fiche couldn't be opened. The file may have moved; rescan the inbox."));
+      .catch(() =>
+        setError(
+          "This fiche couldn't be opened. The file may have moved; rescan the inbox.",
+        ),
+      );
   }, [id]);
 
   useEffect(() => {
     if (!doc || !location.hash) return;
-    document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+    document
+      .getElementById(location.hash.slice(1))
+      ?.scrollIntoView({ block: "start" });
   }, [doc]);
 
   if (error) return <p className="notice bad">{error}</p>;
@@ -56,70 +63,123 @@ export default function ReaderPage() {
   const markdown = doc.mime === "text/markdown";
   const parts = partsCount(doc.mime, doc.page_count);
   return (
-    <div className="reader" style={{ "--tint": tintVar(doc.course) } as React.CSSProperties}>
-      <header className="card reader-head">
-        <p className="callno">{callNumber({ ...doc, page: 0, mime: "" })}</p>
-        <h1 dir="auto">{doc.title}</h1>
-        <p className="reader-meta">
-          {doc.course ? `${doc.course} · ${unitOf(doc.course).name}` : "Loose note"} · {kindOf(doc.mime)}
-          {parts ? ` · ${parts}` : ""}
-        </p>
-        <DocSummary doc={doc} />
-        <div className="reader-actions">
-          <Link className="quiet-btn" href={drawerHref("/", doc.course)}>
-            <PenLine size={15} aria-hidden />
-            Ask {doc.course ?? "all drawers"}
-          </Link>
-          <a className="quiet-btn" href={fileUrl({ doc_id: doc.id, mime: doc.mime })} target="_blank" rel="noreferrer">
-            <ExternalLink size={15} aria-hidden />
-            Open the original
-          </a>
-        </div>
-        {doc.status !== "ok" && (
-          <p className="notice">
-            {doc.status === "empty_text"
-              ? "This file has no text layer (it looks scanned), so it isn't searchable yet."
-              : `This file couldn't be read: ${doc.error ?? "unknown error"}.`}
+    <div className="reader-split">
+      <div
+        className="reader"
+        style={{ "--tint": tintVar(doc.course) } as React.CSSProperties}
+      >
+        <header className="card reader-head">
+          <p className="callno">{callNumber({ ...doc, page: 0, mime: "" })}</p>
+          <h1 dir="auto">{doc.title}</h1>
+          <p className="reader-meta">
+            {doc.course
+              ? `${doc.course} · ${unitOf(doc.course).name}`
+              : "Loose note"}{" "}
+            · {kindOf(doc.mime)}
+            {parts ? ` · ${parts}` : ""}
           </p>
-        )}
-      </header>
-
-      {doc.pages.map((p) => (
-        <section key={p.page} id={`p-${p.page}`} className="card page">
-          {doc.pages.length > 1 && (
-            <p className="page-label">
-              {doc.mime === PDF ? (
-                <a href={fileUrl({ doc_id: doc.id, mime: doc.mime, page: p.page })} target="_blank" rel="noreferrer">
-                  {locator({ ...doc, page: p.page, label: p.label })}
-                </a>
-              ) : (
-                locator({ ...doc, page: p.page, label: p.label })
-              )}
+          <DocSummary doc={doc} />
+          <div className="reader-actions">
+            <Link className="quiet-btn" href={drawerHref("/", doc.course)}>
+              <PenLine size={15} aria-hidden />
+              Ask {doc.course ?? "all drawers"}
+            </Link>
+            <a
+              className="quiet-btn"
+              href={fileUrl({ doc_id: doc.id, mime: doc.mime })}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink size={15} aria-hidden />
+              Open the original
+            </a>
+          </div>
+          {doc.status !== "ok" && (
+            <p className="notice">
+              {doc.status === "empty_text"
+                ? "This file has no text layer (it looks scanned), so it isn't searchable yet."
+                : `This file couldn't be read: ${doc.error ?? "unknown error"}.`}
             </p>
           )}
-          {doc.page_images ? (
-            <PageImage docId={doc.id} page={p.page} text={p.text} unit={doc.mime === PDF ? "Page" : "Slide"} />
-          ) : p.text.trim() ? (
-            markdown ? (
-              <div className="prose" dir="auto">
-                <NoteProse text={p.page === 1 ? withoutLeadingTitle(p.text) : p.text} docId={doc.id} />
-              </div>
+        </header>
+
+        {doc.pages.map((p) => (
+          <section key={p.page} id={`p-${p.page}`} className="card page">
+            {doc.pages.length > 1 && (
+              <p className="page-label">
+                {doc.mime === PDF ? (
+                  <a
+                    href={fileUrl({
+                      doc_id: doc.id,
+                      mime: doc.mime,
+                      page: p.page,
+                    })}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {locator({ ...doc, page: p.page, label: p.label })}
+                  </a>
+                ) : (
+                  locator({ ...doc, page: p.page, label: p.label })
+                )}
+              </p>
+            )}
+            {doc.page_images ? (
+              <PageImage
+                docId={doc.id}
+                page={p.page}
+                text={p.text}
+                unit={doc.mime === PDF ? "Page" : "Slide"}
+              />
+            ) : p.text.trim() ? (
+              markdown ? (
+                <div className="prose" dir="auto">
+                  <NoteProse
+                    text={p.page === 1 ? withoutLeadingTitle(p.text) : p.text}
+                    docId={doc.id}
+                  />
+                </div>
+              ) : (
+                <div className="plain" dir="auto">
+                  {p.text}
+                </div>
+              )
             ) : (
-              <div className="plain" dir="auto">
-                {p.text}
-              </div>
-            )
-          ) : (
-            <p className="muted">No text on this {doc.mime === PDF ? "page" : "part"}.</p>
-          )}
-        </section>
-      ))}
+              <p className="muted">
+                No text on this {doc.mime === PDF ? "page" : "part"}.
+              </p>
+            )}
+          </section>
+        ))}
+      </div>
+      <ReaderAsk doc={doc} onJump={jumpTo} />
     </div>
   );
 }
 
+/** Scroll the reader to a page or slide and flash it, so the eye finds it. */
+function jumpTo(page: number) {
+  const el = document.getElementById(`p-${page}`);
+  if (!el) return;
+  history.replaceState(null, "", `#p-${page}`);
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.remove("flash");
+  void el.offsetWidth; // restart the animation when the same page is cited twice
+  el.classList.add("flash");
+}
+
 /** The page drawn as a picture, its indexed text folded below; if the picture fails, the text is shown open. */
-function PageImage({ docId, page, text, unit }: { docId: number; page: number; text: string; unit: string }) {
+function PageImage({
+  docId,
+  page,
+  text,
+  unit,
+}: {
+  docId: number;
+  page: number;
+  text: string;
+  unit: string;
+}) {
   const [failed, setFailed] = useState(false);
   return (
     <>
@@ -128,7 +188,9 @@ function PageImage({ docId, page, text, unit }: { docId: number; page: number; t
         <img
           className="page-image"
           src={pageImageUrl(docId, page)}
-          alt={text.trim() ? `${unit} ${page}` : `${unit} ${page}, no text layer`}
+          alt={
+            text.trim() ? `${unit} ${page}` : `${unit} ${page}, no text layer`
+          }
           loading="lazy"
           onError={() => setFailed(true)}
         />

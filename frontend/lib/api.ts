@@ -1,10 +1,13 @@
 import { chapterCode, moduleCode } from "./modules";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const PDF = "application/pdf";
-export const PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-export const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+export const PPTX =
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+export const DOCX =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export type Citation = {
   n: number;
@@ -50,12 +53,18 @@ export type DocumentRow = {
 };
 
 export type Tag = { id: number; name: string };
-export type TagRow = Tag & { course: string | null; count: number; raws: string[]; user_named: boolean };
+export type TagRow = Tag & {
+  course: string | null;
+  count: number;
+  raws: string[];
+  user_named: boolean;
+};
 
 export type EnrichStatus = "pending" | "ok" | "error" | "skipped";
 
 export type EnrichmentStatus = {
-  state: "running" | "waiting" | "paused" | "idle" | "waiting for Ollama" | "off";
+  state:
+    "running" | "waiting" | "paused" | "idle" | "waiting for Ollama" | "off";
   current: string | null;
   last_error: string | null;
   paused: boolean;
@@ -69,12 +78,21 @@ export type DocumentPages = Omit<DocumentRow, "chunk_count"> & {
   page_images: boolean;
 };
 
-export type RerankerStatus = { state: "ready" | "not loaded" | "off"; reason: string | null };
+export type RerankerStatus = {
+  state: "ready" | "not loaded" | "off";
+  reason: string | null;
+};
 
 export type Health = {
   ok: boolean;
   db: { ok: boolean; error?: string };
-  ollama: { reachable: boolean; llm_model?: string; llm_pulled?: boolean; embed_pulled?: boolean; error?: string };
+  ollama: {
+    reachable: boolean;
+    llm_model?: string;
+    llm_pulled?: boolean;
+    embed_pulled?: boolean;
+    error?: string;
+  };
   blackboard_login_needed?: boolean;
   reranker?: RerankerStatus;
 };
@@ -89,15 +107,25 @@ export function locator(c: Locatable): string {
 }
 
 /** Library call number: PROB2 · CH1 · p. 3 */
-export function callNumber(c: Locatable & { course: string | null; path: string }): string {
+export function callNumber(
+  c: Locatable & { course: string | null; path: string },
+): string {
   const parts = [moduleCode(c.course), chapterCode(c.path)];
-  if (c.mime === PDF || c.mime === PPTX || (c.mime === DOCX && c.label)) parts.push(locator(c));
+  if (c.mime === PDF || c.mime === PPTX || (c.mime === DOCX && c.label))
+    parts.push(locator(c));
   return parts.filter(Boolean).join(" · ");
 }
 
 /** "12 pages", "30 slides", "4 sections"; null for single-part notes. */
 export function partsCount(mime: string, n: number): string | null {
-  const unit = mime === PDF ? "page" : mime === PPTX ? "slide" : mime === DOCX ? "section" : null;
+  const unit =
+    mime === PDF
+      ? "page"
+      : mime === PPTX
+        ? "slide"
+        : mime === DOCX
+          ? "section"
+          : null;
   return unit && `${n} ${unit}${n === 1 ? "" : "s"}`;
 }
 
@@ -108,7 +136,11 @@ export function kindOf(mime: string): string {
   return "Note";
 }
 
-export function fileUrl(c: { doc_id: number; page?: number; mime: string }): string {
+export function fileUrl(c: {
+  doc_id: number;
+  page?: number;
+  mime: string;
+}): string {
   const base = `${API_URL}/files/${c.doc_id}`;
   return c.mime === PDF && c.page ? `${base}#page=${c.page}` : base;
 }
@@ -133,22 +165,32 @@ type Handlers = {
   onError: (message: string) => void;
 };
 
-/** POST /ask and parse the SSE stream (EventSource can't POST). */
-export async function askStream(question: string, course: string | null, h: Handlers, signal?: AbortSignal) {
+/** POST /ask and parse the SSE stream (EventSource can't POST). docId keeps the answer to one document. */
+export async function askStream(
+  question: string,
+  course: string | null,
+  h: Handlers,
+  signal?: AbortSignal,
+  docId?: number,
+) {
   let res: Response;
   try {
     res = await fetch(`${API_URL}/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, course }),
+      body: JSON.stringify({ question, course, doc_id: docId ?? null }),
       signal,
     });
   } catch {
-    h.onError(`Can't reach the backend at ${API_URL}. Start it with: uv run uvicorn app.main:app`);
+    h.onError(
+      `Can't reach the backend at ${API_URL}. Start it with: uv run uvicorn app.main:app`,
+    );
     return;
   }
   if (!res.ok || !res.body) {
-    h.onError(`The backend answered ${res.status}. Check its log for the cause.`);
+    h.onError(
+      `The backend answered ${res.status}. Check its log for the cause.`,
+    );
     return;
   }
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
@@ -172,7 +214,10 @@ export async function askStream(question: string, course: string | null, h: Hand
   }
 }
 
-export async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
+export async function getJSON<T>(
+  path: string,
+  signal?: AbortSignal,
+): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { cache: "no-store", signal });
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
   return res.json();
@@ -221,7 +266,10 @@ export function fetchHistoryItem(id: number): Promise<HistoryItem> {
 /** Permanent. keepalive lets it finish while the page unloads. A 404 means it's already gone. */
 export async function deleteHistory(id: number): Promise<boolean> {
   try {
-    const res = await fetch(`${API_URL}/history/${id}`, { method: "DELETE", keepalive: true });
+    const res = await fetch(`${API_URL}/history/${id}`, {
+      method: "DELETE",
+      keepalive: true,
+    });
     return res.ok || res.status === 404;
   } catch {
     return false;
@@ -229,14 +277,29 @@ export async function deleteHistory(id: number): Promise<boolean> {
 }
 
 export type AdminStatus = {
-  services: { db: { ok: boolean; error?: string }; ollama: Health["ollama"] } | null;
+  services: {
+    db: { ok: boolean; error?: string };
+    ollama: Health["ollama"];
+  } | null;
   reranker: RerankerStatus | null;
   llm:
     | { loaded: false; model: string }
-    | { loaded: true; model: string; gpu_share: number; expires_at: string | null }
+    | {
+        loaded: true;
+        model: string;
+        gpu_share: number;
+        expires_at: string | null;
+      }
     | null;
-  gpu: { available: false } | { available: true; name: string; used_mib: number; total_mib: number };
-  answers: { count: number; median_ms: number | null; max_ms: number | null; last_at: string | null } | null;
+  gpu:
+    | { available: false }
+    | { available: true; name: string; used_mib: number; total_mib: number };
+  answers: {
+    count: number;
+    median_ms: number | null;
+    max_ms: number | null;
+    last_at: string | null;
+  } | null;
   index: {
     documents: number;
     chunks: number;
@@ -249,7 +312,12 @@ export type AdminStatus = {
 };
 
 export type AdminLibrary = {
-  modules: { course: string | null; documents: number; chunks: number; problems: number }[];
+  modules: {
+    course: string | null;
+    documents: number;
+    chunks: number;
+    problems: number;
+  }[];
   problems: {
     id: number;
     path: string;
@@ -259,7 +327,13 @@ export type AdminLibrary = {
     error: string | null;
   }[];
   excluded: { path: string; excluded_at: string; on_disk: boolean }[];
-  summary_errors: { id: number; path: string; title: string; course: string | null; error: string | null }[];
+  summary_errors: {
+    id: number;
+    path: string;
+    title: string;
+    course: string | null;
+    error: string | null;
+  }[];
 };
 
 /** An API error that keeps FastAPI's `detail` (a string, or a {field: reason} map for settings). */
@@ -273,7 +347,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function sendJSON<T>(method: "POST" | "PUT" | "PATCH" | "DELETE", path: string, body: unknown): Promise<T> {
+export async function sendJSON<T>(
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
+  path: string,
+  body: unknown,
+): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
@@ -287,7 +365,11 @@ export async function sendJSON<T>(method: "POST" | "PUT" | "PATCH" | "DELETE", p
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = data?.detail;
-    throw new ApiError(typeof detail === "string" ? detail : `${path} returned ${res.status}`, res.status, detail);
+    throw new ApiError(
+      typeof detail === "string" ? detail : `${path} returned ${res.status}`,
+      res.status,
+      detail,
+    );
   }
   return data as T;
 }
@@ -327,9 +409,21 @@ export type InsightsSummary = {
   per_day: { day: string; questions: number; median_ms: number | null }[];
 };
 
-export type ProblemRow = { id: number; ts: string; question: string; course: string | null; latency_ms: number | null };
+export type ProblemRow = {
+  id: number;
+  ts: string;
+  question: string;
+  course: string | null;
+  latency_ms: number | null;
+};
 
-export type ComparedHit = { chunk_id: number; title: string; page: number; label: string | null; score: number };
+export type ComparedHit = {
+  chunk_id: number;
+  title: string;
+  page: number;
+  label: string | null;
+  score: number;
+};
 export type CompareResult = {
   summary: { questions: number; changed: number; flipped: number };
   rows: {
@@ -344,7 +438,13 @@ export type CompareResult = {
 };
 
 export type SyncEvent = { type: string; [k: string]: unknown };
-export type SyncAction = "downloaded" | "saved_page" | "already_had" | "would_download" | "would_save_page" | "failed";
+export type SyncAction =
+  | "downloaded"
+  | "saved_page"
+  | "already_had"
+  | "would_download"
+  | "would_save_page"
+  | "failed";
 export type SyncJob = {
   id: number;
   mode: "sync" | "preview" | "probe" | "login";
@@ -357,7 +457,13 @@ export type SyncJob = {
   bytes: number;
   error: string | null;
   /** the Blackboard calendar step; absent on runs from before it existed */
-  deadlines?: { new?: number; updated?: number; removed?: number; would_import?: number; failed?: string } | null;
+  deadlines?: {
+    new?: number;
+    updated?: number;
+    removed?: number;
+    would_import?: number;
+    failed?: string;
+  } | null;
   events?: SyncEvent[];
   courses?: { name: string; folder: string | null }[] | null;
 };
@@ -408,7 +514,11 @@ export type EvalJob = {
   done: number;
   total: number;
   error: string | null;
-  result: { accepted?: number; rejected?: Record<string, number>; run_id?: number } | null;
+  result: {
+    accepted?: number;
+    rejected?: Record<string, number>;
+    run_id?: number;
+  } | null;
 };
 export type EvalStatus = {
   questions: { generated: number; labelled: number };

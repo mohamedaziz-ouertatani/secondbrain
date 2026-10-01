@@ -36,28 +36,30 @@ def keywords(question: str) -> list[str]:
 _COLUMNS = """c.id AS chunk_id, c.document_id AS doc_id, c.page, c.text, c.meta->>'label' AS label,
               (c.meta->>'ocr')::boolean IS TRUE AS ocr,
               d.title, d.course, d.mime, d.path, d.summary, 1 - (c.embedding <=> %(q)s) AS score"""
-_COURSE = "(%(course)s::text IS NULL OR d.course = %(course)s)"
+_SCOPE = "(%(course)s::text IS NULL OR d.course = %(course)s) AND (%(doc_id)s::int IS NULL OR d.id = %(doc_id)s)"
 
 
-def dense(question: str, k: int, course: str | None = None) -> list[dict]:
+def dense(question: str, k: int, course: str | None = None, doc_id: int | None = None) -> list[dict]:
     qvec = ollama.embed([question])[0]
     with get_pool().connection() as conn:
-        return _dense(conn, qvec, k, course)
+        return _dense(conn, qvec, k, course, doc_id)
 
 
-def _dense(conn, qvec, k: int, course: str | None) -> list[dict]:
+def _dense(conn, qvec, k: int, course: str | None, doc_id: int | None = None) -> list[dict]:
     """Nearest chunks. With doc_boost > 0, candidate_k are fetched and re-sorted by
-    score + doc_boost x similarity(question, file summary); `score` itself stays the chunk's cosine."""
+    score + doc_boost x similarity(question, file summary); `score` itself stays the chunk's cosine.
+    Within one document the sort is exact: the HNSW index filters after its search, so a single
+    file's chunks could all fall outside the neighbours it looks at."""
     s = get_settings()
     boost = s.doc_boost
     conn.execute("SET hnsw.ef_search = 100")
     hits = conn.execute(
         f"""SELECT {_COLUMNS}, COALESCE(1 - (d.summary_embedding <=> %(q)s), 0) AS doc_score
             FROM chunks c JOIN documents d ON d.id = c.document_id
-            WHERE {_COURSE}
-            ORDER BY c.embedding <=> %(q)s
+            WHERE {_SCOPE}
+            ORDER BY {"(c.embedding <=> %(q)s) + 0" if doc_id else "c.embedding <=> %(q)s"}
             LIMIT %(k)s""",
-        {"q": qvec, "k": max(k, s.candidate_k) if boost else k, "course": course},
+        {"q": qvec, "k": max(k, s.candidate_k) if boost else k, "course": course, "doc_id": doc_id},
     ).fetchall()
     if boost:
         hits.sort(key=lambda h: -(h["score"] + boost * h["doc_score"]))
@@ -65,17 +67,17 @@ def _dense(conn, qvec, k: int, course: str | None) -> list[dict]:
     return hits
 
 
-def _lexical(conn, qvec, terms: list[str], k: int, course: str | None) -> list[dict]:
+def _lexical(conn, qvec, terms: list[str], k: int, course: str | None, doc_id: int | None = None) -> list[dict]:
     """Chunks matching any term, best ts_rank_cd first; all_terms marks chunks that contain every term."""
     if not terms:
         return []
     return conn.execute(
         f"""SELECT {_COLUMNS}, c.tsv @@ to_tsquery('simple', %(all)s) AS all_terms
             FROM chunks c JOIN documents d ON d.id = c.document_id
-            WHERE c.tsv @@ to_tsquery('simple', %(any)s) AND {_COURSE}
+            WHERE c.tsv @@ to_tsquery('simple', %(any)s) AND {_SCOPE}
             ORDER BY ts_rank_cd(c.tsv, to_tsquery('simple', %(any)s)) DESC, c.id
             LIMIT %(k)s""",
-        {"q": qvec, "k": k, "course": course, "any": " | ".join(terms), "all": " & ".join(terms)},
+        {"q": qvec, "k": k, "course": course, "doc_id": doc_id, "any": " | ".join(terms), "all": " & ".join(terms)},
     ).fetchall()
 
 
@@ -97,14 +99,16 @@ def answerable(hits: list[dict], min_score: float) -> bool:
     return any(h["score"] >= min_score or h.get("all_terms") for h in hits)
 
 
-def retrieve(question: str, course: str | None = None, mode: str | None = None) -> tuple[list[dict], list[dict]]:
-    """Returns (all candidates, the ones passed to the LLM)."""
-    return retrieve_with_vector(ollama.embed([question])[0], question, course, mode)
+def retrieve(
+    question: str, course: str | None = None, mode: str | None = None, doc_id: int | None = None,
+) -> tuple[list[dict], list[dict]]:
+    """Returns (all candidates, the ones passed to the LLM). doc_id keeps them to one document."""
+    return retrieve_with_vector(ollama.embed([question])[0], question, course, mode, doc_id=doc_id)
 
 
 def retrieve_with_vector(
     qvec, question: str, course: str | None = None, mode: str | None = None, k: int | None = None,
-    rerank: bool | None = None,
+    rerank: bool | None = None, doc_id: int | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """retrieve() with the question already embedded, so one vector can serve both modes.
     k: dense candidate depth (the evaluation uses 20; /ask uses top_k).
@@ -115,10 +119,10 @@ def retrieve_with_vector(
     with get_pool().connection() as conn:
         if mode == "dense":
             depth = k or s.top_k
-            hits = _dense(conn, qvec, max(depth, s.candidate_k) if want else depth, course)
+            hits = _dense(conn, qvec, max(depth, s.candidate_k) if want else depth, course, doc_id)
         else:
-            dense_hits = _dense(conn, qvec, s.candidate_k, course)
-            lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course)
+            dense_hits = _dense(conn, qvec, s.candidate_k, course, doc_id)
+            lexical_hits = _lexical(conn, qvec, keywords(question), s.candidate_k, course, doc_id)
             hits = fuse(dense_hits, lexical_hits, s.rrf_k)
     if want and (ranked := rr.reranker.rerank(question, hits[: s.candidate_k], force=bool(rerank))) is not None:
         return ranked, ranked[: s.top_k] if answerable(ranked, s.min_score) else []
