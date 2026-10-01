@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { dayHeading, dayKey, isOverdue, type PlannerItem } from "@/lib/planner";
+import { dayHeading, dayKey, daysOf, isOverdue, type PlannerItem } from "@/lib/planner";
 import { ItemRow } from "./ItemRow";
 
-/** Overdue first, then each day from today on. Past done items and notes aren't shown. */
+/** Overdue first, then each day from today on; a span is listed under every day it covers. Past done items and notes aren't shown. */
 export function Agenda({
   items,
   onOpen,
@@ -19,10 +19,8 @@ export function Agenda({
   const overdue = items.filter((i) => isOverdue(i, now));
   const days = new Map<string, PlannerItem[]>();
   for (const i of items) {
-    if (!i.starts_at || i.kind === "note" || isOverdue(i, now)) continue;
-    const k = dayKey(new Date(i.starts_at));
-    if (k < today) continue;
-    days.set(k, [...(days.get(k) ?? []), i]);
+    if (i.kind === "note" || isOverdue(i, now)) continue;
+    for (const k of daysOf(i)) if (k >= today) days.set(k, [...(days.get(k) ?? []), i]);
   }
 
   useEffect(() => {
@@ -47,7 +45,7 @@ export function Agenda({
           </ul>
         </section>
       )}
-      {[...days.entries()].map(([k, rows]) => (
+      {[...days.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([k, rows]) => (
         <section key={k} id={`day-${k}`} className="agenda-day" aria-label={dayHeading(k)}>
           <h3 className="stack-label">{dayHeading(k)}</h3>
           <ul className="plan-list">

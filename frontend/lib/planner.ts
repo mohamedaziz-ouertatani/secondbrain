@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { API_URL, getJSON, sendJSON } from "./api";
 import { moduleCode } from "./modules";
+import { dayKey, daysOf } from "./planDays";
 
 export type Kind = "note" | "todo" | "event";
 
@@ -115,10 +116,7 @@ export async function parseLine(text: string, course: string | null, signal?: Ab
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Local calendar day, "2026-10-02". */
-export function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
+export { dayKey, daysOf };
 
 export function isOverdue(i: PlannerItem, now = new Date()): boolean {
   return i.kind === "todo" && !i.done_at && !i.removed_at && !!i.starts_at && new Date(i.starts_at) < now;
@@ -127,11 +125,16 @@ export function isOverdue(i: PlannerItem, now = new Date()): boolean {
 const hm = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 const dayShort = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
-/** "due Fri 2 Oct 23:59", "Mon 5 Oct 14:30–16:00", "Sat 3 Oct"; "" when undated. */
+/** "due Fri 2 Oct 23:59", "Mon 5 Oct 14:30–16:00", "Sat 3 Oct", "Mon 14 Dec – Sat 26 Dec"; "" when undated. */
 export function whenLabel(i: Pick<PlannerItem, "kind" | "starts_at" | "ends_at" | "all_day">): string {
   if (!i.starts_at) return "";
   const d = new Date(i.starts_at);
-  if (i.all_day) return dayShort(d);
+  if (i.all_day) {
+    const days = daysOf(i);
+    if (days.length < 2) return dayShort(d);
+    const [y, m, day] = days[days.length - 1].split("-").map(Number);
+    return `${dayShort(d)} – ${dayShort(new Date(y, m - 1, day))}`;
+  }
   const t = i.ends_at ? `${hm(d)}–${hm(new Date(i.ends_at))}` : hm(d);
   return `${i.kind === "todo" ? "due " : ""}${dayShort(d)} ${t}`;
 }

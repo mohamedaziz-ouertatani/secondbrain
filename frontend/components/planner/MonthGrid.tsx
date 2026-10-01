@@ -2,12 +2,12 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { tintVar } from "@/lib/modules";
-import { dayKey, type PlannerItem } from "@/lib/planner";
+import { dayKey, daysOf, type PlannerItem } from "@/lib/planner";
 
 const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MAX_CHIPS = 3;
 
-/** Six Monday-first weeks around `month`; each day shows up to three chips, then "+N". */
+/** Six Monday-first weeks around `month`; each day shows up to three chips, then "+N". A span shows on every day it covers. */
 export function MonthGrid({
   items,
   month,
@@ -26,10 +26,12 @@ export function MonthGrid({
   start.setDate(1 - ((first.getDay() + 6) % 7));
   const cells = Array.from({ length: 42 }, (_, n) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + n));
   const byDay = new Map<string, PlannerItem[]>();
+  const firstDay = new Map<number, string>(); // spans only: later days draw as a continuation
   for (const i of items) {
-    if (!i.starts_at || i.kind === "note") continue;
-    const k = dayKey(new Date(i.starts_at));
-    byDay.set(k, [...(byDay.get(k) ?? []), i]);
+    if (i.kind === "note") continue;
+    const days = daysOf(i);
+    for (const k of days) byDay.set(k, [...(byDay.get(k) ?? []), i]);
+    if (days.length > 1) firstDay.set(i.id, days[0]);
   }
   const today = dayKey(new Date());
   const shift = (n: number) => onMonth(new Date(month.getFullYear(), month.getMonth() + n, 1));
@@ -66,7 +68,7 @@ export function MonthGrid({
                 <button
                   key={i.id}
                   type="button"
-                  className={`month-chip${i.done_at || i.removed_at ? " done" : ""}`}
+                  className={`month-chip${i.done_at || i.removed_at ? " done" : ""}${(firstDay.get(i.id) ?? k) < k ? " cont" : ""}`}
                   style={{ "--tint": tintVar(i.course) } as React.CSSProperties}
                   onClick={() => onOpen(i)}
                   title={i.title}
