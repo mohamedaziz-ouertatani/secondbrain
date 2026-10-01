@@ -12,6 +12,8 @@ from ..config import get_settings
 from ..db import get_pool
 from ..enrich import vocab
 from ..enrich.worker import ENRICH_STATE
+from ..ingest import slides
+from ..ingest.parse import PDF, PPTX
 from ..ingest.pipeline import cached_pages, rescan
 from ..llm import ollama
 from ..rag import rerank
@@ -126,7 +128,8 @@ def document_pages(doc_id: int) -> dict:
         pages = cached_pages(path)
     except Exception as e:
         raise HTTPException(422, f"could not read {path.name}: {e}") from e
-    return {**row, "tags": vocab.document_tags(doc_id), "pages": pages}
+    page_images = row["mime"] == PDF or (row["mime"] == PPTX and slides.converter() is not None)
+    return {**row, "tags": vocab.document_tags(doc_id), "pages": pages, "page_images": page_images}
 
 
 # Rendered width in pixels, whatever the page size (slides are small, A4 is not): about twice the
@@ -136,10 +139,17 @@ PAGE_WIDTH_PX = 1400
 
 @router.get("/documents/{doc_id}/pages/{page}.png")
 def document_page_image(doc_id: int, page: int) -> Response:
-    """One PDF page as an image: the extracted text flattens formulas, the page itself doesn't."""
+    """One PDF page or slide as an image: the extracted text flattens formulas and diagrams, the page doesn't."""
     row, path = _document_file(doc_id)
-    if row["mime"] != "application/pdf":
-        raise HTTPException(404, "not a PDF")
+    if row["mime"] == PPTX:
+        try:
+            path = slides.deck_pdf(path)
+        except Exception as e:
+            raise HTTPException(502, f"could not draw the slides: {e}") from e
+        if path is None:
+            raise HTTPException(404, "slides can't be drawn: LibreOffice isn't installed")
+    elif row["mime"] != PDF:
+        raise HTTPException(404, "not a PDF or slides")
     with pymupdf.open(path) as doc:
         if not 1 <= page <= doc.page_count:
             raise HTTPException(404, "page not found")

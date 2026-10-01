@@ -97,24 +97,8 @@ export default function ReaderPage() {
               )}
             </p>
           )}
-          {doc.mime === PDF ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element -- served by the API, not Next's image pipeline */}
-              <img
-                className="page-image"
-                src={pageImageUrl(doc.id, p.page)}
-                alt={p.text.trim() ? `Page ${p.page}` : `Page ${p.page}, no text layer`}
-                loading="lazy"
-              />
-              {p.text.trim() && (
-                <details className="page-text">
-                  <summary>Indexed text</summary>
-                  <div className="plain" dir="auto">
-                    {p.text}
-                  </div>
-                </details>
-              )}
-            </>
+          {doc.page_images ? (
+            <PageImage docId={doc.id} page={p.page} text={p.text} unit={doc.mime === PDF ? "Page" : "Slide"} />
           ) : p.text.trim() ? (
             markdown ? (
               <div className="prose" dir="auto">
@@ -131,5 +115,37 @@ export default function ReaderPage() {
         </section>
       ))}
     </div>
+  );
+}
+
+/** The page drawn as a picture, its indexed text folded below; if the picture fails, the text is shown open. */
+function PageImage({ docId, page, text, unit }: { docId: number; page: number; text: string; unit: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <>
+      {!failed && (
+        // eslint-disable-next-line @next/next/no-img-element -- served by the API, not Next's image pipeline
+        <img
+          className="page-image"
+          src={pageImageUrl(docId, page)}
+          alt={text.trim() ? `${unit} ${page}` : `${unit} ${page}, no text layer`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {text.trim() &&
+        (failed ? (
+          <div className="plain" dir="auto">
+            {text}
+          </div>
+        ) : (
+          <details className="page-text">
+            <summary>Indexed text</summary>
+            <div className="plain" dir="auto">
+              {text}
+            </div>
+          </details>
+        ))}
+    </>
   );
 }

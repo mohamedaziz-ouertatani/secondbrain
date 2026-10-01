@@ -109,6 +109,7 @@ Every setting, measure and action says what it does, with a "How it works" note 
 After a file is indexed, a background job has the local model write a short summary, 5–10 key concepts and 3–8 topic tags for it:
 - **Library:** the summary shows as one line under each file, and the filter box also searches summaries and concepts.
 - **Reader:** the full summary and concepts sit at the top, marked **generated** because a 4B model can get them wrong.
+  - PDF pages and PowerPoint slides are shown as pictures, with the indexed text folded underneath. Slides need [LibreOffice](https://www.libreoffice.org/) (`winget install TheDocumentFoundation.LibreOffice`). Each deck is converted to PDF the first time it's opened, which takes a few seconds, and is cached in `backend/data/slides`. Without LibreOffice, slides show their text only.
 - **Timing:** the job pauses while you're asking a question and during rescans, re-indexes and evaluation runs, so answers aren't slowed. Long files are summarised in parts, then combined. The first pass over the whole library takes a while; after that, only new and changed files are summarised.
 - **Admin:**
   - the admin Overview shows progress under System details, with **Pause summaries** and **Resume summaries** among the everyday actions;

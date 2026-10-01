@@ -65,6 +65,8 @@ export type EnrichmentStatus = {
 
 export type DocumentPages = Omit<DocumentRow, "chunk_count"> & {
   pages: { page: number; label: string | null; text: string }[];
+  /** PDF pages, and slides when the backend has LibreOffice, can be shown as pictures. */
+  page_images: boolean;
 };
 
 export type RerankerStatus = { state: "ready" | "not loaded" | "off"; reason: string | null };
@@ -111,7 +113,7 @@ export function fileUrl(c: { doc_id: number; page?: number; mime: string }): str
   return c.mime === PDF && c.page ? `${base}#page=${c.page}` : base;
 }
 
-/** A PDF page rendered as an image: formulas survive, unlike the extracted text. */
+/** A PDF page or slide rendered as an image: formulas and diagrams survive, unlike the extracted text. */
 export function pageImageUrl(docId: number, page: number): string {
   return `${API_URL}/documents/${docId}/pages/${page}.png`;
 }
