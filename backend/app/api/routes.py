@@ -28,12 +28,13 @@ router = APIRouter()
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     course: str | None = None
+    doc_id: int | None = None  # asked from a document's reader: answer from that file
 
 
 @router.post("/ask")
 def ask_endpoint(req: AskRequest) -> StreamingResponse:
     def sse():
-        for event, data in ask(req.question.strip(), req.course or None):
+        for event, data in ask(req.question.strip(), req.course or None, req.doc_id):
             yield f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(sse(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})

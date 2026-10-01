@@ -1565,6 +1565,226 @@ td {
   max-width: 60ch;
 }
 
+/* ---- reader + ask panel: the page on the left, questions pinned on the right ---- */
+
+.reader-split {
+  display: grid;
+  grid-template-columns: minmax(0, 82ch) minmax(340px, 420px);
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.reader-split .reader {
+  max-width: none;
+}
+
+/* the sticky panel keeps the same gap at the bottom of the page as at the top */
+.main:has(> .reader-split) {
+  padding-bottom: 1.75rem;
+}
+
+.reader-ask {
+  position: sticky;
+  top: 1.75rem;
+  height: calc(100vh - 3.5rem);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--card-2);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.reader-ask-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem 0.6rem 1rem;
+  border-bottom: 1px solid var(--rule-blue);
+}
+
+.reader-ask-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reader-ask-head .icon-btn {
+  margin-left: auto;
+}
+
+.scope {
+  display: flex;
+  min-width: 0;
+  border: 1px solid var(--rule-blue);
+  border-radius: 999px;
+  overflow: hidden;
+  font-size: 0.8rem;
+}
+
+.scope button {
+  min-width: 0;
+  max-width: 11rem;
+  padding: 0.2rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.scope button[aria-checked="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.reader-ask-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border-bottom: 2px solid var(--rule-red);
+  background: var(--card);
+}
+
+.reader-ask-form textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 10rem;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.reader-ask-form textarea:focus {
+  outline: none;
+}
+
+.reader-ask-answers {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.9rem;
+}
+
+.reader-answer .card.answer {
+  font-size: 0.95rem;
+}
+
+.reader-sources {
+  margin: 0.4rem 0 0;
+  padding: 0 0.25rem;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.reader-sources li {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+  min-width: 0;
+}
+
+.reader-sources .n {
+  font-family: var(--type);
+  color: var(--muted);
+}
+
+.reader-sources a {
+  color: var(--primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkish {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* collapsed: a tab on the right edge */
+.reader-ask-tab {
+  position: sticky;
+  top: 1.75rem;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: var(--shadow-pulled);
+  cursor: pointer;
+}
+
+.reader-split:has(> .reader-ask-tab) {
+  grid-template-columns: minmax(0, 82ch) auto;
+}
+
+/* a cited page, just jumped to */
+.page.flash {
+  animation: page-flash 1.6s var(--ease);
+}
+
+@keyframes page-flash {
+  from {
+    box-shadow: 0 0 0 3px var(--focus), var(--shadow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page.flash {
+    animation: none;
+    outline: 3px solid var(--focus);
+  }
+}
+
+/* narrower: the panel slides over the page from the right, and the tab floats */
+@media (max-width: 1099px) {
+  .reader-split,
+  .reader-split:has(> .reader-ask-tab) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .reader-ask {
+    position: fixed;
+    inset: 0 0 0 auto;
+    top: 0;
+    z-index: 40;
+    width: min(420px, 100vw);
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: var(--shadow-pulled);
+  }
+  .reader-ask-tab {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    top: auto;
+    z-index: 40;
+  }
+}
+
 /* ---- responsive --------------------------------------------------------- */
 
 @media (max-width: 1280px) {

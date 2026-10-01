@@ -24,7 +24,7 @@ def test_ask_marks_answering_until_the_stream_ends_or_is_closed(env, monkeypatch
     from app.llm import busy
     from app.rag import answer
 
-    monkeypatch.setattr(answer, "retrieve", lambda q, c: ([], []))  # refused: no LLM call
+    monkeypatch.setattr(answer, "retrieve", lambda q, c, **kw: ([], []))  # refused: no LLM call
     gen = answer.ask("anything?")
     assert not busy.is_answering()
     next(gen)

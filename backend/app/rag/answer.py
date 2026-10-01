@@ -18,21 +18,23 @@ log = logging.getLogger(__name__)
 SNIPPET_CHARS = 240
 
 
-def ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
+def ask(question: str, course: str | None = None, doc_id: int | None = None) -> Iterator[tuple[str, dict]]:
+    """doc_id: answer from that one document (asked from its reader)."""
     with busy.answering():  # background enrichment keeps off the GPU until the stream ends or is closed
-        yield from _ask(question, course)
+        yield from _ask(question, course, doc_id)
 
 
-def _ask(question: str, course: str | None = None) -> Iterator[tuple[str, dict]]:
+def _ask(question: str, course: str | None = None, doc_id: int | None = None) -> Iterator[tuple[str, dict]]:
     s = get_settings()
     t0 = time.perf_counter()
-    candidates, sources = retrieve(question, course)
+    candidates, sources = retrieve(question, course, doc_id=doc_id)
     reranked = [h["rerank_score"] for h in candidates if "rerank_score" in h]
     entry = {
         "question": question,
         "llm_model": s.llm_model,
         "embed_model": s.embed_model,
         "params": {"top_k": s.top_k, "min_score": s.min_score, "mode": s.retrieval_mode, "course": course,
+                   **({"doc_id": doc_id} if doc_id else {}),
                    "rerank": "on" if reranked else "off", "rerank_max_length": s.rerank_max_length,
                    "top_rerank_score": round(max(reranked), 4) if reranked else None,
                    **({"candidate_k": s.candidate_k, "rrf_k": s.rrf_k} if s.retrieval_mode == "hybrid" else {})},
