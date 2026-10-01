@@ -3401,6 +3401,12 @@ section.plan-done > .stack-label {
   cursor: pointer;
 }
 
+/* A later day of a multi-day span: no accent bar, so the run reads as one block. */
+.month-chip.cont {
+  border-left-color: transparent;
+  color: var(--muted);
+}
+
 .month-chip.done {
   text-decoration: line-through;
   color: var(--muted);
