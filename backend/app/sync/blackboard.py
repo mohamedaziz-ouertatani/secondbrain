@@ -23,12 +23,12 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from ..config import ROOT, get_settings
 from ..ingest.parse import SUPPORTED
 from ..planner import blackboard as planner_bb
-from . import ultra_pages
+from . import scorm, ultra_pages
 
 log = logging.getLogger("blackboard")
 
@@ -131,8 +131,12 @@ CONTENT_FIELDS = "fields=id,title,contentHandler,hasChildren,modified,availabili
 ULTRA_BODY = "ultraDocumentBody"
 
 
-def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, course_name: str = "") -> Iterator[RemoteFile]:
-    """Yield readable files; count unreadable ones by extension into `skipped`."""
+def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, course_name: str = "",
+         course_key: str = "") -> Iterator[RemoteFile]:
+    """Yield readable files; count unreadable ones by extension into `skipped`.
+
+    `course_key` is the course's courseId (e.g. ESE.GED0009__5DS1); SCORM packages need it.
+    """
     skipped = skipped if skipped is not None else Counter()
 
     def skip(name: str) -> None:
@@ -162,6 +166,30 @@ def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, cou
             else:
                 skip(e.name)
 
+    def package(item: dict, folders: list[str]) -> Iterator[RemoteFile]:
+        """A SCORM package's launch page as <title>.md, its images in a <title>/ folder beside it."""
+        base = scorm.package_dir(course_key, item["id"])
+        try:
+            href = scorm.launch_href(api.download(base + "imsmanifest.xml"))
+            if not href:
+                return
+            page_url = urljoin(get_settings().blackboard_url.rstrip("/") + base, href)
+            html = api.download(page_url).decode("utf-8", errors="replace")
+        except Exception as e:  # noqa: BLE001 -- package removed or not readable: skip it, sync the rest
+            log.warning("skipped SCORM package %r: %s", item["title"], e)
+            return
+        title = item["title"]
+        assets = safe_segment(title)
+        note, embedded = ultra_pages.convert(scorm.to_page_body(html, page_url), title.strip(),
+                                             breadcrumb=[p for p in (course_name, *folders) if p],
+                                             image_path=lambda name: f"{assets}/{safe_segment(name, 120)}")
+        modified = item.get("modified", "")
+        if note:
+            yield RemoteFile(course_id, item["id"], "scorm", folders, f"{safe_segment(title)}.md", modified, text=note)
+        for e in embedded:
+            if ultra_pages.is_image(e.name) or readable(e.name):
+                yield RemoteFile(course_id, item["id"], e.key, folders + [title], e.name, modified, url=e.url)
+
     def visit(path: str, folders: list[str], skippable: bool = False) -> Iterator[RemoteFile]:
         for item in paged(api, path, skippable):
             if (item.get("availability") or {}).get("available") == "No":
@@ -176,6 +204,9 @@ def walk(api: BlackboardAPI, course_id: str, skipped: Counter | None = None, cou
                     folders + [item["title"]],
                     skippable=True,
                 )
+                continue
+            if hid == scorm.HANDLER and course_key:
+                yield from package(item, folders)
                 continue
             if hid not in FILE_HANDLERS or item["title"] == ULTRA_BODY:  # a body has no attachments
                 continue
@@ -370,7 +401,7 @@ def run(api: BlackboardAPI, *, probe: bool, dry_run: bool, only: str | None, inc
         if not selected(c, folder, only):
             continue
         skipped: Counter = Counter()
-        files = list(walk(api, c["id"], skipped, folder))
+        files = list(walk(api, c["id"], skipped, folder, c.get("courseId", "")))
         plan = plan_course(files, inbox / folder, state, inbox)
         emit({"type": "course", "folder": folder, "files": len(files), "to_download": len(plan.download),
               "unchanged": plan.unchanged, "deleted_locally": plan.deleted_locally,
